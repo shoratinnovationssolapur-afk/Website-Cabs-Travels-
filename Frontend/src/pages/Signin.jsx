@@ -59,10 +59,7 @@ const Signin = () => {
           alt="SUV"
           className="w-28"
         />
-        <div className="flex justify-between w-20 -mt-3">
-          <div className="w-6 h-6 bg-black rounded-full border-4 border-gray-700 animate-wheel"></div>
-          <div className="w-6 h-6 bg-black rounded-full border-4 border-gray-700 animate-wheel"></div>
-        </div>
+       
       </div>
 
       {/* Road */}
