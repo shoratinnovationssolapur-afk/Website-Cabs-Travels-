@@ -1,17 +1,16 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./App.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Signin from './pages/Signin';
-import Signup from './pages/Signup';
 
+import Signin from "./pages/Signin";
+import Signup from "./pages/Signup";
+import Dashboard from "./pages/Dashboard";
+import ProtectedRoute from "./pages/ProtectedRoute";
 
 function App() {
   const router = createBrowserRouter([
     {
       path: "/",
-      element: <Signin/>,   
+      element: <Signin />,
     },
     {
       path: "/signin",
@@ -20,6 +19,16 @@ function App() {
     {
       path: "/signup",
       element: <Signup />,
+    },
+
+    // ✅ Protected Dashboard Route
+    {
+      path: "/dashboard",
+      element: (
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      ),
     },
   ]);
 
