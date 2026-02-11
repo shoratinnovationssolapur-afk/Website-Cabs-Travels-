@@ -63,30 +63,27 @@ const Signup = () => {
       </button>
 
       {/* Car Animation */}
-      <div className="absolute bottom-16 animate-drive flex flex-col items-center">
+      <div className="absolute bottom-4 left-70 right-10 animate-drive flex ">
         <img
           src="https://cdn-icons-png.flaticon.com/512/3774/3774278.png"
           alt="SUV"
           className="w-28"
         />
-        <div className="flex justify-between w-20 -mt-3">
-          <div className="w-6 h-6 bg-black rounded-full border-4 border-gray-700 animate-wheel"></div>
-          <div className="w-6 h-6 bg-black rounded-full border-4 border-gray-700 animate-wheel"></div>
-        </div>
+        
       </div>
 
       {/* Road */}
-      <div className="absolute bottom-10 w-full h-6 bg-gray-800"></div>
-      <div className="absolute bottom-12 w-full border-t-4 border-dashed border-yellow-400"></div>
+      <div className="absolute bottom-1 h-[30px] w-full h-6 bg-gray-800"></div>
+      <div className="absolute bottom-3 w-full border-t-4 border-dashed border-yellow-400"></div>
 
       {/* Signup Form */}
       <form
         onSubmit={handleSignup}
-        className="relative z-10 w-[90%] h-[620px] max-w-[500px] bg-white/20 backdrop-blur-md shadow-xl shadow-blue-900/30 flex flex-col justify-center items-center gap-[20px] px-[20px] rounded-2xl"
+        className="relative z-10 w-[90%] h-[520px]  max-w-[500px] bg-white/20  shadow-xl shadow-blue-900/30 flex flex-col justify-center items-center gap-[20px] px-[20px] rounded-2xl"
       >
-        <h1 className="text-white text-[28px] font-semibold font-serif mb-[20px] text-center">
+        <h1 className={`${isNight?"text-white":"text-black"} text-[28px] font-semibold font-serif mb-[20px] text-center`}>
           Register to{" "}
-          <span className="text-blue-700">Rathod Cabs And Travels</span>
+          <span className={`${isNight?"text-yellow-300":"text-blue-700"}`}>Rathod Cabs And Travels</span>
         </h1>
 
         {/* Name */}
@@ -95,7 +92,7 @@ const Signup = () => {
           placeholder="Enter your name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full h-[60px] outline-0 border-2 border-white bg-transparent text-white placeholder-gray-200 px-[20px] rounded-full"
+          className={`w-full h-[60px] outline-0 border-2 border-white bg-transparent ${isNight ? "text-white placeholder-white" : "text-black placeholder-black"}  px-[20px] rounded-full`}
         />
 
         {/* Email */}
@@ -104,7 +101,7 @@ const Signup = () => {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full h-[60px] outline-0 border-2 border-white bg-transparent text-white placeholder-gray-200 px-[20px] rounded-full"
+          className={`w-full h-[60px] outline-0 border-2 border-white bg-transparent ${isNight ? "text-white placeholder-white" : "text-black placeholder-black"}  px-[20px] rounded-full`}
         />
 
         {/* Password */}
@@ -114,7 +111,7 @@ const Signup = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full h-full outline-0 border-2 border-white bg-transparent text-white placeholder-gray-200 px-[20px] rounded-full"
+            className={`w-full h-full outline-0 border-2 border-white bg-transparent ${isNight ? "text-white placeholder-white" : "text-black placeholder-black"}  px-[20px] rounded-full`}
           />
 
           {showpassword ? (
@@ -132,7 +129,7 @@ const Signup = () => {
 
         {/* Error Message */}
         {error && (
-          <p className="text-red-300 text-sm text-center">{error}</p>
+          <p className="text-red-500 text-sm text-center">{error}</p>
         )}
 
         {/* Signup Button */}
@@ -146,11 +143,11 @@ const Signup = () => {
 
         {/* Redirect */}
         <p
-          className="text-white cursor-pointer"
+          className={`${isNight?"text-white":"text-black"} cursor-pointer`}
           onClick={() => navigate("/signin")}
         >
           Already have an account?{" "}
-          <span className="text-blue-800 font-semibold">Sign In</span>
+          <span className={`${isNight?"text-yellow-300":"text-blue-700"} font-semibold cursor-pointer`}>Sign In</span>
         </p>
       </form>
     </div>
