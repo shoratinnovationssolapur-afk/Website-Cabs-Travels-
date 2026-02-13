@@ -1,16 +1,5 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
 # Dependencies
 node_modules/
-Backend/node_modules/
-frontend/node_modules/
 
 # Build outputs
 dist
@@ -21,17 +10,19 @@ coverage
 # Environment variables
 .env
 .env.*
-Backend/.env
-frontend/.env
 
-# Firebase / GCP credentials (IMPORTANT)
-*.json
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Local config
 *.local
 
 # Editor / OS files
-.vscode/*
+.vscode/
 !.vscode/extensions.json
 .idea
 .DS_Store

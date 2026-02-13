@@ -1,28 +1,26 @@
-.env
-Backend/config/*.json 
-# Node modules
-node_modules/
-Backend/node_modules/
-
-# Environment files
-.env
-Backend/.env
 # Dependencies
 node_modules/
-Backend/node_modules/
 
 # Environment variables
 .env
-Backend/.env
+.env.*
 
-# Firebase / GCP credentials
-*.json
+# Firebase / GCP credentials (ONLY config folder)
+config/*.json
 
 # Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
