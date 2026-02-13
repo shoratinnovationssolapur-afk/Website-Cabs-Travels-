@@ -7,16 +7,35 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+# Dependencies
+node_modules/
+Backend/node_modules/
+frontend/node_modules/
+
+# Build outputs
 dist
 dist-ssr
+build
+coverage
+
+# Environment variables
+.env
+.env.*
+Backend/.env
+frontend/.env
+
+# Firebase / GCP credentials (IMPORTANT)
+*.json
+
+# Local config
 *.local
 
-# Editor directories and files
+# Editor / OS files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
