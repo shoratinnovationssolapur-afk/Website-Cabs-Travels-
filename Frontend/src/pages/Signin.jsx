@@ -37,7 +37,7 @@ const Signin = () => {
 
       alert("Login Successful ✅");
 
-      navigate("/dashboard");
+      navigate("/profile");
     } catch (err) {
       setError("Invalid Credentials ❌");
     } finally {
