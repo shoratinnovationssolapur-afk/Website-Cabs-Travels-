@@ -1,37 +1,57 @@
+# =========================
 # Dependencies
+# =========================
 node_modules/
 Backend/node_modules/
 Frontend/node_modules/
 
-# Environment files
+# =========================
+# Environment / Secrets
+# =========================
 .env
+.env.*
 Backend/.env
 Frontend/.env
 
-# Build outputs
+# Firebase service keys (never push)
+Backend/firebase-key.json
+Backend/serviceAccountKey.json
+
+# =========================
+# Build Outputs
+# =========================
 dist/
 Frontend/dist/
+Backend/dist/
 
+# Vite cache
+Frontend/.vite/
+
+# =========================
 # Logs
+# =========================
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
 
-# OS files
+# =========================
+# OS / Editor Junk
+# =========================
 .DS_Store
 Thumbs.db
 
-# IDE files
 .vscode/
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-# Misc
-*.log
-*.tmp
-*.bak
-firebase-key.json
 
+# =========================
+# Optional Uploads (if you add later)
+# =========================
+Backend/uploads/
+Frontend/uploads/
+
+# =========================
+# Coverage / Tests
+# =========================
+coverage/
