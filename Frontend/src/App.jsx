@@ -13,6 +13,7 @@ import TripHistory from "./pages/TripHistory";
 import Invoice from "./pages/Invoice";
 import Services from "./pages/Services";
 import TourPackagesPage from "./pages/TourPackagesPage";
+import BookingDetails from "./pages/BookingDetails";
 
 function App() {
   const router = createBrowserRouter([
@@ -68,6 +69,12 @@ function App() {
       path: "/aboutus",
       element: <AboutUs />,
     },
+
+    //Booking Deatils page
+      {
+        path: "/booking-details",
+        element: <BookingDetails />,
+      },
 
     // ✅ Public Pricing Page
     {
