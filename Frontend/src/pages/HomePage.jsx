@@ -1,5 +1,11 @@
-import React from "react";
+import React,{useState} from "react";
 import { useNavigate } from "react-router-dom";
+import { auth, db } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
+
+
+
 
 import innova from "../assets/innova.avif";
 import MahindraXUV700 from "../assets/MahindraXUV700.avif";
@@ -16,12 +22,23 @@ import RangeRover from "../assets/Luxurycar2.webp";
 import BMW from "../assets/Luxurycar3.webp";
 import Audi from "../assets/Luxurycar4.webp";
 import VolvoXC90 from "../assets/Luxurycar5.webp";
+import LocationInputs from "../components/pickupanddrop";
 
 
 
 
 
 const HomePage = () => {
+const [name, setName] = useState("");
+const [phone, setPhone] = useState("");
+const [tripType, setTripType] = useState("");
+const [carType, setCarType] = useState("");
+const [dateTime, setDateTime] = useState("");
+
+// For LocationInputs integration (important)
+const [pickup, setPickup] = useState("");
+const [drop, setDrop] = useState("");
+
   const cars = [
     { name: "Toyota Innova", desc: "Spacious & Comfortable", img: innova },
     { name: "Mahindra XUV700", desc: "Luxury & Power", img: MahindraXUV700 },
@@ -43,6 +60,50 @@ const HomePage = () => {
    {name: "Audi", desc: "Luxury & Reliability", img: Audi },
    {name: " Volvo XC90", desc: "Stylish & Dynamic", img: VolvoXC90 },
   ]
+    
+  const submitBooking = async () => {
+
+  if (
+    !name.trim() ||
+    !phone.trim() ||
+    !pickup.trim() ||
+    !drop.trim() ||
+    !carType ||
+    !dateTime
+  ) {
+    alert("Please first fill the booking form");
+    return;
+  }
+
+  const user = auth.currentUser;
+
+  if (!user) {
+    alert("Please login to book a ride");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "bookings"), {
+      userId: user.uid,
+      userEmail: user.email,
+      name,
+      phone,
+      pickup,
+      drop,
+      carType,
+      tripType,
+      dateTime,
+      status: "pending",
+      createdAt: serverTimestamp()
+    });
+
+    alert("Booking Successful");
+
+  } catch (error) {
+    alert(error.message);
+  }
+};
+
 
 
   return (
@@ -185,41 +246,76 @@ const HomePage = () => {
 
       {/* ================= QUICK BOOKING ================= */}
       <section id="booking" className="py-16 px-6 max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-10">
-          Quick Booking
-        </h2>
+  <h2 className="text-3xl font-bold text-center mb-10">
+    Quick Booking
+  </h2>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          <input className="border p-3 rounded-lg" placeholder="Name" />
-          <input className="border p-3 rounded-lg" placeholder="Mobile Number" />
-          <input className="border p-3 rounded-lg" placeholder="Pickup Location" />
-          <input className="border p-3 rounded-lg" placeholder="Drop Location" />
+  <div className="grid md:grid-cols-3 gap-6 ">
 
-          <select className="border p-3 rounded-lg">
-            <option>Trip Type</option>
-            <option>One Day</option>
-            <option>3 Day</option>
-            <option>5 Day</option>
-            <option>Outstation</option>
-          </select>
+    <input
+      className="border p-3 rounded-lg"
+      placeholder="Name"
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+    />
 
-          <select className="border p-3 rounded-lg">
-            <option>Car Type</option>
-            <option>Sedan</option>
-            <option>SUV</option>
-            <option>Luxury</option>
-          </select>
+    <input
+      className="border p-3 rounded-lg"
+      placeholder="Mobile Number"
+      value={phone}
+      onChange={(e) => setPhone(e.target.value)}
+    />
 
-          <input
-            type="datetime-local"
-            className="border p-3 rounded-lg md:col-span-3"
-          />
+    {/* <div className="md:col-span-2"> */}
+    <LocationInputs
+  pickup={pickup}
+  setPickup={setPickup}
+  drop={drop}
+  setDrop={setDrop}
+/>
 
-          <button className="bg-blue-700 text-white py-3 rounded-lg md:col-span-3 hover:bg-blue-800 transition">
-            Submit Booking Request
-          </button>
-        </div>
-      </section>
+  {/* </div> */}
+
+    <select
+      className="border p-3 rounded-lg"
+      value={tripType}
+      onChange={(e) => setTripType(e.target.value)}
+    >
+      <option value="">Trip Type</option>
+      <option>One Day</option>
+      <option>3 Day</option>
+      <option>5 Day</option>
+      <option>Outstation</option>
+    </select>
+
+    <select
+      className="border p-3 rounded-lg"
+      value={carType}
+      onChange={(e) => setCarType(e.target.value)}
+    >
+      <option value="">Car Type</option>
+      <option>Sedan</option>
+      <option>SUV</option>
+      <option>Luxury</option>
+    </select>
+
+    <input
+      type="datetime-local"
+      className="border p-3 rounded-lg md:col-span-3"
+      value={dateTime}
+      onChange={(e) => setDateTime(e.target.value)}
+    />
+
+    <button
+      className="bg-blue-700 text-white py-3 rounded-lg md:col-span-3 hover:bg-blue-800 transition cursor-pointer"
+      onClick={submitBooking}
+    >
+      Submit Booking Request
+    </button>
+
+  </div>
+</section>
+
 
       {/* ================= SERVICES ================= */}
       <section className="bg-gray-100 py-16 px-6">
