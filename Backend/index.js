@@ -2,7 +2,9 @@ const express = require("express");
 const db = require("./config/firebaseadmin");
 const dotenv = require("dotenv");
 dotenv.config();
+const cors = require("cors");
 const app = express();
+app.use(cors());
 app.use(express.json());
 const imageRoute = require("./routes/imageroute");
 

@@ -153,7 +153,7 @@ const BookingDetails = () => {
             </div>
           </div>
         </div>
-
+      
       </main>
     </div>
   );
