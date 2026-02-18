@@ -4,6 +4,7 @@ import LoginModal from "./components/LoginModal";
 import HomePage from "./pages/HomePage";
 import RentCarPage from "./components/RentCarPage";
 import "leaflet/dist/leaflet.css";
+import BookingDetails from "./pages/BookingDetails"
 
 import {
   createBrowserRouter,
@@ -37,8 +38,12 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <HomePage /> },
       { path: "/rent-your-car", element: <RentCarPage /> },
+
+      // ⭐ ADD BOOKING PAGE HERE
+      { path: "/booking", element: <BookingDetails /> },
     ],
   },
+
   {
       
         path : "/booking-details",
@@ -47,8 +52,9 @@ const router = createBrowserRouter([
   }
 
  ,
-
+ feature/firebase-cloudinary-setup
 ]);
+
 
 
 function App() {

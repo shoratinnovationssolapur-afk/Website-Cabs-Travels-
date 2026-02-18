@@ -1,12 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp,getDocs } from "firebase/firestore";
 
 
-
-
-import outstationcar from "../assets/OutstationCab.webp";
 import innova from "../assets/innova.avif";
 import MahindraXUV700 from "../assets/MahindraXUV700.avif";
 import HyundaiCreta from "../assets/HyundaiCreta.avif";
@@ -22,10 +19,14 @@ import RangeRover from "../assets/Luxurycar2.webp";
 import BMW from "../assets/Luxurycar3.webp";
 import Audi from "../assets/Luxurycar4.webp";
 import VolvoXC90 from "../assets/Luxurycar5.webp";
+
+import outstationcar from "../assets/OutstationCab.webp";
+
 import LocationInputs from "../components/pickupanddrop";
 import ServiceCard from "../components/ServiceCard";
 import ServiceModal from "../components/ServiceModal";
 import RouteFare from "../components/RouteFare";
+
 
 
 
@@ -44,30 +45,112 @@ const HomePage = () => {
   const [selectedService, setSelectedService] = useState(null);
   const [heroPickup, setHeroPickup] = useState("");
   const [heroDrop, setHeroDrop] = useState("");
+  const [vehicles, setVehicles] = useState([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+
+  const navigate = useNavigate();
 
 
 
-  const cars = [
-    { name: "Toyota Innova", desc: "Spacious & Comfortable", img: innova },
-    { name: "Mahindra XUV700", desc: "Luxury & Power", img: MahindraXUV700 },
-    { name: "Hyundai Creta", desc: "Premium Travel Experience", img: HyundaiCreta },
-    { name: "Suzuki Grand Vitara", desc: "Versatile & Stylish", img: GrandVitara },
-    { name: "Maruti Brezza", desc: "Compact & Efficient", img: Brezza },
-  ];
-  const SedenCars = [
-    { name: "Hyundai Aura", desc: "Elegant & Comfortable", img: HyundaiAura },
-    { name: "Suzuki Dzire", desc: "Stylish & Smooth Ride", img: SuzukiDzire },
-    { name: "Hyndai Verna", desc: "Spacious & Fuel Efficient", img: HyundaiVerna },
-    { name: "Honda Amaze", desc: "Premium & Comfortable", img: HondaAmaze },
-    { name: "Tata Tigor", desc: "Stylish & Reliable", img: TataTigor },
-  ];
-  const LuxuryCars = [
-    { name: "Mercedes-Benz S-Class", desc: "Luxury & Performance", img: MercedesBenzSClass },
-    { name: "Range Rover", desc: "Elegant & Powerful", img: RangeRover },
-    { name: "BMW", desc: "Sophisticated & Comfortable", img: BMW },
-    { name: "Audi", desc: "Luxury & Reliability", img: Audi },
-    { name: " Volvo XC90", desc: "Stylish & Dynamic", img: VolvoXC90 },
-  ]
+
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "vehicles"));
+
+        const vehicleList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        setVehicles(vehicleList);
+
+      } catch (error) {
+        console.error("Error fetching vehicles:", error);
+      }
+    };
+
+    fetchVehicles();
+  }, []);
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("vehicle_id");
+
+  if (id) setSelectedVehicleId(id);
+}, []);
+
+
+
+  const seedVehicles = async () => {
+    const vehicles = [
+
+      {
+        name: "Toyota Innova",
+        type: "SUV",
+        desc: "Spacious & Comfortable",
+        imageUrl:
+          innova
+      },
+      {
+        name: "Mahindra XUV700",
+        type: "SUV",
+        desc: "Luxury & Power",
+        imageUrl:
+          MahindraXUV700
+      },
+
+      {
+        name: "Hyundai Creta",
+        type: "SUV",
+        desc: "Premium Travel Experience",
+        imageUrl:
+          HyundaiCreta
+      },
+      {
+        name: "Suzuki Brezza",
+        type: "SUV",
+        desc: "Smooth Ride",
+        imageUrl:Brezza
+          
+      },
+      {
+        name: "Grand Vitara",
+        type: "SUV",
+        desc: "Versatile & Stylish",
+        imageUrl:GrandVitara
+      
+      },
+
+     { name: "Hyundai Aura", type: "Sedan", desc: "Elegant & Comfortable", imageUrl: HyundaiAura },
+    { name: "Suzuki Dzire", type: "Sedan", desc: "Stylish & Smooth Ride", imageUrl: SuzukiDzire },
+    { name: "Hyndai Verna", type: "Sedan", desc: "Spacious & Fuel Efficient", imageUrl: HyundaiVerna },
+    { name: "Honda Amaze", type: "Sedan", desc: "Premium & Comfortable", imageUrl: HondaAmaze },
+    { name: "Tata Tigor", type: "Sedan", desc: "Stylish & Reliable", imageUrl: TataTigor },
+
+    {name: "Mercedes-Benz S-Class", desc: "Luxury & Performance", imageUrl:MercedesBenzSClass },
+   {name: "Range Rover", desc: "Elegant & Powerful", imageUrl:RangeRover },
+   {name: "BMW", desc: "Sophisticated & Comfortable", imageUrl: BMW },
+   {name: "Audi", desc: "Luxury & Reliability", imageUrl: Audi },
+   {name: " Volvo XC90", desc: "Stylish & Dynamic", imageUrl: VolvoXC90 },
+      
+
+    ];
+    
+
+
+    for (const vehicle of vehicles) {
+      await addDoc(collection(db, "vehicles"), vehicle);
+    }
+
+    alert("Vehicles added successfully");
+  };
+
+
+
+
+
+
 
   const submitBooking = async () => {
 
@@ -92,20 +175,20 @@ const HomePage = () => {
 
     try {
       await addDoc(collection(db, "bookings"), {
-        userId: user.uid,
-        userEmail: user.email,
-        name,
-        phone,
-        pickup,
-        drop,
-        carType,
-        tripType,
-        dateTime,
-        status: "pending",
-        createdAt: serverTimestamp()
-      });
-
-      alert("Booking Successful");
+  userId: user.uid,
+  userEmail: user.email,
+  vehicleId: selectedVehicleId,   // ⭐ IMPORTANT
+  name,
+  phone,
+  pickup,
+  drop,
+  carType,
+  tripType,
+  dateTime,
+  status: "pending",
+  createdAt: serverTimestamp()
+});
+      alert("Booking request submitted successfully!");
 
     } catch (error) {
       alert(error.message);
@@ -140,12 +223,12 @@ const HomePage = () => {
 
 
       {/* ================= HERO SECTION ================= */}
-      
-        
 
-        {/* Hero Content */}
-       
-     <section className="relative h-screen flex items-center justify-center text-white overflow-hidden">
+
+
+      {/* Hero Content */}
+
+      <section className="relative h-screen flex items-center justify-center text-white overflow-hidden">
 
         {/* Background Image */}
         <div
@@ -185,67 +268,42 @@ const HomePage = () => {
               Book Ride
             </a>
           </div>
-<div className="flex justify-center gap-4 mt-22">
+          <div className="flex justify-center gap-4 mt-22">
 
-  {["Sedan", "SUV", "Luxury"].map((type) => (
-    <button
-      key={type}
-      onClick={() => {
-        const id = type.toUpperCase(); // sedan, suv, luxury
+            {["Sedan", "SUV", "Luxury"].map((type) => (
+              <button
+                key={type}
+                onClick={() => {
+                  const id = type.toUpperCase(); // sedan, suv, luxury
 
-        document
-          .getElementById(id)
-          ?.scrollIntoView({ behavior: "smooth" });
-      }}
-      className="bg-white/20 px-6 py-2 rounded-full hover:bg-yellow-400 hover:text-black transition cursor-pointer font-semibold backdrop-blur-sm"
-    >
-      {type === "Sedan"
-        ? "🚗"
-        : type === "SUV"
-        ? "🚙"
-        : "👑"}{" "}
-      {type}
-    </button>
-  ))}
+                  document
+                    .getElementById(id)
+                    ?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="bg-white/20 px-6 py-2 rounded-full hover:bg-yellow-400 hover:text-black transition cursor-pointer font-semibold backdrop-blur-sm"
+              >
+                {type === "Sedan"
+                  ? "🚗"
+                  : type === "SUV"
+                    ? "🚙"
+                    : "👑"}{" "}
+                {type}
+              </button>
+            ))}
 
-</div>
-<div className=" text-white  inline-block relative top-10 font-semibold animate-pulse">
-  ⭐ #1 Trusted Cab Service in Solapur
-</div>
+          </div>
+          <div className=" text-white  inline-block relative top-10 font-semibold animate-pulse">
+            ⭐ #1 Trusted Cab Service in Solapur
+          </div>
 
 
 
         </div>
-        
+
       </section>
 
-      
 
-      {/* ⭐ WORKING QUICK FARE ESTIMATE */}
-      {/* <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl flex flex-col md:flex-row gap-3 mt-6 justify-center items-center">
 
-        <input
-          value={heroPickup}
-          onChange={(e) => setHeroPickup(e.target.value)}
-          placeholder="Pickup"
-          className="px-3 py-2 rounded text-black w-full md:w-auto"
-        />
-
-        <input
-          value={heroDrop}
-          onChange={(e) => setHeroDrop(e.target.value)}
-          placeholder="Drop"
-          className="px-3 py-2 rounded text-black w-full md:w-auto"
-        />
-
-        <button
-          onClick={handleHeroFare}
-          className="bg-yellow-400 px-5 py-2 rounded font-semibold hover:scale-105 transition"
-        >
-          Get Fare
-        </button>
-
-      </div> */}
 
       {/* ================= SUV SHOWCASE ================= */}
       <section id="SUV" className="py-16 px-6 bg-white ">
@@ -255,26 +313,38 @@ const HomePage = () => {
 
         {/* Scroll Container */}
         <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
-          {cars.map((car, index) => (
-            <div
-              key={index}
-              className="min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group"
-            >
-              <img
-                src={car.img}
-                alt={car.name}
-                className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-              />
+          {vehicles
+            .filter(v => v.type === "SUV")
+            .map(vehicle => (
+              <div
+                key={vehicle.id}
+                onClick={() =>
+                   navigate(`/booking?vehicle_id=${vehicle.id}`)
 
-              <div className="p-4 text-center">
-                <h3 className="font-semibold text-lg">{car.name}</h3>
-                <p className="text-gray-600 text-sm">{car.desc}</p>
+                }
+
+                className="min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group"
+
+              >
+                <img
+                  src={vehicle.imageUrl}
+                  alt={vehicle.name}
+                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+
+                <div className="p-4 text-center">
+                  <h3 className="font-semibold text-lg">{vehicle.name}</h3>
+                  <p className="text-gray-600 text-sm">{vehicle.desc}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+
 
         </div>
       </section>
+
+     
+
 
       {/*SEDAN SHOWCASE*/}
       <section id="SEDAN" className=" py-16 px-6  bg-white">
@@ -283,23 +353,27 @@ const HomePage = () => {
         </h2>
         {/* Scroll Container */}
         <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
-          {SedenCars.map((Sedancar, index) => (
-            <div
-              key={index}
-              className="min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group"
-            >
-              <img
-                src={Sedancar.img}
-                alt={Sedancar.name}
-                className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-              />
+          {vehicles
+            .filter(v => v.type === "Sedan")
+            .map(vehicle => (
+              <div key={vehicle.id}
+                onClick={() =>
+                  navigate(`/booking?vehicle_id=${vehicle.id}`)
+                }
 
-              <div className="p-4 text-center">
-                <h3 className="font-semibold text-lg">{Sedancar.name}</h3>
-                <p className="text-gray-600 text-sm">{Sedancar.desc}</p>
+                className="min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group">
+                <img
+                  src={vehicle.imageUrl}
+                  alt={vehicle.name}
+                  className="w-full h-48 object-cover"
+                />
+
+                <div className="p-4 text-center">
+                  <h3 className="font-semibold text-lg">{vehicle.name}</h3>
+                  <p className="text-gray-600 text-sm">{vehicle.desc}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
 
         </div>
       </section>
@@ -310,23 +384,27 @@ const HomePage = () => {
         </h2>
         {/* Scroll Container */}
         <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
-          {LuxuryCars.map((Luxurycar, index) => (
-            <div
-              key={index}
-              className="min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group"
-            >
-              <img
-                src={Luxurycar.img}
-                alt={Luxurycar.name}
-                className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-              />
+          {vehicles
+            .filter(v => v.type === "Luxury")
+            .map(vehicle => (
+              <div key={vehicle.id}
+                onClick={() =>
+                  navigate(`/booking?vehicle_id=${vehicle.id}`)
+                }
 
-              <div className="p-4 text-center">
-                <h3 className="font-semibold text-lg">{Luxurycar.name}</h3>
-                <p className="text-gray-600 text-sm">{Luxurycar.desc}</p>
+                className="min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group">
+                <img
+                  src={vehicle.imageUrl}
+                  alt={vehicle.name}
+                  className="w-full h-48 object-cover"
+                />
+
+                <div className="p-4 text-center">
+                  <h3 className="font-semibold text-lg">{vehicle.name}</h3>
+                  <p className="text-gray-600 text-sm">{vehicle.desc}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
 
         </div>
 
@@ -366,9 +444,9 @@ const HomePage = () => {
 
 
           {/* </div> */}
-        
 
-          <select 
+
+          <select
             className="border p-3 rounded-lg"
             value={tripType}
             onChange={(e) => setTripType(e.target.value)}
@@ -391,7 +469,7 @@ const HomePage = () => {
             <option>Luxury</option>
           </select>
 
-         
+
 
           <input
             type="datetime-local"
@@ -469,128 +547,128 @@ const HomePage = () => {
 
       </section>
       {/* ================= ABOUT US ================= */}
-<section className="py-20 px-6 bg-white">
-  <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
 
-    {/* LEFT CONTENT */}
-    <div>
-      <h2 className="text-4xl font-bold mb-6 text-gray-900">
-        About Rathod Cabs & Travels
-      </h2>
+          {/* LEFT CONTENT */}
+          <div>
+            <h2 className="text-4xl font-bold mb-6 text-gray-900">
+              About Rathod Cabs & Travels
+            </h2>
 
-      <p className="text-gray-700 mb-4 leading-relaxed">
-        Rathod Cabs & Travels is a trusted cab service provider offering
-        comfortable, safe, and reliable transportation across Solapur,
-        Pune, Mumbai, Goa, and nearby destinations. We specialize in
-        outstation travel, airport transfers, and corporate rides with
-        well-maintained vehicles and professional drivers.
-      </p>
+            <p className="text-gray-700 mb-4 leading-relaxed">
+              Rathod Cabs & Travels is a trusted cab service provider offering
+              comfortable, safe, and reliable transportation across Solapur,
+              Pune, Mumbai, Goa, and nearby destinations. We specialize in
+              outstation travel, airport transfers, and corporate rides with
+              well-maintained vehicles and professional drivers.
+            </p>
 
-      <p className="text-gray-700 leading-relaxed">
-        Our mission is to provide a stress-free travel experience with
-        punctual service, transparent pricing, and customer-first support.
-        Whether it’s a business trip or a family vacation, we ensure every
-        journey is smooth and memorable.
-      </p>
-    </div>
+            <p className="text-gray-700 leading-relaxed">
+              Our mission is to provide a stress-free travel experience with
+              punctual service, transparent pricing, and customer-first support.
+              Whether it’s a business trip or a family vacation, we ensure every
+              journey is smooth and memorable.
+            </p>
+          </div>
 
-    {/* RIGHT IMAGE */}
-    <div>
-      <img
-        src={outstationcar}
-        alt="Cab Service"
-        className="rounded-2xl shadow-lg"
-      />
-    </div>
+          {/* RIGHT IMAGE */}
+          <div>
+            <img
+              src={outstationcar}
+              alt="Cab Service"
+              className="rounded-2xl shadow-lg"
+            />
+          </div>
 
-  </div>
-</section>
-{/* ================= WHY CHOOSE US ================= */}
-<section className="py-20 px-6 bg-gray-100">
-  <div className="max-w-6xl mx-auto text-center">
+        </div>
+      </section>
+      {/* ================= WHY CHOOSE US ================= */}
+      <section className="py-20 px-6 bg-gray-100">
+        <div className="max-w-6xl mx-auto text-center">
 
-    <h2 className="text-4xl font-bold mb-12">
-      Why Choose Us
-    </h2>
+          <h2 className="text-4xl font-bold mb-12">
+            Why Choose Us
+          </h2>
 
-    <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
 
-      {/* SAFE & RELIABLE */}
-      <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-        <div className="text-4xl mb-4">🛡️</div>
-        <h3 className="text-xl font-semibold mb-2">
-          Safe & Reliable
-        </h3>
-        <p className="text-gray-600">
-          Experienced drivers and well-maintained vehicles ensure a
-          secure and comfortable journey every time.
-        </p>
-      </div>
+            {/* SAFE & RELIABLE */}
+            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+              <div className="text-4xl mb-4">🛡️</div>
+              <h3 className="text-xl font-semibold mb-2">
+                Safe & Reliable
+              </h3>
+              <p className="text-gray-600">
+                Experienced drivers and well-maintained vehicles ensure a
+                secure and comfortable journey every time.
+              </p>
+            </div>
 
-      {/* ON-TIME SERVICE */}
-      <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-        <div className="text-4xl mb-4">⏱️</div>
-        <h3 className="text-xl font-semibold mb-2">
-          Always On Time
-        </h3>
-        <p className="text-gray-600">
-          We value your time and guarantee punctual pickups and
-          timely drop-offs for every trip.
-        </p>
-      </div>
+            {/* ON-TIME SERVICE */}
+            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+              <div className="text-4xl mb-4">⏱️</div>
+              <h3 className="text-xl font-semibold mb-2">
+                Always On Time
+              </h3>
+              <p className="text-gray-600">
+                We value your time and guarantee punctual pickups and
+                timely drop-offs for every trip.
+              </p>
+            </div>
 
-      {/* AFFORDABLE PRICING */}
-      <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-        <div className="text-4xl mb-4">💰</div>
-        <h3 className="text-xl font-semibold mb-2">
-          Transparent Pricing
-        </h3>
-        <p className="text-gray-600">
-          No hidden charges — get fair and competitive pricing for
-          all types of journeys.
-        </p>
-      </div>
+            {/* AFFORDABLE PRICING */}
+            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+              <div className="text-4xl mb-4">💰</div>
+              <h3 className="text-xl font-semibold mb-2">
+                Transparent Pricing
+              </h3>
+              <p className="text-gray-600">
+                No hidden charges — get fair and competitive pricing for
+                all types of journeys.
+              </p>
+            </div>
 
-      {/* 24x7 SUPPORT */}
-      <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-        <div className="text-4xl mb-4">📞</div>
-        <h3 className="text-xl font-semibold mb-2">
-          24×7 Customer Support
-        </h3>
-        <p className="text-gray-600">
-          Our support team is available round-the-clock to assist
-          you anytime, anywhere.
-        </p>
-      </div>
+            {/* 24x7 SUPPORT */}
+            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+              <div className="text-4xl mb-4">📞</div>
+              <h3 className="text-xl font-semibold mb-2">
+                24×7 Customer Support
+              </h3>
+              <p className="text-gray-600">
+                Our support team is available round-the-clock to assist
+                you anytime, anywhere.
+              </p>
+            </div>
 
-      {/* CLEAN VEHICLES */}
-      <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-        <div className="text-4xl mb-4">✨</div>
-        <h3 className="text-xl font-semibold mb-2">
-          Clean & Comfortable
-        </h3>
-        <p className="text-gray-600">
-          Enjoy a pleasant ride in sanitized, spacious, and
-          comfortable vehicles.
-        </p>
-      </div>
+            {/* CLEAN VEHICLES */}
+            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+              <div className="text-4xl mb-4">✨</div>
+              <h3 className="text-xl font-semibold mb-2">
+                Clean & Comfortable
+              </h3>
+              <p className="text-gray-600">
+                Enjoy a pleasant ride in sanitized, spacious, and
+                comfortable vehicles.
+              </p>
+            </div>
 
-      {/* WIDE COVERAGE */}
-      <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-        <div className="text-4xl mb-4">🌍</div>
-        <h3 className="text-xl font-semibold mb-2">
-          Wide Service Area
-        </h3>
-        <p className="text-gray-600">
-          Serving Solapur, Pune, Mumbai, Goa, and many nearby
-          destinations for your convenience.
-        </p>
-      </div>
+            {/* WIDE COVERAGE */}
+            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+              <div className="text-4xl mb-4">🌍</div>
+              <h3 className="text-xl font-semibold mb-2">
+                Wide Service Area
+              </h3>
+              <p className="text-gray-600">
+                Serving Solapur, Pune, Mumbai, Goa, and many nearby
+                destinations for your convenience.
+              </p>
+            </div>
 
-    </div>
+          </div>
 
-  </div>
-</section>
+        </div>
+      </section>
 
 
 
@@ -608,4 +686,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default HomePage;   
