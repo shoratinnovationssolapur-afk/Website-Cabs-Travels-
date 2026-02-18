@@ -4,6 +4,7 @@ import LoginModal from "./components/LoginModal";
 import HomePage from "./pages/HomePage";
 import RentCarPage from "./components/RentCarPage";
 import "leaflet/dist/leaflet.css";
+import BookingDetails from "./pages/BookingDetails"
 
 import {
   createBrowserRouter,
