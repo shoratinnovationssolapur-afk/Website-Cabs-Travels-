@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import HomePage from "../pages/Homepage";
+// import HomePage from "../pages/Homepage";
 
 const Navbar = ({ openLogin }) => {
   const navigate = useNavigate();
@@ -12,9 +12,9 @@ const Navbar = ({ openLogin }) => {
   };
 
   return (
-    <nav className="bg-black text-white px-3 py-2 flex justify-between items-center">
+    <nav className=" text-white bg-black  px-3 py-2 flex justify-between items-center">
 
-      <h2 className="text-xl font-bold">
+      <h2 className="text-xl font-bold text-yellow-500">
         Rathod Cabs & Travels
       </h2>
 
