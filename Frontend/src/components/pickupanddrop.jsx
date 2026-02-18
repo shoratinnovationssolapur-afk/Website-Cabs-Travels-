@@ -68,7 +68,7 @@ const searchLocation = (query, setResults) => {
             searchLocation(e.target.value, setPickupSuggestions);
           }}
           placeholder="Pickup Location"
-          className="border p-3 rounded-lg w-full"
+          className="border p-3 rounded-lg w-full placeholder-black"
         />
 
         {/* Suggestions */}
@@ -108,7 +108,7 @@ const searchLocation = (query, setResults) => {
             searchLocation(e.target.value, setDropSuggestions);
           }}
           placeholder="Drop Location"
-          className="border p-3 rounded-lg w-full"
+          className="border p-3 rounded-lg w-full placeholder-black"
         />
 
         {/* Suggestions */}

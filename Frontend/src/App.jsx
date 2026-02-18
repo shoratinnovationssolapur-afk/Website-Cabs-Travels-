@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Navbar from "./components/Navbar";
 import LoginModal from "./components/LoginModal";
-import HomePage from "./pages/Homepage";
+import HomePage from "./pages/HomePage";
 import RentCarPage from "./components/RentCarPage";
+import "leaflet/dist/leaflet.css";
+
 import {
   createBrowserRouter,
   RouterProvider,
