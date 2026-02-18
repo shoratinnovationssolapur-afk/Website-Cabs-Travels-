@@ -18,9 +18,14 @@
     "nodemon": "^3.1.11"
   },
   "dependencies": {
+
+    "cloudinary": "^2.9.0",
+
+    "multer": "^2.0.2",
     "@react-google-maps/api": "^2.20.8",
     "firebase-admin": "^13.6.1",
     "leaflet": "^1.9.4",
     "react-leaflet": "^5.0.0"
+
   }
 }

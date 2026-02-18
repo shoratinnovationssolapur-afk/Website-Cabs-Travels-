@@ -4,6 +4,9 @@ const dotenv = require("dotenv");
 dotenv.config();
 const app = express();
 app.use(express.json());
+const imageRoute = require("./routes/imageroute");
+
+app.use('/api/images', imageRoute);
 
 app.post("/add-user", async (req, res) => {
   const docRef = await db.collection("users").add(req.body);
