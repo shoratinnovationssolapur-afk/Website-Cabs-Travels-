@@ -595,8 +595,8 @@ const HomePage = () => {
 
 
       {/* ================= FOOTER ================= */}
-      <footer className="bg-indigo-900 text-white py-8 px-6 text-center">
-        <p className="font-semibold">
+      <footer className="bg-yellow-500 text-white font-bold py-8 px-6 text-center">
+        <p className="font-bold">
           Rathod Cabs & Travels
         </p>
         <p>Solapur | Pune | Mumbai | Goa</p>
