@@ -1,8 +1,11 @@
 import { useState } from "react";
 import Navbar from "./components/Navbar";
 import LoginModal from "./components/LoginModal";
-import HomePage from "./pages/Homepage";
+import HomePage from "./pages/HomePage";
 import RentCarPage from "./components/RentCarPage";
+import "leaflet/dist/leaflet.css";
+import BookingDetails from "./pages/BookingDetails"
+
 import {
   createBrowserRouter,
   RouterProvider,
@@ -37,9 +40,12 @@ const router = createBrowserRouter([
       { path: "/rent-your-car", element: <RentCarPage /> },
     ],
   },
-  
-  { path: "/booking-details", element: <BookingDetails /> },
- 
+  {
+      
+        path : "/booking-details",
+        element : <BookingDetails />
+      
+  }
 ]);
 
 
