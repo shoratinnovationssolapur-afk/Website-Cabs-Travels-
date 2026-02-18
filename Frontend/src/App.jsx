@@ -38,15 +38,13 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <HomePage /> },
       { path: "/rent-your-car", element: <RentCarPage /> },
+
+      // ⭐ ADD BOOKING PAGE HERE
+      { path: "/booking", element: <BookingDetails /> },
     ],
   },
-  {
-      
-        path : "/booking-details",
-        element : <BookingDetails />
-      
-  }
 ]);
+
 
 
 function App() {
