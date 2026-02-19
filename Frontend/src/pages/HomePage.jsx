@@ -63,6 +63,12 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
+  if (window.location.hash === "#booking") {
+    document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" });
+  }
+}, []);
+
+  useEffect(() => {
     const fetchVehicles = async () => {
       try {
         const snapshot = await getDocs(collection(db, "vehicles"));
