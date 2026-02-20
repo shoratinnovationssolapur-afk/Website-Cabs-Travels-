@@ -33,6 +33,31 @@ import { useAuthContext } from "../context/AuthContext";
 import AdminDashboard from "./AdminDashboard";
 import UserHome from "./UserHome";
 
+const [dateTime, setDateTime] = useState("");
+const [error, setError] = useState("");
+
+// Get current date/time in YYYY-MM-DDTHH:MM format for the 'min' attribute
+const getCurrentDateTime = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000; // adjust for local time
+  return new Date(now - offset).toISOString().slice(0, 16);
+};
+
+const handleDateChange = (e) => {
+  const selectedValue = e.target.value;
+  const now = new Date();
+  const selectedDate = new Date(selectedValue);
+
+  setDateTime(selectedValue);
+
+  // Validation: Check if selected time is in the past
+  if (selectedDate < now) {
+    setError("⚠️ Please select a future date and time.");
+  } else {
+    setError(""); // Clear error if valid
+  }
+};
+
 const HomePage = () => {
   const { role } = useAuthContext();
 
@@ -277,7 +302,7 @@ const submitBooking = async () => {
 
           <div className="flex justify-center gap-6 flex-wrap">
             <a
-              href="tel:+919999999999"
+            href="https://wa.me/9130067841" target="_blank" rel="noreferrer" 
               className="bg-yellow-400 text-black px-8 py-3 rounded-full font-semibold hover:scale-105 transition"
             >
               Call Now
