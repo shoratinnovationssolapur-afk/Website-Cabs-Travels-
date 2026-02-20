@@ -9,10 +9,13 @@ import AdminVehicles from "./pages/AdminVehicles";
 import AdminBookings from "./pages/AdminBookings";
 import AdminUsers from "./pages/AdminUsers";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminDrivers from "./pages/AdminDrivers";
 
 import AdminRoute from "./components/AdminRoute";
 import { AuthProvider } from "./context/AuthContext";
 import LogoutModal from "./components/LogoutModal";
+import RoleMismatchModal from "./components/RoleMismatchModal";
+
 
 import {
   createBrowserRouter,
@@ -25,6 +28,8 @@ import {
 function Layout() {
   const [showLogin, setShowLogin] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+    const [showMismatch, setShowMismatch] = useState(false);
+    const [mismatchMsg, setMismatchMsg] = useState("");
 
   return (
     <>
@@ -34,11 +39,23 @@ function Layout() {
       />
 
       {showLogin && (
-        <LoginModal closeModal={() => setShowLogin(false)} />
-      )}
+  <LoginModal
+    closeModal={() => setShowLogin(false)}
+    showMismatch={(msg) => {
+      setMismatchMsg(msg);
+      setShowMismatch(true);
+    }}
+  />
+)}
 
       {showLogout && (
         <LogoutModal closeModal={() => setShowLogout(false)} />
+      )}
+      {showMismatch && (
+        <RoleMismatchModal
+          message={mismatchMsg}
+          close={() => setShowMismatch(false)}
+        />
       )}
 
       <Outlet />
@@ -91,6 +108,14 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
+      {
+  path: "/admin/drivers",
+  element: (
+    <AdminRoute>
+      <AdminDrivers />
+    </AdminRoute>
+  ),
+},
 
     ],
   },

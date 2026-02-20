@@ -33,26 +33,40 @@ const Navbar = ({ openLogin, openLogout,loading }) => {
   {/* ===== ADMIN NAVBAR ===== */}
   {user && role === "Admin" && (
     <>
+<button
+        onClick={() => navigate("/admin")}
+        className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer"
+      >
+        Home
+      </button>
+
       <button
         onClick={() => navigate("/admin/vehicles")}
-        className="bg-white text-black px-4 py-2 rounded font-semibold"
+        className="bg-white text-black  hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer"
       >
         Manage Vehicles
       </button>
 
       <button
         onClick={() => navigate("/admin/bookings")}
-        className="bg-white text-black px-4 py-2 rounded font-semibold"
+        className="bg-white text-black  hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer"
       >
         Bookings
       </button>
 
       <button
         onClick={() => navigate("/admin/users")}
-        className="bg-white text-black px-4 py-2 rounded font-semibold"
+        className="bg-white text-black  hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer"
       >
         Users
       </button>
+
+      <button
+  onClick={() => navigate("/admin/drivers")}
+  className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold"
+>
+  Drivers
+</button>
 
       <button
         onClick={openLogout}
