@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -7,21 +8,37 @@ import {
 } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+
 const LoginModal = ({ closeModal }) => {
+
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
+  // ⭐ ADD THIS (REQUIRED)
+  const [role, setRole] = useState("User");
+  const [adminCode, setAdminCode] = useState("");
+
+  const ADMIN_SECRET = "RATHOD_ADMIN_2026";
+  const navigate = useNavigate();
+
+
+
+
   // ================= GOOGLE LOGIN =================
   const signInWithGoogle = async () => {
     try {
-      const provider = new GoogleAuthProvider();
 
+      if (role === "Admin" && adminCode !== ADMIN_SECRET) {
+        alert("Invalid Admin Code");
+        return;
+      }
+
+      const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Save user if new
       const userRef = doc(db, "users", user.uid);
       const snap = await getDoc(userRef);
 
@@ -30,58 +47,141 @@ const LoginModal = ({ closeModal }) => {
           name: user.displayName,
           email: user.email,
           photo: user.photoURL,
+          role,   // ⭐ SAVED HERE
           createdAt: new Date()
         });
       }
 
       alert("Login Successful");
+
+      if (role === "Admin") {
+        navigate("/admin/vehicles");   // Admin dashboard
+      } else {
+        navigate("/");                 // User home
+      }
+
       closeModal();
+
 
     } catch (error) {
       alert(error.message);
     }
   };
+
+
 
   // ================= EMAIL REGISTER =================
-  const registerUser = async () => {
-    try {
-      const userCred = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+  
+const registerUser = async () => {
+  try {
+    const userCred = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
-      await setDoc(doc(db, "users", userCred.user.uid), {
-        name,
-        email,
-        createdAt: new Date()
-      });
+    await setDoc(doc(db, "users", userCred.user.uid), {
+      name,
+      email,
+      role: role,
+      createdAt: new Date()
+    });
 
-      alert("Account Created");
-      closeModal();
+    alert("Account Created");
+    // navigate({loginUser})
 
-    } catch (error) {
-      alert(error.message);
+    // ⭐ REDIRECT BASED ON ROLE
+    if (role === "Admin") {
+      window.location.href = "/admin/vehicles";
+    } else {
+      window.location.href = "/";
     }
-  };
+
+    closeModal();
+
+  } catch (error) {
+    alert(error.message);
+  }
+};
+
+
+
 
   // ================= EMAIL LOGIN =================
-  const loginUser = async () => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
+ const loginUser = async () => {
+  try {
 
-      alert("Login Successful");
-      closeModal();
+    await signInWithEmailAndPassword(auth, email, password);
 
-    } catch (error) {
-      alert(error.message);
+    const user = auth.currentUser;
+
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+
+    if (!snap.exists()) {
+      alert("User profile not found");
+      return;
     }
-  };
+
+    const userData = snap.data();
+
+    // 🔴 If admin login → check code
+    if (userData.role === "Admin") {
+
+      if (adminCode !== ADMIN_SECRET) {
+        alert("Invalid Admin Code");
+        return;
+      }
+
+      alert("Admin Login Successful");
+
+      // Redirect admin
+      window.location.href = "/admin/vehicles";
+
+    } else {
+
+      alert("User Login Successful");
+      window.location.href = "/";
+
+    }
+
+    closeModal();
+
+  } catch (error) {
+    alert(error.message);
+  }
+};
+
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
 
       <div className="bg-white rounded-xl w-[450px] p-8 relative">
+
+        {/* ROLE SELECTOR */}
+        <div className="flex gap-4 mb-4">
+
+          <label>
+            <input
+              type="radio"
+              value="User"
+              checked={role === "User"}
+              onChange={(e) => setRole(e.target.value)}
+            />
+            User
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              value="Admin"
+              checked={role === "Admin"}
+              onChange={(e) => setRole(e.target.value)}
+            />
+            Admin
+          </label>
+
+        </div>
 
         {/* GOOGLE BUTTON */}
         <button
@@ -121,6 +221,16 @@ const LoginModal = ({ closeModal }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            {!isRegister && role === "Admin" && (
+              <input
+                type="password"
+                placeholder="Enter Admin Code"
+                className="w-full border p-3 rounded mb-4"
+                value={adminCode}
+                onChange={(e) => setAdminCode(e.target.value)}
+              />
+            )}
+
 
             <button
               onClick={loginUser}
