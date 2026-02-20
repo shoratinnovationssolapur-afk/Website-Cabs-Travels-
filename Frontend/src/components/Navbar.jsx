@@ -1,46 +1,105 @@
 import { useNavigate } from "react-router-dom";
-// import HomePage from "../pages/Homepage";
+import { useAuthContext } from "../context/AuthContext";
+import { auth } from "../firebase";
 
-const Navbar = ({ openLogin }) => {
+
+const Navbar = ({ openLogin, openLogout,loading }) => {
   const navigate = useNavigate();
 
-  const openRentPage = () => {
-    navigate("/rent-your-car");
-  };
-  const openHomePage = () => {
-    navigate("/");
-  };
+  const { user, role } = useAuthContext();   // ⭐ IMPORTANT
+
+  const goHome = () => navigate("/");
+  const goRent = () => navigate("/rent-your-car");
+
+  const goAdminVehicles = () => navigate("/admin/vehicles");
+  const goAdminBookings = () => navigate("/admin/bookings");
+  
+  if(loading) return null;
 
   return (
-    <nav className=" text-white bg-black  px-3 py-2 flex justify-between items-center">
+    <nav className="text-white bg-black px-3 py-2 flex justify-between items-center">
 
-      <h2 className="text-xl font-bold text-yellow-500">
+      {/* LOGO */}
+      <h2
+        onClick={goHome}
+        className="text-xl font-bold text-yellow-500 cursor-pointer"
+      >
         Rathod Cabs & Travels
       </h2>
 
-      <div className=" flex gap-4 ">
+      {/* RIGHT SIDE */}
+     <div className="flex gap-4">
+
+  {/* ===== ADMIN NAVBAR ===== */}
+  {user && role === "Admin" && (
+    <>
+      <button
+        onClick={() => navigate("/admin/vehicles")}
+        className="bg-white text-black px-4 py-2 rounded font-semibold"
+      >
+        Manage Vehicles
+      </button>
 
       <button
-       onClick={openHomePage}
-        className="bg-white hover:bg-yellow-500 text-black px-4 py-2 rounded font-semibold "
+        onClick={() => navigate("/admin/bookings")}
+        className="bg-white text-black px-4 py-2 rounded font-semibold"
+      >
+        Bookings
+      </button>
+
+      <button
+        onClick={() => navigate("/admin/users")}
+        className="bg-white text-black px-4 py-2 rounded font-semibold"
+      >
+        Users
+      </button>
+
+      <button
+        onClick={openLogout}
+        className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold  cursor-pointer"
+      >
+        Logout
+      </button>
+    </>
+  )}
+
+  {/* ===== USER NAVBAR ===== */}
+  {user && role === "User" && (
+    <>
+      <button
+        onClick={() => navigate("/")}
+        className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer"
       >
         Home
       </button>
 
       <button
-        onClick={openRentPage}
-        className="bg-white hover:bg-yellow-500 text-black px-4 py-2 rounded font-semibold "
+        onClick={() => navigate("/rent-your-car")}
+        className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer"
       >
-        Do you want to rent your car? Click here
+        Rent Your Car
       </button>
 
       <button
-        onClick={openLogin}
-        className="bg-white hover:bg-yellow-500 text-black px-4 py-2 rounded font-semibold"
+        onClick={openLogout}
+        className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer"
       >
-        Login / Create Account
+        Logout
       </button>
-      </div>
+    </>
+  )}
+
+  {/* ===== GUEST NAVBAR ===== */}
+  {!user && (
+    <button
+      onClick={openLogin}
+      className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer"
+    >
+      Login / Create Account
+    </button>
+  )}
+
+</div>
 
     </nav>
   );

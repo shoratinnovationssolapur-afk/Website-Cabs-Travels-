@@ -1,8 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
-import { signOut, onAuthStateChanged } from "firebase/auth"; // Added signOut and Listener
 import { collection, addDoc, serverTimestamp,getDocs } from "firebase/firestore";
 
 
@@ -29,35 +27,32 @@ import ServiceCard from "../components/ServiceCard";
 import ServiceModal from "../components/ServiceModal";
 import RouteFare from "../components/RouteFare";
 
-import { useAuthContext } from "../context/AuthContext";
-import AdminDashboard from "./AdminDashboard";
-import UserHome from "./UserHome";
 
-const HomePage = () => {
-  const { role } = useAuthContext();
 
-  if (role === "Admin") {
-    return <AdminDashboard />;
-  }
+
+
+
+const UserHome = () => {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [carType, setCarType] = useState("");
+  const [dateTime, setDateTime] = useState("");
+
+  // For LocationInputs integration (important)
+  const [pickup, setPickup] = useState("");
+  const [drop, setDrop] = useState("");
+  const [tripType, setTripType] = useState("");
+  const [selectedService, setSelectedService] = useState(null);
+  const [heroPickup, setHeroPickup] = useState("");
+  const [heroDrop, setHeroDrop] = useState("");
+  const [vehicles, setVehicles] = useState([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
 
   const navigate = useNavigate();
 
-// FIXED: Added missing state
-  const [currentUser, setCurrentUser] = useState(null);
 
-// Listen for Auth State Changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
 
-  useEffect(() => {
-  if (window.location.hash === "#booking") {
-    document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" });
-  }
-}, []);
+
 
   useEffect(() => {
     const fetchVehicles = async () => {
@@ -142,38 +137,32 @@ const HomePage = () => {
 
     ];
     
-  };
 
-  // Listen for Auth State Changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
 
-// Logout Handler
-const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      alert("Logged out successfully");
-      // navigate("/login"); // Removed this line to stay on HomePage
-    } catch (error) {
-      console.error("Error logging out:", error.message);
+    for (const vehicle of vehicles) {
+      await addDoc(collection(db, "vehicles"), vehicle);
     }
+
+    alert("Vehicles added successfully");
   };
 
 
 
 
-const submitBooking = async () => {
-    if (!name.trim() || !phone.trim() || !pickup.trim() || !drop.trim() || !carType || !dateTime) {
+
+
+
+  const submitBooking = async () => {
+
+    if (
+      !name.trim() ||
+      !phone.trim() ||
+      !pickup.trim() ||
+      !drop.trim() ||
+      !carType ||
+      !dateTime
+    ) {
       alert("Please first fill the booking form");
-      return;
-    }
-
-    if (!currentUser) {
-      alert("Please login to book a ride");
       return;
     }
 
@@ -184,22 +173,23 @@ const submitBooking = async () => {
       return;
     }
 
-   try {
+    try {
       await addDoc(collection(db, "bookings"), {
-        userId: currentUser.uid,
-        userEmail: currentUser.email,
-        vehicleId: selectedVehicleId,
-        name,
-        phone,
-        pickup,
-        drop,
-        carType,
-        tripType,
-        dateTime,
-        status: "pending",
-        createdAt: serverTimestamp()
-      });
+  userId: user.uid,
+  userEmail: user.email,
+  vehicleId: selectedVehicleId,   // ⭐ IMPORTANT
+  name,
+  phone,
+  pickup,
+  drop,
+  carType,
+  tripType,
+  dateTime,
+  status: "pending",
+  createdAt: serverTimestamp()
+});
       alert("Booking request submitted successfully!");
+
     } catch (error) {
       alert(error.message);
     }
@@ -231,22 +221,10 @@ const submitBooking = async () => {
       <div className="absolute top-6 right-6 z-50">
       </div>
 
-{/* ================= LOGOUT BUTTON ================= */}
-      {currentUser && (
-        <div className="fixed top-6 right-6 z-[100]">
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white px-5 py-2 rounded-full font-medium shadow-lg hover:bg-red-700 transition-all flex items-center gap-2"
-          >
-            <span>Logout</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-          </button>
-        </div>
-      )}
 
       {/* ================= HERO SECTION ================= */}
+
+
 
       {/* Hero Content */}
 
@@ -706,9 +684,6 @@ const submitBooking = async () => {
 
     </div>
   );
-
-  return <UserHome />;
-
 };
 
-export default HomePage;
+export default UserHome;   
