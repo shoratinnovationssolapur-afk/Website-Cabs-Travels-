@@ -6,6 +6,9 @@ import {
   Calendar, MapPin, CheckCircle, Info, 
   Car, Loader2, Minus, Plus, IndianRupee, ShieldCheck, ChevronLeft
 } from 'lucide-react';
+import { getAuth } from "firebase/auth"; // <--- Add this
+
+const auth = getAuth(); // <--- Initialize auth
 
 const BookingDetails = () => {
   const [searchParams] = useSearchParams();
@@ -34,22 +37,25 @@ const BookingDetails = () => {
     fetchVehicle();
   }, [vehicleId]);
 
-  const handleFinalBooking = async () => {
-    try {
-      await addDoc(collection(db, "confirmed_bookings"), {
-        vehicleId: vehicle.id,
-        vehicleName: vehicle.name,
-        pickup: pickupLocation,
-        drop: dropLocation,
-        durationDays: days,
-        totalFare: totalAmount,
-        status: "confirmed",
-        createdAt: serverTimestamp()
-      });
-      alert("🎉 Booking Confirmed Successfully!");
-      navigate('/');
-    } catch (error) { alert("Error: " + error.message); }
-  };
+const handleFinalBooking = async () => {
+  try {
+    await addDoc(collection(db, "bookings"), { // Changed to 'bookings'
+      vehicleId: vehicle.id,
+      vehicleName: vehicle.name,
+      pickup: pickupLocation,
+      drop: dropLocation,
+      durationDays: days,
+      totalFare: totalAmount,
+      status: "pending", // Set to pending for Admin review
+      userId: auth.currentUser.uid, // Required so you can read it back later
+      createdAt: serverTimestamp()
+    });
+    alert("🚀 Request sent to Admin for confirmation!");
+    navigate('/');
+  } catch (error) { 
+    alert("Error: " + error.message); 
+  }
+};
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-yellow-500" size={48} /></div>;
 
