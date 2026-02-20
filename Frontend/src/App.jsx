@@ -20,6 +20,7 @@ import UserProfile from "./pages/UserProfile";
 import AdminLayout from "./pages/AdminLayout";
 
 
+
 import {
   createBrowserRouter,
   RouterProvider,
@@ -134,6 +135,9 @@ const router = createBrowserRouter([
     ],
   },
   { path: "/profile", element: <UserProfile /> },
+  {
+    path:"/auto-assign-drivers",element:<autoAssignDriver />
+  },
 
   {
       
