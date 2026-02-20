@@ -21,3 +21,14 @@
 .animate-fadeInUp {
   animation: fadeInUp 1.2s ease forwards;
 }
+
+/* Custom CSS for the progress bar animation */
+        @keyframes progress {
+          0% { transform: scaleX(0); }
+          50% { transform: scaleX(0.7); }
+          100% { transform: scaleX(1); }
+        }
+        .animate-progress-bar {
+          animation: progress 2s ease-in-out infinite;
+        }
+    
