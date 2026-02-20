@@ -119,6 +119,16 @@ const router = createBrowserRouter([
 
     ],
   },
+
+  {
+      
+        path : "/booking-details",
+        element : <BookingDetails />
+      
+  }
+
+ ,
+ feature/firebase-cloudinary-setup
 ]);
 
 

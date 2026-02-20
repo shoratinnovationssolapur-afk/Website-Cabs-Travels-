@@ -255,7 +255,7 @@ const UserHome = () => {
 
           <div className="flex justify-center gap-6 flex-wrap">
             <a
-              href="tel:+919999999999"
+              href="https://wa.me/9130067841" target="_blank" rel="noreferrer" 
               className="bg-yellow-400 text-black px-8 py-3 rounded-full font-semibold hover:scale-105 transition"
             >
               Call Now
@@ -440,7 +440,7 @@ const UserHome = () => {
             drop={drop}
             setDrop={setDrop}
           />
-          <RouteFare pickup={pickup} drop={drop} />
+          <RouteFare pickup={pickup} drop={drop} dateTime={dateTime} />
 
 
           {/* </div> */}

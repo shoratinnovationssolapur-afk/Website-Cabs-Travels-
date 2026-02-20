@@ -1,25 +1,39 @@
 const express = require('express');
-const { uploadToCloudinary } = require('../utils/cloudinary'); // CORRECT (Added the extra dot)
-const { db, admin } = require('../config/firebaseadmin'); // Your Firebase setup file
+const { uploadToCloudinary } = require('../utils/cloudinary');
+const { db, admin } = require('../config/firebaseadmin');
 const multer = require('multer');
+const fs = require('fs'); // Added to clean up temp files
 
 const router = express.Router();
-const upload = multer({ dest: 'temp/' }); // Temporary storage for incoming files
+const upload = multer({ dest: 'temp/' });
 
-router.post('/upload', upload.single('image'), async (req, res) => {
+// Changed from .single('image') to .array('images', 5) 
+// 'images' is the field name, 5 is the max number of files
+router.post('/upload', upload.array('images', 5), async (req, res) => {
   try {
-    // 1. Upload to Cloudinary using your new service
-    const cloudinaryResponse = await uploadToCloudinary(req.file.path);
-
-    if (!cloudinaryResponse) {
-      return res.status(500).json({ message: "Cloudinary upload failed" });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No images uploaded" });
     }
 
-    // 2. Save the URL to Firebase Firestore
+    // 1. Upload all files to Cloudinary in parallel
+    const uploadPromises = req.files.map(async (file) => {
+      const result = await uploadToCloudinary(file.path);
+      
+      // Optional: Delete local temp file after upload to keep server clean
+      if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      
+      return {
+        imageUrl: result.secure_url,
+        publicId: result.public_id
+      };
+    });
+
+    const uploadedImages = await Promise.all(uploadPromises);
+
+    // 2. Save the array of images to Firestore
     const imageData = {
-      imageUrl: cloudinaryResponse.secure_url,
-      publicId: cloudinaryResponse.public_id,
-      uploadedBy: req.body.userId,
+      images: uploadedImages, // This is now an array of objects {imageUrl, publicId}
+      uploadedBy: req.body.userId || "anonymous",
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
 
@@ -28,11 +42,13 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     res.status(200).json({
       message: "Success",
       dbId: docRef.id,
-      url: cloudinaryResponse.secure_url
+      urls: uploadedImages.map(img => img.imageUrl) // Send back simple URL array
     });
 
   } catch (error) {
+    console.error("Upload Route Error:", error);
     res.status(500).json({ error: error.message });
   }
 });
+
 module.exports = router;
