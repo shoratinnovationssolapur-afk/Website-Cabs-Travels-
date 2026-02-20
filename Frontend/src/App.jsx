@@ -18,6 +18,7 @@ import LogoutModal from "./components/LogoutModal";
 import RoleMismatchModal from "./components/RoleMismatchModal";
 import UserProfile from "./pages/UserProfile";
 import AdminLayout from "./pages/AdminLayout";
+import { autoAssignDriver } from "./pages/autoassigndriver";
 
 
 
@@ -136,7 +137,7 @@ const router = createBrowserRouter([
   },
   { path: "/profile", element: <UserProfile /> },
   {
-    path:"/auto-assign-drivers",element:<autoAssignDriver />
+    path:"/auto-assign-drivers",element:{autoAssignDriver }
   },
 
   {
