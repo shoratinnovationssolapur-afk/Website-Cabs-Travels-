@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
 
 const BookingDetails = () => {
   const [vehicle, setVehicle] = useState(null);
@@ -9,6 +11,7 @@ const BookingDetails = () => {
 
   const [searchParams] = useSearchParams();
   const vehicleId = searchParams.get("vehicle_id");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchVehicle = async () => {
@@ -102,13 +105,14 @@ const BookingDetails = () => {
 
         {/* Book Button */}
         <button
-          onClick={() =>
-            window.location.href = `/ ?vehicle_id=${vehicle.id}#booking`
-          }
-          className="w-full bg-yellow-500 text-white py-3 rounded-lg font-bold hover:bg-yellow-600 transition"
-        >
-          Proceed to Booking
-        </button>
+  onClick={() =>
+    navigate(`/?vehicle_id=${vehicle.id}#booking`)
+  }
+  className="w-full bg-yellow-500 text-white py-3 rounded-lg font-bold hover:bg-yellow-600 transition"
+>
+  Proceed to Booking
+</button>
+
 
       </div>
     </div>
