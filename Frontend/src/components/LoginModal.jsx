@@ -61,7 +61,7 @@ const LoginModal = ({ closeModal, showMismatch }) => {
 
       alert("Login Successful");
 
-      navigate(userData.role === "Admin" ? "/admin" : "/");
+      navigate(userData.role === "Admin" ? "/admin/dashboard" : "/");
       closeModal();
 
     } catch (error) {
@@ -134,7 +134,7 @@ const LoginModal = ({ closeModal, showMismatch }) => {
 
       alert("Login Successful");
 
-      navigate(userData.role === "Admin" ? "/admin" : "/");
+      navigate(userData.role === "Admin" ? "/admin/dashboard" : "/");
       closeModal();
 
     } catch (error) {

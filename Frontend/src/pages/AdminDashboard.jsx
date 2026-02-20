@@ -13,6 +13,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import AdminLayout from "./AdminLayout";
 
 const COLORS = ["#6366F1", "#22C55E", "#F59E0B", "#EF4444"];
 

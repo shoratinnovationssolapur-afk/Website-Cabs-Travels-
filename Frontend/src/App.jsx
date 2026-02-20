@@ -4,6 +4,7 @@ import LoginModal from "./components/LoginModal";
 import UserHome from "./pages/UserHome";
 import RentCarPage from "./components/RentCarPage";
 import BookingDetails from "./pages/BookingDetails";
+import "leaflet/dist/leaflet.css";
 
 import AdminVehicles from "./pages/AdminVehicles";
 import AdminBookings from "./pages/AdminBookings";
@@ -15,6 +16,8 @@ import AdminRoute from "./components/AdminRoute";
 import { AuthProvider } from "./context/AuthContext";
 import LogoutModal from "./components/LogoutModal";
 import RoleMismatchModal from "./components/RoleMismatchModal";
+import UserProfile from "./pages/UserProfile";
+import AdminLayout from "./pages/AdminLayout";
 
 
 import {
@@ -77,7 +80,7 @@ const router = createBrowserRouter([
 
       // ================= ADMIN ROUTES =================
       {
-        path: "/admin",
+        path: "/admin/dashboard",
         element: (
           <AdminRoute>
             <AdminDashboard />
@@ -117,8 +120,20 @@ const router = createBrowserRouter([
   ),
 },
 
+
+
+{
+  path: "/admin",
+  element: (
+    <AdminRoute>
+      <AdminLayout />
+    </AdminRoute>
+  )
+}
+
     ],
   },
+  { path: "/profile", element: <UserProfile /> },
 
   {
       
