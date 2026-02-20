@@ -40,7 +40,7 @@ const BookingDetails = () => {
 
 const handleFinalBooking = async () => {
   try {
-    await addDoc(collection(db, "bookings"), { // Changed to 'bookings'
+    await addDoc(collection(db, "confirm_bookings"), { // Changed to 'confirm_bookings'
       vehicleId: vehicle.id,
       vehicleName: vehicle.name,
       pickup: pickupLocation,

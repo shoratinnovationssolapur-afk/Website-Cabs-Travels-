@@ -19,6 +19,7 @@ import {
   RouterProvider,
   Outlet,
 } from "react-router-dom";
+import Tours from "./pages/Tours";
 
 
 // ================= LAYOUT =================
@@ -90,6 +91,11 @@ const router = createBrowserRouter([
             <AdminUsers />
           </AdminRoute>
         ),
+      },
+
+      {
+        path: "/tours",
+        element: <Tours />
       },
 
     ],
