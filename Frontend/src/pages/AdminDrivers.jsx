@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../firebase";
+import { serverTimestamp } from "firebase/firestore";
 import {
   collection,
   addDoc,
@@ -29,18 +30,22 @@ const AdminDrivers = () => {
   }, []);
 
   const addDriver = async () => {
-    if (!name || !phone) return alert("Fill all fields");
+  if (!name || !phone) return alert("Fill all fields");
 
-    await addDoc(collection(db, "drivers"), {
-      name,
-      phone,
-      available: true
-    });
+  await addDoc(collection(db, "drivers"), {
+    name,
+    phone,
+    available: true,
+    status: "active",
+    rating: 5,
+    createdAt: serverTimestamp()
+  });
 
-    setName("");
-    setPhone("");
-    fetchDrivers();
-  };
+  setName("");
+  setPhone("");
+
+  fetchDrivers();
+};
 
   const deleteDriver = async (id) => {
     await deleteDoc(doc(db, "drivers", id));

@@ -17,7 +17,6 @@ const BookingDetails = () => {
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(1);
-  
   const vehicleId = searchParams.get("vehicle_id");
   const pickupLocation = searchParams.get("pickup") || "Solapur City";
   const dropLocation = searchParams.get("drop") || "Pune Airport";
@@ -74,7 +73,57 @@ const handleFinalBooking = async () => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30"></div>
         
+        {/* Vehicle Image */}
+        <div className="overflow-hidden rounded-lg mb-6">
+          <img
+            src={vehicle.imageUrl}
+            alt={vehicle.name}
+            className="w-full h-72 object-cover hover:scale-105 transition-transform duration-500"
+          />
+        </div>
+
+        {/* Vehicle Info */}
+        <div className="flex justify-between items-start mb-2">
+          <h2 className="text-3xl font-bold text-gray-800">{vehicle.name}</h2>
+          <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase">
+            {vehicle.type}
+          </span>
+        </div>
+
+        <p className="text-gray-600 mb-6 leading-relaxed">
+          {vehicle.desc}
+        </p>
+
+        <div className="grid grid-cols-2 gap-4 mb-6 border-y border-gray-100 py-4">
+          <div>
+            <p className="text-sm text-gray-500">Pricing</p>
+            <p className="text-lg font-bold text-green-600">
+              {vehicle.pricePerKm ? `₹ ${vehicle.pricePerKm}/km` : "Contact for Price"}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-500">Status</p>
+            {vehicle.available === false ? (
+              <p className="text-red-600 font-bold">❌ Not Available</p>
+            ) : (
+              <p className="text-green-600 font-bold">✅ Available Now</p>
+            )}
+          </div>
+        </div>
+
+        {/* Book Button */}
+        <button
+
+  onClick={() =>
+    navigate(`/?vehicle_id=${vehicle.id}#booking`)
+  }
+  className="w-full bg-yellow-500 text-white py-3 rounded-lg font-bold hover:bg-yellow-600 transition"
+>
+  Proceed to Booking
+</button>
+
         {/* Back Button Overlay */}
+
         <button 
           onClick={() => navigate(-1)}
           className="absolute top-6 left-6 bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-white/40 transition"

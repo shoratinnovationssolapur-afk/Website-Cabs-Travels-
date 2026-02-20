@@ -4,27 +4,24 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  signOut
 } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
-const LoginModal = ({ closeModal }) => {
+const LoginModal = ({ closeModal, showMismatch }) => {
 
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
-  // ⭐ ADD THIS (REQUIRED)
   const [role, setRole] = useState("User");
   const [adminCode, setAdminCode] = useState("");
 
   const ADMIN_SECRET = "RATHOD_ADMIN_2026";
   const navigate = useNavigate();
-
-
-
 
   // ================= GOOGLE LOGIN =================
   const signInWithGoogle = async () => {
@@ -42,116 +39,108 @@ const LoginModal = ({ closeModal }) => {
       const userRef = doc(db, "users", user.uid);
       const snap = await getDoc(userRef);
 
+      // New user
       if (!snap.exists()) {
         await setDoc(userRef, {
           name: user.displayName,
           email: user.email,
           photo: user.photoURL,
-          role,   // ⭐ SAVED HERE
+          role,
           createdAt: new Date()
         });
       }
 
-      alert("Login Successful");
+      const userData = (await getDoc(userRef)).data();
 
-      if (role === "Admin") {
-        navigate("/admin/vehicles");   // Admin dashboard
-      } else {
-        navigate("/");                 // User home
+      // ⭐ Role mismatch check
+      if (role !== userData.role) {
+        showMismatch(`You are registered as ${userData.role}. Please login as ${userData.role}.`);
+        await signOut(auth);
+        return;
       }
 
-      closeModal();
+      alert("Login Successful");
 
+      navigate(userData.role === "Admin" ? "/admin" : "/");
+      closeModal();
 
     } catch (error) {
       alert(error.message);
     }
   };
 
+  // ================= REGISTER =================
+  const registerUser = async () => {
+    try {
 
+      const userCred = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-  // ================= EMAIL REGISTER =================
-  
-const registerUser = async () => {
-  try {
-    const userCred = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+      await setDoc(doc(db, "users", userCred.user.uid), {
+        name,
+        email,
+        role,
+        createdAt: new Date()
+      });
 
-    await setDoc(doc(db, "users", userCred.user.uid), {
-      name,
-      email,
-      role: role,
-      createdAt: new Date()
-    });
+      alert("Account Created. Please login.");
 
-    alert("Account Created");
-    // navigate({loginUser})
+      await signOut(auth);
 
-    // ⭐ REDIRECT BASED ON ROLE
-    if (role === "Admin") {
-      window.location.href = "/admin/vehicles";
-    } else {
-      window.location.href = "/";
+      // Reset form
+      setEmail("");
+      setPassword("");
+      setName("");
+      setIsRegister(false);
+
+    } catch (error) {
+      alert(error.message);
     }
+  };
 
-    closeModal();
+  // ================= LOGIN =================
+  const loginUser = async () => {
+    try {
 
-  } catch (error) {
-    alert(error.message);
-  }
-};
+      await signInWithEmailAndPassword(auth, email, password);
 
+      const user = auth.currentUser;
+      const snap = await getDoc(doc(db, "users", user.uid));
 
-
-
-  // ================= EMAIL LOGIN =================
- const loginUser = async () => {
-  try {
-
-    await signInWithEmailAndPassword(auth, email, password);
-
-    const user = auth.currentUser;
-
-    const userRef = doc(db, "users", user.uid);
-    const snap = await getDoc(userRef);
-
-    if (!snap.exists()) {
-      alert("User profile not found");
-      return;
-    }
-
-    const userData = snap.data();
-
-    // 🔴 If admin login → check code
-    if (userData.role === "Admin") {
-
-      if (adminCode !== ADMIN_SECRET) {
-        alert("Invalid Admin Code");
+      if (!snap.exists()) {
+        alert("User profile not found");
         return;
       }
 
-      alert("Admin Login Successful");
+      const userData = snap.data();
 
-      // Redirect admin
-      window.location.href = "/admin/vehicles";
+      // ⭐ Role mismatch
+      if (role !== userData.role) {
+        showMismatch(`You are registered as ${userData.role}. Please login as ${userData.role}.`);
+        await signOut(auth);
+        return;
+      }
 
-    } else {
+      // ⭐ Admin code check
+      if (userData.role === "Admin") {
+        if (adminCode !== ADMIN_SECRET) {
+          alert("Invalid Admin Code");
+          return;
+        }
+      }
 
-      alert("User Login Successful");
-      window.location.href = "/";
+      alert("Login Successful");
 
+      navigate(userData.role === "Admin" ? "/admin" : "/");
+      closeModal();
+
+    } catch (error) {
+      alert(error.message);
     }
-
-    closeModal();
-
-  } catch (error) {
-    alert(error.message);
-  }
-};
-
+  };
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
@@ -160,7 +149,6 @@ const registerUser = async () => {
 
         {/* ROLE SELECTOR */}
         <div className="flex gap-4 mb-4">
-
           <label>
             <input
               type="radio"
@@ -180,7 +168,6 @@ const registerUser = async () => {
             />
             Admin
           </label>
-
         </div>
 
         {/* GOOGLE BUTTON */}
@@ -188,23 +175,14 @@ const registerUser = async () => {
           onClick={signInWithGoogle}
           className="w-full flex items-center justify-center gap-3 border py-3 rounded font-semibold hover:bg-gray-100 mb-4"
         >
-          <img
-            src="https://www.svgrepo.com/show/475656/google-color.svg"
-            alt="Google"
-            className="w-5 h-5"
-          />
           Continue with Google
         </button>
 
-        <div className="text-center mb-4 text-gray-500">
-          — OR —
-        </div>
+        <div className="text-center mb-4 text-gray-500">— OR —</div>
 
         {!isRegister ? (
           <>
-            <h3 className="text-xl font-semibold mb-4">
-              Login with Email
-            </h3>
+            <h3 className="text-xl font-semibold mb-4">Login with Email</h3>
 
             <input
               type="email"
@@ -221,7 +199,8 @@ const registerUser = async () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {!isRegister && role === "Admin" && (
+
+            {role === "Admin" && (
               <input
                 type="password"
                 placeholder="Enter Admin Code"
@@ -230,7 +209,6 @@ const registerUser = async () => {
                 onChange={(e) => setAdminCode(e.target.value)}
               />
             )}
-
 
             <button
               onClick={loginUser}
@@ -251,9 +229,7 @@ const registerUser = async () => {
           </>
         ) : (
           <>
-            <h3 className="text-xl font-semibold mb-4">
-              Create Account
-            </h3>
+            <h3 className="text-xl font-semibold mb-4">Create Account</h3>
 
             <input
               placeholder="Full Name"
