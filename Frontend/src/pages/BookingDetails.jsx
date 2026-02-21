@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from "../firebase";
-import { doc, getDoc, addDoc, collection, serverTimestamp,onSnapshot } from "firebase/firestore";
+import { doc, getDoc, addDoc, collection, serverTimestamp,onSnapshot,getDocs,updateDoc } from "firebase/firestore";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
   Calendar, MapPin, CheckCircle, Info, 
@@ -63,7 +63,9 @@ const [rideStatus, setRideStatus] = useState(null);
 // };
 const handleFinalBooking = async () => {
   try {
-    const docRef = await addDoc(collection(db, "bookings"), {
+
+    // 1️⃣ Create booking
+    const bookingRef = await addDoc(collection(db, "bookings"), {
       vehicleId: vehicle.id,
       vehicleName: vehicle.name,
       pickup: pickupLocation,
@@ -72,15 +74,40 @@ const handleFinalBooking = async () => {
       totalFare: totalAmount,
       status: "pending",
       userId: auth.currentUser.uid,
+      driverId: null,
       createdAt: serverTimestamp()
     });
 
-    setBookingId(docRef.id);   // ⭐ IMPORTANT
-    alert("Request sent to Admin!");
-      navigate(`/my-booking/${docRef.id}`)
+    // 2️⃣ Find available driver
+    const driversSnap = await getDocs(collection(db, "drivers"));
+
+    const availableDriver = driversSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .find(d => d.available === true);
+
+    if (availableDriver) {
+
+      // 3️⃣ Assign driver to booking
+      await updateDoc(doc(db, "bookings", bookingRef.id), {
+        driverId: availableDriver.id,
+        status: "driver_assigned"
+      });
+
+      // 4️⃣ Mark driver busy
+      await updateDoc(doc(db, "drivers", availableDriver.id), {
+        available: false,
+        currentBookingId: bookingRef.id
+      });
+
+      alert(`🚗 Driver ${availableDriver.name} assigned`);
+    } else {
+      alert("⚠️ No driver available right now");
+    }
+
+    navigate("/");
 
   } catch (error) {
-    alert(error.message);
+    alert("Error: " + error.message);
   }
 };
 

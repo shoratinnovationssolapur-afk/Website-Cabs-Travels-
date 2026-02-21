@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { IoEye, IoEyeOff } from "react-icons/io5";
 import {
   GoogleAuthProvider,
   signInWithPopup,
@@ -11,6 +12,8 @@ import { auth, db } from "../firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const LoginModal = ({ closeModal, showMismatch }) => {
+
+  const [showadminCode, setShowAdminCode] = useState(false);
 
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
@@ -200,15 +203,31 @@ const LoginModal = ({ closeModal, showMismatch }) => {
               onChange={(e) => setPassword(e.target.value)}
             />
 
-            {role === "Admin" && (
+          {role === "Admin" && (
+            <div className="relative mb-4">
               <input
-                type="password"
+                type={showadminCode ? "text" : "password"}
                 placeholder="Enter Admin Code"
-                className="w-full border p-3 rounded mb-4"
+                className="w-full border p-3 rounded"
                 value={adminCode}
                 onChange={(e) => setAdminCode(e.target.value)}
               />
-            )}
+              {!showadminCode ? (
+                <IoEye
+                  className="absolute top-[17px] right-[12px] text-gray-500 w-[20px] h-[20px] cursor-pointer"
+                  onClick={() => setShowAdminCode(true)}
+                />
+              ) : (
+                <IoEyeOff
+                  className="absolute top-[17px] right-[12px] text-gray-500 w-[20px] h-[20px] cursor-pointer"
+                  onClick={() => setShowAdminCode(false)}
+                />
+              )}
+            </div>
+          )}
+            
+           
+          
 
             <button
               onClick={loginUser}

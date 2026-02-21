@@ -20,23 +20,23 @@ export default function AdminLayout() {
         </h2>
 
         <nav className="flex flex-col gap-4">
-          <button onClick={() => setActive("profile")}>
+          <button className="hover:bg-white hover:text-black cursor-pointer" onClick={() => setActive("profile")}>
             Profile
           </button>
 
-          <button onClick={() => setActive("dashboard")}>
+          <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("dashboard")}>
             Dashboard
           </button>
 
-          <button onClick={() => setActive("tours")}>
+          <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("tours")}>
             Add Tours
           </button>
 
-          <button onClick={() => setActive("vehicles")}>
+          <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("vehicles")}>
             Vehicles
           </button>
 
-          <button onClick={() => setActive("users")}>
+          <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("users")}>
             Users
           </button>
 

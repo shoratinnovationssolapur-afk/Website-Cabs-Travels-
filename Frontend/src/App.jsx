@@ -18,7 +18,8 @@ import LogoutModal from "./components/LogoutModal";
 import RoleMismatchModal from "./components/RoleMismatchModal";
 import UserProfile from "./pages/UserProfile";
 import AdminLayout from "./pages/AdminLayout";
-import { autoAssignDriver } from "./pages/autoassigndriver";
+import TourDetails from "./pages/TourDetails";
+import AdminTours from "./pages/AdminTours";
 
 
 
@@ -136,9 +137,9 @@ const router = createBrowserRouter([
     ],
   },
   { path: "/profile", element: <UserProfile /> },
-  {
-    path:"/auto-assign-drivers",element:{autoAssignDriver }
-  },
+  
+  { path: "/admin/tours", element: <AdminTours /> },
+{ path: "/tour/:id", element: <TourDetails /> },
 
   {
       

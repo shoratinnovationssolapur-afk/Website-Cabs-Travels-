@@ -6,6 +6,7 @@ import {
   updateDoc,
   doc
 } from "firebase/firestore";
+import { autoAssignDriver } from "../utils/autoAssignDriver";
 
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -64,6 +65,13 @@ const AdminBookings = () => {
                 className="bg-red-600 text-white px-3 py-1 rounded"
               >
                 Reject
+              </button>
+
+              <button
+                onClick={() => autoAssignDriver(booking.id)}
+                className="bg-blue-600 text-white px-3 py-1 rounded"
+              >
+                Assign Driver
               </button>
 
             </div>
