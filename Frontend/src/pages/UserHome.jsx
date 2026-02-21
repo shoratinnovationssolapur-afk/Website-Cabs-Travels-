@@ -595,7 +595,7 @@ const UserHome = () => {
 
             {/* SAFE & RELIABLE */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">🛡️</div>
+              <div className="text-8xl mb-4">🛡️</div>
               <h3 className="text-xl font-semibold mb-2">
                 Safe & Reliable
               </h3>
@@ -607,7 +607,7 @@ const UserHome = () => {
 
             {/* ON-TIME SERVICE */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">⏱️</div>
+              <div className="text-8xl mb-4">⏱️</div>
               <h3 className="text-xl font-semibold mb-2">
                 Always On Time
               </h3>
@@ -619,7 +619,7 @@ const UserHome = () => {
 
             {/* AFFORDABLE PRICING */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">💰</div>
+              <div className="text-8xl mb-4">💰</div>
               <h3 className="text-xl font-semibold mb-2">
                 Transparent Pricing
               </h3>
@@ -631,7 +631,7 @@ const UserHome = () => {
 
             {/* 24x7 SUPPORT */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">📞</div>
+              <div className="text-8xl mb-4">📞</div>
               <h3 className="text-xl font-semibold mb-2">
                 24×7 Customer Support
               </h3>
@@ -643,7 +643,7 @@ const UserHome = () => {
 
             {/* CLEAN VEHICLES */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">✨</div>
+              <div className="text-8xl mb-4">✨</div>
               <h3 className="text-xl font-semibold mb-2">
                 Clean & Comfortable
               </h3>
@@ -655,7 +655,7 @@ const UserHome = () => {
 
             {/* WIDE COVERAGE */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">🌍</div>
+              <div className="text-8xl mb-4">🌍</div>
               <h3 className="text-xl font-semibold mb-2">
                 Wide Service Area
               </h3>
@@ -678,7 +678,7 @@ const UserHome = () => {
           Rathod Cabs & Travels
         </p>
         <p>Solapur | Pune | Mumbai | Goa</p>
-        <p>Phone: +91 99999 99999</p>
+        <p>Phone: +91 91300 67841 </p>
         <p>Email: info@rathodcabs.com</p>
       </footer>
 

@@ -39,7 +39,7 @@ const BookingDetails = () => {
 
 const handleFinalBooking = async () => {
   try {
-    await addDoc(collection(db, "bookings"), { // Changed to 'bookings'
+    await addDoc(collection(db, "confirm_bookings"), { // Changed to 'confirm_bookings'
       vehicleId: vehicle.id,
       vehicleName: vehicle.name,
       pickup: pickupLocation,
@@ -174,7 +174,7 @@ const handleFinalBooking = async () => {
                 <div className="space-y-1 md:text-right">
                    <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">To</p>
                    <p className="text-xl font-bold text-gray-800">{dropLocation}</p>
-                </div>
+                </div> 
              </div>
           </div>
 
