@@ -1,7 +1,6 @@
 import { useState } from "react";
 import Navbar from "./components/Navbar";
 import LoginModal from "./components/LoginModal";
-import UserHome from "./pages/UserHome";
 import RentCarPage from "./components/RentCarPage";
 import BookingDetails from "./pages/BookingDetails";
 import "leaflet/dist/leaflet.css";
@@ -18,8 +17,9 @@ import LogoutModal from "./components/LogoutModal";
 import RoleMismatchModal from "./components/RoleMismatchModal";
 import UserProfile from "./pages/UserProfile";
 import AdminLayout from "./pages/AdminLayout";
-import TourDetails from "./pages/TourDetails";
+import TourDetails from "./utils/TourDetails";
 import AdminTours from "./pages/AdminTours";
+import HomePage from "./pages/HomePage";
 
 
 
@@ -28,6 +28,8 @@ import {
   RouterProvider,
   Outlet,
 } from "react-router-dom";
+import UserLayout from "./pages/UserLayout";
+import UserRoute from "./components/UserRoute";
 
 
 // ================= LAYOUT =================
@@ -77,9 +79,11 @@ const router = createBrowserRouter([
     children: [
 
       // ================= USER ROUTES =================
-      { path: "/", element: <UserHome /> },
+      { path: "/users", element: <HomePage/> },
       { path: "/rent-your-car", element: <RentCarPage /> },
       { path: "/booking", element: <BookingDetails /> },
+       { path: "/profile", element: <UserProfile /> },
+       {path:"/user-panel", element: (<UserRoute><UserLayout /></UserRoute>)},
 
       // ================= ADMIN ROUTES =================
       {
@@ -136,10 +140,11 @@ const router = createBrowserRouter([
 
     ],
   },
-  { path: "/profile", element: <UserProfile /> },
+ 
   
   { path: "/admin/tours", element: <AdminTours /> },
 { path: "/tour/:id", element: <TourDetails /> },
+
 
   {
       

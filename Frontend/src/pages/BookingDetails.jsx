@@ -64,7 +64,13 @@ const [rideStatus, setRideStatus] = useState(null);
 const handleFinalBooking = async () => {
   try {
 
-    // 1️⃣ Create booking
+    // 🔴 Ensure user logged in
+    if (!auth.currentUser) {
+      alert("Please login first");
+      return;
+    }
+
+    // 1️⃣ CREATE BOOKING
     const bookingRef = await addDoc(collection(db, "bookings"), {
       vehicleId: vehicle.id,
       vehicleName: vehicle.name,
@@ -74,35 +80,21 @@ const handleFinalBooking = async () => {
       totalFare: totalAmount,
       status: "pending",
       userId: auth.currentUser.uid,
-      driverId: null,
       createdAt: serverTimestamp()
     });
 
-    // 2️⃣ Find available driver
-    const driversSnap = await getDocs(collection(db, "drivers"));
+    // 🔥 IMPORTANT — booking ID
+    const bookingId = bookingRef.id;
 
-    const availableDriver = driversSnap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .find(d => d.available === true);
-
-    if (availableDriver) {
-
-      // 3️⃣ Assign driver to booking
-      await updateDoc(doc(db, "bookings", bookingRef.id), {
-        driverId: availableDriver.id,
-        status: "driver_assigned"
-      });
-
-      // 4️⃣ Mark driver busy
-      await updateDoc(doc(db, "drivers", availableDriver.id), {
-        available: false,
-        currentBookingId: bookingRef.id
-      });
-
-      alert(`🚗 Driver ${availableDriver.name} assigned`);
-    } else {
-      alert("⚠️ No driver available right now");
+    if (!bookingId) {
+      alert("Booking ID missing");
+      return;
     }
+
+    // 2️⃣ AUTO ASSIGN DRIVER
+    await autoAssignDriver(bookingId);
+
+    alert("🚀 Booking created & driver assigned!");
 
     navigate("/");
 

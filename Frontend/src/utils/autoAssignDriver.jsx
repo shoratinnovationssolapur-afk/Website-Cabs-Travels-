@@ -3,6 +3,11 @@ import { db } from "../firebase";
 
 export const autoAssignDriver = async (bookingId) => {
 
+  if (!bookingId) {
+    alert("Booking ID is missing");
+    return;
+  }
+
   const driversSnap = await getDocs(collection(db, "drivers"));
 
   const availableDrivers = driversSnap.docs
@@ -14,7 +19,7 @@ export const autoAssignDriver = async (bookingId) => {
     return;
   }
 
-  const driver = availableDrivers[0]; // nearest logic can be added
+  const driver = availableDrivers[0];
 
   await updateDoc(doc(db, "bookings", bookingId), {
     driverId: driver.id,

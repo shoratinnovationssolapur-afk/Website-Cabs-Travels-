@@ -53,26 +53,29 @@ const AdminBookings = () => {
 
             <div className="flex gap-2 mt-3">
 
+              
+
               <button
                 onClick={() => updateStatus(b, "approved")}
-                className="bg-green-600 text-white px-3 py-1 rounded"
+                className="bg-green-600 text-white cursor-pointer hover:bg-green-400 px-3 py-1 rounded"
               >
                 Approve
               </button>
 
               <button
                 onClick={() => updateStatus(b, "rejected")}
-                className="bg-red-600 text-white px-3 py-1 rounded"
+                className="bg-red-600 text-white cursor-pointer hover:bg-red-400 px-3 py-1 rounded"
               >
                 Reject
               </button>
-
-              <button
-                onClick={() => autoAssignDriver(booking.id)}
-                className="bg-blue-600 text-white px-3 py-1 rounded"
+<button
+                onClick={() => autoAssignDriver(b.id)}
+                className="bg-blue-600 text-white hover:bg-blue-400 cursor-pointer px-3 py-1 rounded"
               >
                 Assign Driver
-              </button>
+                </button>
+              
+            
 
             </div>
           </div>
