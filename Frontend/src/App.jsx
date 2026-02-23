@@ -21,6 +21,7 @@ import TourDetails from "./utils/TourDetails";
 import AdminTours from "./pages/AdminTours";
 import HomePage from "./pages/HomePage";
 import UserBookings from "./pages/UserBookings";
+import ToursSection from "./utils/ToursSection";
 
 
 
@@ -165,6 +166,13 @@ const router = createBrowserRouter([
         path: "/tour/:id",
         element: <TourDetails />,
       },
+<<<<<<< HEAD
+=======
+      {
+        path: "/tours",
+        element: <ToursSection />,
+      },
+>>>>>>> 3646680f20580e7f0d59a180d919fff7a5a85ceb
     ],
   },
 ]);
