@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { db } from "../firebase";
-import { doc, getDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, addDoc, collection, serverTimestamp,onSnapshot,getDocs,updateDoc } from "firebase/firestore";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
   Calendar, MapPin, CheckCircle, Info, 
   Car, Loader2, Minus, Plus, IndianRupee, ShieldCheck, ChevronLeft
 } from 'lucide-react';
 import { getAuth } from "firebase/auth"; // <--- Add this
+
 
 const auth = getAuth(); // <--- Initialize auth
 
@@ -17,6 +18,9 @@ const BookingDetails = () => {
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(1);
+  const [bookingId, setBookingId] = useState(null);
+const [rideStatus, setRideStatus] = useState(null);
+  
   const vehicleId = searchParams.get("vehicle_id");
   const pickupLocation = searchParams.get("pickup") || "Solapur City";
   const dropLocation = searchParams.get("drop") || "Pune Airport";
@@ -37,25 +41,85 @@ const BookingDetails = () => {
     fetchVehicle();
   }, [vehicleId]);
 
+// const handleFinalBooking = async () => {
+//   try {
+//     await addDoc(collection(db, "bookings"), { // Changed to 'bookings'
+//       vehicleId: vehicle.id,
+//       vehicleName: vehicle.name,
+//       pickup: pickupLocation,
+//       drop: dropLocation,
+//       durationDays: days,
+//       totalFare: totalAmount,
+//       status: "pending", // Set to pending for Admin review
+//       userId: auth.currentUser.uid, // Required so you can read it back later
+//       createdAt: serverTimestamp()
+//     });
+//     alert("🚀 Request sent to Admin for confirmation!");
+//     navigate(`/my-booking/${docRef.id}`)
+//     // navigate('/');
+//   } catch (error) { 
+//     alert("Error: " + error.message); 
+//   }
+// };
 const handleFinalBooking = async () => {
   try {
-    await addDoc(collection(db, "confirm_bookings"), { // Changed to 'confirm_bookings'
+
+    // 🔴 Ensure user logged in
+    if (!auth.currentUser) {
+      alert("Please login first");
+      return;
+    }
+
+    // 1️⃣ CREATE BOOKING
+    const bookingRef = await addDoc(collection(db, "bookings"), {
       vehicleId: vehicle.id,
       vehicleName: vehicle.name,
       pickup: pickupLocation,
       drop: dropLocation,
       durationDays: days,
       totalFare: totalAmount,
-      status: "pending", // Set to pending for Admin review
-      userId: auth.currentUser.uid, // Required so you can read it back later
+      status: "pending",
+      userId: auth.currentUser.uid,
       createdAt: serverTimestamp()
     });
-    alert("🚀 Request sent to Admin for confirmation!");
-    navigate('/');
-  } catch (error) { 
-    alert("Error: " + error.message); 
+
+    // 🔥 IMPORTANT — booking ID
+    const bookingId = bookingRef.id;
+
+    if (!bookingId) {
+      alert("Booking ID missing");
+      return;
+    }
+
+    // 2️⃣ AUTO ASSIGN DRIVER
+    await autoAssignDriver(bookingId);
+
+    alert("🚀 Booking created & driver assigned!");
+
+    navigate("/");
+
+  } catch (error) {
+    alert("Error: " + error.message);
   }
 };
+
+
+
+useEffect(() => {
+  if (!bookingId) return;
+
+  const unsubscribe = onSnapshot(
+    doc(db, "bookings", bookingId),
+    (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setRideStatus(data.status);
+      }
+    }
+  );
+
+  return () => unsubscribe();
+}, [bookingId]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-yellow-500" size={48} /></div>;
 
@@ -73,57 +137,7 @@ const handleFinalBooking = async () => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30"></div>
         
-        {/* Vehicle Image */}
-        <div className="overflow-hidden rounded-lg mb-6">
-          <img
-            src={vehicle.imageUrl}
-            alt={vehicle.name}
-            className="w-full h-72 object-cover hover:scale-105 transition-transform duration-500"
-          />
-        </div>
-
-        {/* Vehicle Info */}
-        <div className="flex justify-between items-start mb-2">
-          <h2 className="text-3xl font-bold text-gray-800">{vehicle.name}</h2>
-          <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase">
-            {vehicle.type}
-          </span>
-        </div>
-
-        <p className="text-gray-600 mb-6 leading-relaxed">
-          {vehicle.desc}
-        </p>
-
-        <div className="grid grid-cols-2 gap-4 mb-6 border-y border-gray-100 py-4">
-          <div>
-            <p className="text-sm text-gray-500">Pricing</p>
-            <p className="text-lg font-bold text-green-600">
-              {vehicle.pricePerKm ? `₹ ${vehicle.pricePerKm}/km` : "Contact for Price"}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-500">Status</p>
-            {vehicle.available === false ? (
-              <p className="text-red-600 font-bold">❌ Not Available</p>
-            ) : (
-              <p className="text-green-600 font-bold">✅ Available Now</p>
-            )}
-          </div>
-        </div>
-
-        {/* Book Button */}
-        <button
-
-  onClick={() =>
-    navigate(`/?vehicle_id=${vehicle.id}#booking`)
-  }
-  className="w-full bg-yellow-500 text-white py-3 rounded-lg font-bold hover:bg-yellow-600 transition"
->
-  Proceed to Booking
-</button>
-
         {/* Back Button Overlay */}
-
         <button 
           onClick={() => navigate(-1)}
           className="absolute top-6 left-6 bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-white/40 transition"
@@ -224,6 +238,13 @@ const handleFinalBooking = async () => {
                 </div>
               </div>
             </div>
+            {rideStatus && (
+  <div className="mt-6 bg-blue-50 border border-blue-200 p-4 rounded-xl">
+    <p className="font-semibold text-blue-800">
+      🚦 Ride Status: {rideStatus.toUpperCase()}
+    </p>
+  </div>
+)}
 
             <button 
               onClick={handleFinalBooking}

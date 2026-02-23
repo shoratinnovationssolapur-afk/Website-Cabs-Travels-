@@ -1,9 +1,9 @@
 import { useState } from "react";
 import Navbar from "./components/Navbar";
 import LoginModal from "./components/LoginModal";
-import UserHome from "./pages/UserHome";
 import RentCarPage from "./components/RentCarPage";
 import BookingDetails from "./pages/BookingDetails";
+import "leaflet/dist/leaflet.css";
 
 import AdminVehicles from "./pages/AdminVehicles";
 import AdminBookings from "./pages/AdminBookings";
@@ -15,6 +15,14 @@ import AdminRoute from "./components/AdminRoute";
 import { AuthProvider } from "./context/AuthContext";
 import LogoutModal from "./components/LogoutModal";
 import RoleMismatchModal from "./components/RoleMismatchModal";
+import UserProfile from "./pages/UserProfile";
+import AdminLayout from "./pages/AdminLayout";
+import TourDetails from "./utils/TourDetails";
+import AdminTours from "./pages/AdminTours";
+import HomePage from "./pages/HomePage";
+import UserBookings from "./pages/UserBookings";
+
+
 
 
 import {
@@ -22,7 +30,8 @@ import {
   RouterProvider,
   Outlet,
 } from "react-router-dom";
-import Tours from "./pages/Tours";
+import UserLayout from "./pages/UserLayout";
+import UserRoute from "./components/UserRoute";
 
 
 // ================= LAYOUT =================
@@ -71,20 +80,41 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
 
-      // ================= USER ROUTES =================
-      { path: "/", element: <UserHome /> },
-      { path: "/rent-your-car", element: <RentCarPage /> },
-      { path: "/booking", element: <BookingDetails /> },
+     {
+  path: "/user",
+  element: (
+    <UserRoute>
+      <UserLayout />
+    </UserRoute>
+  ),},
+ 
+    {path:"/", element: <HomePage /> },
+    { path: "booking", element: <BookingDetails /> },
+    { path: "profile", element: <UserProfile /> },
+    { path: "rent-your-car", element: <RentCarPage /> },
+    { path: "bookings", element: <UserBookings /> },
+  
+     ,
 
-      // ================= ADMIN ROUTES =================
+      // ================= ADMIN DASHBOARD =================
       {
         path: "/admin",
+        element: (
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        ),
+      },
+
+      {
+        path: "/admin/dashboard",
         element: (
           <AdminRoute>
             <AdminDashboard />
           </AdminRoute>
         ),
       },
+
       {
         path: "/admin/vehicles",
         element: (
@@ -93,6 +123,7 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
+
       {
         path: "/admin/bookings",
         element: (
@@ -101,6 +132,7 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
+
       {
         path: "/admin/users",
         element: (
@@ -109,32 +141,32 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
-      {
-  path: "/admin/drivers",
-  element: (
-    <AdminRoute>
-      <AdminDrivers />
-    </AdminRoute>
-  ),
-},
 
       {
-        path: "/tours",
-        element: <Tours />
+        path: "/admin/drivers",
+        element: (
+          <AdminRoute>
+            <AdminDrivers />
+          </AdminRoute>
+        ),
       },
 
+      {
+        path: "/admin/tours",
+        element: (
+          <AdminRoute>
+            <AdminTours />
+          </AdminRoute>
+        ),
+      },
+
+      // ================= PUBLIC TOUR PAGE =================
+      {
+        path: "/tour/:id",
+        element: <TourDetails />,
+      },
     ],
   },
-
-  {
-      
-        path : "/booking-details",
-        element : <BookingDetails />
-      
-  }
-
- ,
- 
 ]);
 
 

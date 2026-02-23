@@ -14,6 +14,7 @@ import {
   Cell,
 } from "recharts";
 
+
 const COLORS = ["#6366F1", "#22C55E", "#F59E0B", "#EF4444"];
 
 export default function AdminDashboard() {
