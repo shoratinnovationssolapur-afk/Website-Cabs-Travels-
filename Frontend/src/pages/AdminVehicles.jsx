@@ -72,6 +72,16 @@ const AdminVehicles = () => {
 
     fetchVehicles();
   };
+  const changePrice = async (id, newPrice) => {
+    try {
+      await updateDoc(doc(db, "vehicles", id), {
+        pricePerKm: Number(newPrice)
+      });
+      fetchVehicles();
+    } catch (error) {
+      alert("Invalid price");
+    }
+  };
 
   return (
     <div className="p-10 bg-gray-100 min-h-screen">
@@ -161,6 +171,7 @@ const AdminVehicles = () => {
               <p className="text-sm text-gray-600">{v.desc}</p>
 
               <p className="mt-2 font-semibold">
+                <button onClick={() => changePrice(v.id, prompt("Enter new price per km"))}>Change Price</button>
                 ₹ {v.pricePerKm}/km
               </p>
 
