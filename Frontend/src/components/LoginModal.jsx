@@ -2,9 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoEye, IoEyeOff } from "react-icons/io5";
 import {
+  GoogleAuthProvider,
+  signInWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut
+
 } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
@@ -83,6 +86,47 @@ const LoginModal = ({ closeModal, showMismatch }) => {
       alert(error.message);
     }
   };
+  // ================= GOOGLE LOGIN =================
+  const signInWithGoogle = async () => {
+    try {
+      if (role === "Admin" && adminCode !== ADMIN_SECRET) {
+        alert("Invalid Admin Code");
+        return;
+      }
+
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+
+      if (!snap.exists()) {
+        await setDoc(userRef, {
+          name: user.displayName,
+          email: user.email,
+          photo: user.photoURL,
+          role,
+          createdAt: new Date()
+        });
+      }
+
+      const userData = (await getDoc(userRef)).data();
+
+      if (role !== userData.role) {
+        showMismatch(`You are registered as ${userData.role}. Please login as ${userData.role}.`);
+        await signOut(auth);
+        return;
+      }
+
+      alert("Login Successful");
+      redirectByRole(userData.role);
+      closeModal();
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
 
   // ================= LOGIN =================
   const loginUser = async () => {
@@ -132,9 +176,19 @@ const LoginModal = ({ closeModal, showMismatch }) => {
         {/* GOOGLE BUTTON - Hidden for Drivers */}
         {role !== "Driver" && (
           <>
-            <button className="w-full flex items-center justify-center gap-3 border py-3 rounded font-semibold hover:bg-gray-50 mb-4 transition">
-              Continue with Google
+            {/* GOOGLE BUTTON */}
+            <button
+              onClick={signInWithGoogle}
+              className="w-full flex items-center justify-center gap-3 border py-3 rounded font-semibold hover:bg-gray-100 mb-4"
+            >
+              <img
+                src="https://www.svgrepo.com/show/475656/google-color.svg"
+                alt="Google"
+                className="w-5 h-5"
+              />
+              Sign in with Google
             </button>
+
             <div className="text-center mb-4 text-gray-400 text-xs">— OR —</div>
           </>
         )}
