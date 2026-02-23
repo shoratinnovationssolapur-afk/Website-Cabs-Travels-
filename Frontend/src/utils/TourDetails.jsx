@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../firebase";
 import { doc, getDoc, addDoc, collection } from "firebase/firestore";
 import { useParams } from "react-router-dom";
-import { auth } from "../firebase";
+import { auth , db} from "../firebase";
 
 export default function TourDetails() {
 

@@ -30,18 +30,15 @@ const Navbar = ({ openLogin, openLogout, loading }) => {
   return (
     <nav className="text-white bg-black px-3 py-2 flex justify-between items-center">
 
-      <div onClick={toggleSB}>
-        <FaBars />
-        
-      </div>
-
-      {/* LOGO */}
-      <h2
+      <div className="flex gap-3" onClick={toggleSB}>
+         <FaBars className="relative top-1.5 cursor-pointer" />
+       <h2
         onClick={goHome}
-        className={`text-xl font-bold ${role === "Admin" ? "relative right-[370px]" : "relative right-[400px]"} text-yellow-500 cursor-pointer`}
-      >
+        className={`text-xl font-bold  text-yellow-500 cursor-pointer`}
+      >  
         Rathod Cabs & Travels
       </h2>
+      </div>
 
       {/* RIGHT SIDE */}
       <div className="flex gap-4">

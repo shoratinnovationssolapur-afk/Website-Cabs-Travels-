@@ -21,6 +21,7 @@ import TourDetails from "./utils/TourDetails";
 import AdminTours from "./pages/AdminTours";
 import HomePage from "./pages/HomePage";
 import UserBookings from "./pages/UserBookings";
+import ToursSection from "./utils/ToursSection";
 
 
 
@@ -30,12 +31,8 @@ import {
   RouterProvider,
   Outlet,
 } from "react-router-dom";
-<<<<<<< HEAD
 import UserLayout from "./pages/UserLayout";
 import UserRoute from "./components/UserRoute";
-=======
-import Tours from "./pages/Tours";
->>>>>>> 248fbef0dcda052ed2261e4ef909cff196be7c9a
 
 
 // ================= LAYOUT =================
@@ -147,7 +144,6 @@ const router = createBrowserRouter([
       },
 
       {
-<<<<<<< HEAD
         path: "/admin/drivers",
         element: (
           <AdminRoute>
@@ -170,12 +166,10 @@ const router = createBrowserRouter([
         path: "/tour/:id",
         element: <TourDetails />,
       },
-=======
+      {
         path: "/tours",
-        element: <Tours />
+        element: <ToursSection />,
       },
-
->>>>>>> 248fbef0dcda052ed2261e4ef909cff196be7c9a
     ],
   },
 ]);
