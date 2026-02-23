@@ -614,6 +614,7 @@ const HomePage = () => {
               <p className="text-gray-600">
                 We value your time and guarantee punctual pickups and
                 timely drop-offs for every trip.
+                timely drop-offs for every tritep.
               </p>
             </div>
 

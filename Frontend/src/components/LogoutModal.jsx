@@ -1,13 +1,21 @@
 import React from "react";
+import { useNavigate } from 'react-router-dom'; // 1. Import the hook
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
 
 const LogoutModal = ({ closeModal }) => {
 
-  const handleLogout = async () => {
+  const navigate = useNavigate(); // 2. Initialize the navigate function
+
+const handleLogout = async () => {
+  try {
     await signOut(auth);
     closeModal();
-  };
+    navigate('/'); // 3. Redirect to the homepage
+  } catch (error) {
+    console.error("Logout failed:", error);
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
