@@ -1,8 +1,13 @@
 import { useState } from "react";
+import DriverLayout from "./pages/DriverLayout";
 import Navbar from "./components/Navbar";
+import DriverProfile from "./pages/DriverProfile";
 import LoginModal from "./components/LoginModal";
 import RentCarPage from "./components/RentCarPage";
 import BookingDetails from "./pages/BookingDetails";
+import DriverDashboard from "./pages/DriverDashboard"; // Create this file from previous code
+import DriverLogin from "./pages/DriverLogin";         // Create this file from previous code
+import DriverRoute from "./components/DriverRoute";   // Add this helper
 import "leaflet/dist/leaflet.css";
 
 import AdminVehicles from "./pages/AdminVehicles";
@@ -80,22 +85,43 @@ const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
+      { path: "/", element: <HomePage /> },
+      { path: "booking", element: <BookingDetails /> },
+      { path: "profile", element: <UserProfile /> },
+      { path: "rent-your-car", element: <RentCarPage /> },
+      { path: "bookings", element: <UserBookings /> },
+      { path: "tour/:id", element: <TourDetails /> },
+      { path: "tours", element: <ToursSection /> },
 
-     {
-  path: "/user",
+      // ================= USER DASHBOARD =================
+      {
+        path: "/user",
+        element: (
+          <UserRoute>
+            <UserLayout />
+          </UserRoute>
+        ),
+      },
+
+      // ================= DRIVER SECTION =================
+      {
+        path: "/driver-login",
+        element: <DriverLogin />,
+      },
+   {
+  path: "/driver",
   element: (
-    <UserRoute>
-      <UserLayout />
-    </UserRoute>
-  ),},
- 
-    {path:"/", element: <HomePage /> },
-    { path: "booking", element: <BookingDetails /> },
-    { path: "profile", element: <UserProfile /> },
-    { path: "rent-your-car", element: <RentCarPage /> },
-    { path: "bookings", element: <UserBookings /> },
-  
-     ,
+    <DriverRoute>
+      <DriverLayout />
+    </DriverRoute>
+  ),
+  children: [
+    { path: "dashboard", element: <DriverDashboard /> },
+    { path: "profile", element: <DriverProfile /> }, // This is where you use it
+    { path: "history", element: <div className="p-10">Ride History Page</div> },
+    { path: "earnings", element: <div className="p-10">Earnings Page Data</div> },
+  ]
+},
 
       // ================= ADMIN DASHBOARD =================
       {
@@ -105,8 +131,8 @@ const router = createBrowserRouter([
             <AdminLayout />
           </AdminRoute>
         ),
+        // If your AdminLayout also has an <Outlet />, you can move admin pages here as children
       },
-
       {
         path: "/admin/dashboard",
         element: (
@@ -115,7 +141,6 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
-
       {
         path: "/admin/vehicles",
         element: (
@@ -124,7 +149,6 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
-
       {
         path: "/admin/bookings",
         element: (
@@ -133,7 +157,6 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
-
       {
         path: "/admin/users",
         element: (
@@ -142,7 +165,6 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
-
       {
         path: "/admin/drivers",
         element: (
@@ -151,7 +173,6 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
-
       {
         path: "/admin/tours",
         element: (
