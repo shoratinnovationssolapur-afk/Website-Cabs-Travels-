@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
+import { TbMoodSad } from "react-icons/tb";
 
 const UserBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -29,17 +30,21 @@ const UserBookings = () => {
         My Bookings
       </h1>
 
-      {bookings.map(b => (
-        <div key={b.id}
-          className="bg-white p-4 rounded shadow mb-3">
+      {bookings.length === 0 ? (
+        <h1 className="flex items-center gap-2 font-extrabold text-3xl"><TbMoodSad  className="font-extrabold text-3xl"/> Sorry you don't have any bookings</h1>
+      ) : (
+        bookings.map(b => (
+          <div key={b.id}
+            className="bg-white p-4 rounded shadow mb-3">
 
-          <p><b>Vehicle:</b> {b.vehicleName}</p>
-          <p><b>Pickup:</b> {b.pickup}</p>
-          <p><b>Drop:</b> {b.drop}</p>
-          <p><b>Status:</b> {b.status}</p>
+            <p><b>Vehicle:</b> {b.vehicleName}</p>
+            <p><b>Pickup:</b> {b.pickup}</p>
+            <p><b>Drop:</b> {b.drop}</p>
+            <p><b>Status:</b> {b.status}</p>
 
-        </div>
-      ))}
+          </div>
+        ))
+      )}
 
     </div>
   );
