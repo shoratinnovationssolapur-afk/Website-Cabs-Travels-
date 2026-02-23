@@ -13,6 +13,7 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const LoginModal = ({ closeModal, showMismatch }) => {
   const [showadminCode, setShowAdminCode] = useState(false);
+  const [showPassword,setShowPassword] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -158,8 +159,14 @@ const LoginModal = ({ closeModal, showMismatch }) => {
         {/* GOOGLE BUTTON */}
         <button
           onClick={signInWithGoogle}
-          className="w-full flex items-center justify-center gap-3 border py-3 rounded font-semibold hover:bg-gray-100 mb-4"
+         className="w-full flex items-center justify-center gap-3 border py-3 rounded font-semibold hover:bg-gray-100 mb-4"
         >
+          <img
+            src="https://www.svgrepo.com/show/475656/google-color.svg"
+            alt="Google"
+            className="w-5 h-5"
+          />
+        
           Continue with Google
         </button>
 
@@ -175,13 +182,21 @@ const LoginModal = ({ closeModal, showMismatch }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full border p-3 rounded mb-4"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative mb-4">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                className="w-full border p-3 rounded"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <div 
+                className="absolute top-[18px] right-[12px] cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <IoEyeOff className="text-gray-500" /> : <IoEye className="text-gray-500" />}
+              </div>
+            </div>
 
             {role === "Admin" && (
               <div className="relative mb-4">
@@ -234,13 +249,22 @@ const LoginModal = ({ closeModal, showMismatch }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full border p-3 rounded mb-4"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative mb-4">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                className="w-full border p-3 rounded"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <div 
+                className="absolute top-[18px] right-[12px] cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <IoEyeOff className="text-gray-500" /> : <IoEye className="text-gray-500" />}
+              </div>
+            </div>
+            
 
             <button
               onClick={registerUser}
