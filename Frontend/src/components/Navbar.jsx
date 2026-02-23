@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../context/AuthContext";
 import { auth } from "../firebase";
+import { FaBars } from "react-icons/fa6";
 
 
 const Navbar = ({ openLogin, openLogout, loading }) => {
@@ -15,6 +16,10 @@ const Navbar = ({ openLogin, openLogout, loading }) => {
       navigate("/");
     }
   };
+
+  const toggleSB = () => navigate("/user");
+    
+  
   const goRent = () => navigate("/rent-your-car");
 
   const goAdminVehicles = () => navigate("/admin/vehicles");
@@ -25,10 +30,15 @@ const Navbar = ({ openLogin, openLogout, loading }) => {
   return (
     <nav className="text-white bg-black px-3 py-2 flex justify-between items-center">
 
+      <div onClick={toggleSB}>
+        <FaBars />
+        
+      </div>
+
       {/* LOGO */}
       <h2
         onClick={goHome}
-        className="text-xl font-bold text-yellow-500 cursor-pointer"
+        className={`text-xl font-bold ${role === "Admin" ? "relative right-[370px]" : "relative right-[400px]"} text-yellow-500 cursor-pointer`}
       >
         Rathod Cabs & Travels
       </h2>
@@ -107,12 +117,7 @@ const Navbar = ({ openLogin, openLogout, loading }) => {
               Logout
             </button>
 
-            <button
-              onClick={() => navigate("/profile")}
-              className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer"
-            >
-              Profile
-            </button>
+            
           </>
         )}
 

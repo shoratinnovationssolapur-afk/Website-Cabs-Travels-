@@ -20,6 +20,8 @@ import AdminLayout from "./pages/AdminLayout";
 import TourDetails from "./utils/TourDetails";
 import AdminTours from "./pages/AdminTours";
 import HomePage from "./pages/HomePage";
+import UserBookings from "./pages/UserBookings";
+
 
 
 
@@ -78,14 +80,32 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
 
-      // ================= USER ROUTES =================
-      { path: "/users", element: <HomePage/> },
-      { path: "/rent-your-car", element: <RentCarPage /> },
-      { path: "/booking", element: <BookingDetails /> },
-       { path: "/profile", element: <UserProfile /> },
-       {path:"/user-panel", element: (<UserRoute><UserLayout /></UserRoute>)},
+     {
+  path: "/user",
+  element: (
+    <UserRoute>
+      <UserLayout />
+    </UserRoute>
+  ),},
+ 
+    {path:"/", element: <HomePage /> },
+    { path: "booking", element: <BookingDetails /> },
+    { path: "profile", element: <UserProfile /> },
+    { path: "rent-your-car", element: <RentCarPage /> },
+    { path: "bookings", element: <UserBookings /> },
+  
+     ,
 
-      // ================= ADMIN ROUTES =================
+      // ================= ADMIN DASHBOARD =================
+      {
+        path: "/admin",
+        element: (
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        ),
+      },
+
       {
         path: "/admin/dashboard",
         element: (
@@ -94,6 +114,7 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
+
       {
         path: "/admin/vehicles",
         element: (
@@ -102,6 +123,7 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
+
       {
         path: "/admin/bookings",
         element: (
@@ -110,6 +132,7 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
+
       {
         path: "/admin/users",
         element: (
@@ -118,43 +141,32 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
+
       {
-  path: "/admin/drivers",
-  element: (
-    <AdminRoute>
-      <AdminDrivers />
-    </AdminRoute>
-  ),
-},
+        path: "/admin/drivers",
+        element: (
+          <AdminRoute>
+            <AdminDrivers />
+          </AdminRoute>
+        ),
+      },
 
+      {
+        path: "/admin/tours",
+        element: (
+          <AdminRoute>
+            <AdminTours />
+          </AdminRoute>
+        ),
+      },
 
-
-{
-  path: "/admin",
-  element: (
-    <AdminRoute>
-      <AdminLayout />
-    </AdminRoute>
-  )
-}
-
+      // ================= PUBLIC TOUR PAGE =================
+      {
+        path: "/tour/:id",
+        element: <TourDetails />,
+      },
     ],
   },
- 
-  
-  { path: "/admin/tours", element: <AdminTours /> },
-{ path: "/tour/:id", element: <TourDetails /> },
-
-
-  {
-      
-        path : "/booking-details",
-        element : <BookingDetails />
-      
-  }
-
- ,
- 
 ]);
 
 

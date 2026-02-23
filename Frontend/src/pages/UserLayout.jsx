@@ -1,43 +1,48 @@
-import { useState } from "react";
-import ToursSection from "../utils/ToursSection";
-import UserProfile from "./UserProfile";
-export default function UserLayout() {
+import { Outlet, useNavigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase";
 
-  const [active, setActive] = useState("tours");
+const UserLayout = () => {
+  const navigate = useNavigate();
+
+  const logout = async () => {
+    await signOut(auth);
+    navigate("/");
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-100">
 
-      {/* ===== SIDEBAR ===== */}
-      <aside className="w-64 bg-black text-white p-6">
-
-        <h2 className="text-xl font-bold mb-8">
+      {/* SIDEBAR */}
+      <div className="w-64 bg-black text-white p-6 space-y-6">
+        <h2 className="text-xl font-bold text-yellow-400">
           User Panel
         </h2>
 
-        <nav className="flex flex-col gap-4">
-          <button className="hover:bg-white hover:text-black cursor-pointer" onClick={() => setActive("profile")}>
-            Profile
-          </button>
 
-          <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("tours")}>
-            Tours
-          </button>
-        </nav>
+        <button onClick={() => navigate("/bookings")}
+          className="block w-full text-left hover:text-yellow-400">
+          My Bookings
+        </button>
 
-      </aside>
+        <button onClick={() => navigate("/profile")}
+          className="block w-full text-left hover:text-yellow-400">
+          Profile
+        </button>
 
+        <button onClick={logout}
+          className="block w-full text-left text-red-400">
+          Logout
+        </button>
+      </div>
 
-      {/* ===== CONTENT AREA ===== */}
-      <main className="flex-1 p-8">
-
-       
-        {active === "profile" && <UserProfile />}
-        {active === "tours" && <ToursSection />}
-        
-
-      </main>
+      {/* MAIN CONTENT */}
+      <div className="flex-1 p-8">
+        <Outlet />
+      </div>
 
     </div>
   );
-  
-}
+};
+
+export default UserLayout;
