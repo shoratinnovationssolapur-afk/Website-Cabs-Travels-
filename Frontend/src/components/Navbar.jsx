@@ -1,11 +1,9 @@
 import { useNavigate,useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { useAuthContext } from "../context/AuthContext";
-import { auth } from "../firebase";
+import { auth,db } from "../firebase";
 import { FaBars } from "react-icons/fa6";
-import { LogOut } from "lucide-react";
-import LoginModal from "./LoginModal";
-import LogoutModal from "./LogoutModal";
+import {doc,getDoc} from "firebase/firestore";
 
 
 const Navbar = ({ openLogin, openLogout, loading }) => {
@@ -31,6 +29,29 @@ const Navbar = ({ openLogin, openLogout, loading }) => {
     navigate("/user"); // open
   }
 };
+
+const [username, setUsername] = useState("");
+
+useEffect(() => {
+  const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      setUsername("");
+      return;
+    }
+
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+
+      if (snap.exists()) {
+        setUsername(snap.data().name);
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+    }
+  });
+
+  return () => unsubscribe();
+}, []);
    
   
 
@@ -45,14 +66,19 @@ const Navbar = ({ openLogin, openLogout, loading }) => {
   return (
     <nav className="text-white bg-black px-3 py-2 flex justify-between items-center">
 
-      <div className="flex gap-3" >
-        <FaBars className="relative top-1.5 cursor-pointer" onClick={toggleSB} />
+      <div className="flex gap-3 items-center" >
+        <FaBars className="relative top-0.5 cursor-pointer" onClick={toggleSB} />
         <h2
           onClick={goHome}
           className={`text-xl font-bold  text-yellow-500 cursor-pointer`}
         >
           Rathod Cabs & Travels
         </h2>
+        {username && (
+            <div className="  hidden md:block bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl text-yellow-400 font-semibold shadow-lg relative top-0.5">
+              Welcome back, {username} 👋
+            </div>
+          )}
       </div>
 
       {/* RIGHT SIDE */}

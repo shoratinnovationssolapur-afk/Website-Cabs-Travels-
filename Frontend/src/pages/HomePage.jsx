@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
-import { collection, addDoc, serverTimestamp,getDocs } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp,getDocs,getDoc,doc } from "firebase/firestore";
 
 
 import innova from "../assets/innova.avif";
@@ -49,6 +49,12 @@ const HomePage = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
 
   const navigate = useNavigate();
+
+
+
+
+
+  
 
 
 
@@ -230,6 +236,7 @@ const HomePage = () => {
 
       <section className="relative h-screen flex items-center justify-center text-white overflow-hidden">
 
+      
         {/* Background Image */}
         <div
           className="absolute  inset-0 bg-cover bg-center animate-[zoom_20s_linear_infinite]"
@@ -238,12 +245,19 @@ const HomePage = () => {
               "url('https://images.unsplash.com/photo-1503376780353-7e6692767b70')",
           }}
         ></div>
+          
+
 
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-black/60"></div>
 
+       
         {/* Hero Content */}
         <div className="relative z-10 text-center px-6 max-w-3xl">
+          
+          
+         
+         
           <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fadeInUp">
             Rathod on Road,
             <span className="text-yellow-400"> Comfort on Board</span>
