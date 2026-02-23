@@ -1,11 +1,16 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useLocation } from "react-router-dom";
+import { useState } from "react";
 import { useAuthContext } from "../context/AuthContext";
 import { auth } from "../firebase";
 import { FaBars } from "react-icons/fa6";
+import { LogOut } from "lucide-react";
+import LoginModal from "./LoginModal";
+import LogoutModal from "./LogoutModal";
 
 
 const Navbar = ({ openLogin, openLogout, loading }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { user, role } = useAuthContext();   // ⭐ IMPORTANT
 
@@ -17,9 +22,19 @@ const Navbar = ({ openLogin, openLogout, loading }) => {
     }
   };
 
-  const toggleSB = () => navigate("/user");
-    
   
+
+  const toggleSB = () => {
+  if (location.pathname === "/user") {
+    navigate("/");      // close → go back
+  } else {
+    navigate("/user"); // open
+  }
+};
+   
+  
+
+
   const goRent = () => navigate("/rent-your-car");
 
   const goAdminVehicles = () => navigate("/admin/vehicles");
@@ -30,14 +45,14 @@ const Navbar = ({ openLogin, openLogout, loading }) => {
   return (
     <nav className="text-white bg-black px-3 py-2 flex justify-between items-center">
 
-      <div className="flex gap-3" onClick={toggleSB}>
-         <FaBars className="relative top-1.5 cursor-pointer" />
-       <h2
-        onClick={goHome}
-        className={`text-xl font-bold  text-yellow-500 cursor-pointer`}
-      >  
-        Rathod Cabs & Travels
-      </h2>
+      <div className="flex gap-3" >
+        <FaBars className="relative top-1.5 cursor-pointer" onClick={toggleSB} />
+        <h2
+          onClick={goHome}
+          className={`text-xl font-bold  text-yellow-500 cursor-pointer`}
+        >
+          Rathod Cabs & Travels
+        </h2>
       </div>
 
       {/* RIGHT SIDE */}
@@ -114,7 +129,7 @@ const Navbar = ({ openLogin, openLogout, loading }) => {
               Logout
             </button>
 
-            
+
           </>
         )}
 

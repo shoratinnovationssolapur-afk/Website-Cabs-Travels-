@@ -8,7 +8,7 @@ const UserRoute = ({ children }) => {
   if (loading) return <div>Loading...</div>;
 
   // ❌ Not logged in
-  if (!user) return <Navigate to="/" />;
+  // if (!user) return <Navigate to="/" />;
 
   // ❌ Admin trying to access user panel
   if (role === "Admin") return <Navigate to="/admin" />;

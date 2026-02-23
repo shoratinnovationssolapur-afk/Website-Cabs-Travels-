@@ -1,9 +1,11 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
+import { useState } from "react";
 
 const UserLayout = () => {
   const navigate = useNavigate();
+  const [openSidebar, setOpenSidebar] = useState(true);
 
   const logout = async () => {
     await signOut(auth);
@@ -14,6 +16,11 @@ const UserLayout = () => {
     <div className="flex min-h-screen bg-gray-100">
 
       {/* SIDEBAR */}
+
+       {/* <div
+        className={`w-64 bg-black text-white p-6 transition-transform duration-300
+        ${openSidebar ? "translate-x-0" : "-translate-x-full"}`}
+      > */}
       <div className="w-64 bg-black text-white p-6 space-y-6">
         <h2 className="text-xl font-bold text-yellow-400">
           User Panel
@@ -39,6 +46,7 @@ const UserLayout = () => {
           Logout
         </button>
       </div>
+      {/* </div> */}
 
       {/* MAIN CONTENT */}
       <div className="flex-1 p-8">
