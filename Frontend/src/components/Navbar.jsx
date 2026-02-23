@@ -12,23 +12,36 @@ const Navbar = ({ openLogin, openLogout, loading }) => {
 
   const { user, role } = useAuthContext();   // ⭐ IMPORTANT
 
-  const goHome = () => {
+const goHome = () => {
     if (role === "Admin") {
       navigate("/admin");
+    } else if (role === "Driver") {
+      navigate("/driver/dashboard");
     } else {
       navigate("/");
     }
   };
-
   
 
+// ⭐ UPDATED TOGGLE LOGIC
   const toggleSB = () => {
-  if (location.pathname === "/user") {
-    navigate("/");      // close → go back
-  } else {
-    navigate("/user"); // open
-  }
-};
+    if (role === "Driver") {
+      // If already inside driver section, go home. Else go to driver dashboard
+      if (location.pathname.startsWith("/driver")) {
+        navigate("/");
+      } else {
+        navigate("/driver/dashboard");
+      }
+    } else if (role === "User") {
+      if (location.pathname === "/user") {
+        navigate("/");
+      } else {
+        navigate("/user");
+      }
+    } else {
+      navigate("/");
+    }
+  };
 
 const [username, setUsername] = useState("");
 
@@ -130,6 +143,24 @@ useEffect(() => {
             </button>
           </>
         )}
+
+        {/* ⭐ ADDED: DRIVER NAVBAR BUTTONS (Optional) */}
+        {user && role === "Driver" && (
+          <>
+            <button
+              onClick={() => navigate("/driver/dashboard")}
+              className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer"
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={openLogout}
+              className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer"
+            >
+              Logout
+            </button>
+          </>
+        )}  
 
         {/* ===== USER NAVBAR ===== */}
         {user && role === "User" && (
