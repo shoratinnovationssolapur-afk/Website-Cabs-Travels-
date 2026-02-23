@@ -12,24 +12,29 @@ import { auth, db } from "../firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const LoginModal = ({ closeModal, showMismatch }) => {
-
   const [showadminCode, setShowAdminCode] = useState(false);
-
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
-  const [role, setRole] = useState("User");
+  // Role can now be "User", "Admin", or "Driver"
+  const [role, setRole] = useState("User"); 
   const [adminCode, setAdminCode] = useState("");
 
   const ADMIN_SECRET = "RATHOD_ADMIN_2026";
   const navigate = useNavigate();
 
+  // Helper to handle navigation based on role
+  const redirectByRole = (userRole) => {
+    if (userRole === "Admin") navigate("/admin/dashboard");
+    else if (userRole === "Driver") navigate("/driver/dashboard");
+    else navigate("/");
+  };
+
   // ================= GOOGLE LOGIN =================
   const signInWithGoogle = async () => {
     try {
-
       if (role === "Admin" && adminCode !== ADMIN_SECRET) {
         alert("Invalid Admin Code");
         return;
@@ -42,7 +47,6 @@ const LoginModal = ({ closeModal, showMismatch }) => {
       const userRef = doc(db, "users", user.uid);
       const snap = await getDoc(userRef);
 
-      // New user
       if (!snap.exists()) {
         await setDoc(userRef, {
           name: user.displayName,
@@ -55,7 +59,6 @@ const LoginModal = ({ closeModal, showMismatch }) => {
 
       const userData = (await getDoc(userRef)).data();
 
-      // ⭐ Role mismatch check
       if (role !== userData.role) {
         showMismatch(`You are registered as ${userData.role}. Please login as ${userData.role}.`);
         await signOut(auth);
@@ -63,10 +66,8 @@ const LoginModal = ({ closeModal, showMismatch }) => {
       }
 
       alert("Login Successful");
-
-      navigate(userData.role === "Admin" ? "/admin/dashboard" : "/");
+      redirectByRole(userData.role);
       closeModal();
-
     } catch (error) {
       alert(error.message);
     }
@@ -75,12 +76,10 @@ const LoginModal = ({ closeModal, showMismatch }) => {
   // ================= REGISTER =================
   const registerUser = async () => {
     try {
-
-      const userCred = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      // Logic for Driver registration: 
+      // If you need specific driver codes, you can add a check here similar to Admin.
+      
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
 
       await setDoc(doc(db, "users", userCred.user.uid), {
         name,
@@ -90,15 +89,12 @@ const LoginModal = ({ closeModal, showMismatch }) => {
       });
 
       alert("Account Created. Please login.");
-
       await signOut(auth);
 
-      // Reset form
       setEmail("");
       setPassword("");
       setName("");
       setIsRegister(false);
-
     } catch (error) {
       alert(error.message);
     }
@@ -107,7 +103,6 @@ const LoginModal = ({ closeModal, showMismatch }) => {
   // ================= LOGIN =================
   const loginUser = async () => {
     try {
-
       await signInWithEmailAndPassword(auth, email, password);
 
       const user = auth.currentUser;
@@ -120,26 +115,21 @@ const LoginModal = ({ closeModal, showMismatch }) => {
 
       const userData = snap.data();
 
-      // ⭐ Role mismatch
       if (role !== userData.role) {
         showMismatch(`You are registered as ${userData.role}. Please login as ${userData.role}.`);
         await signOut(auth);
         return;
       }
 
-      // ⭐ Admin code check
-      if (userData.role === "Admin") {
-        if (adminCode !== ADMIN_SECRET) {
-          alert("Invalid Admin Code");
-          return;
-        }
+      if (userData.role === "Admin" && adminCode !== ADMIN_SECRET) {
+        alert("Invalid Admin Code");
+        await signOut(auth);
+        return;
       }
 
       alert("Login Successful");
-
-      navigate(userData.role === "Admin" ? "/admin/dashboard" : "/");
+      redirectByRole(userData.role);
       closeModal();
-
     } catch (error) {
       alert(error.message);
     }
@@ -147,30 +137,22 @@ const LoginModal = ({ closeModal, showMismatch }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-
       <div className="bg-white rounded-xl w-[450px] p-8 relative">
-
+        
         {/* ROLE SELECTOR */}
-        <div className="flex gap-4 mb-4">
-          <label>
-            <input
-              type="radio"
-              value="User"
-              checked={role === "User"}
-              onChange={(e) => setRole(e.target.value)}
-            />
-            User
-          </label>
-
-          <label>
-            <input
-              type="radio"
-              value="Admin"
-              checked={role === "Admin"}
-              onChange={(e) => setRole(e.target.value)}
-            />
-            Admin
-          </label>
+        <div className="flex justify-between mb-6 bg-gray-100 p-2 rounded-lg">
+          {["User", "Driver", "Admin"].map((r) => (
+            <label key={r} className={`flex-1 text-center py-2 rounded-md cursor-pointer transition-all ${role === r ? "bg-blue-900 text-white" : "text-gray-600"}`}>
+              <input
+                type="radio"
+                className="hidden"
+                value={r}
+                checked={role === r}
+                onChange={(e) => setRole(e.target.value)}
+              />
+              {r}
+            </label>
+          ))}
         </div>
 
         {/* GOOGLE BUTTON */}
@@ -185,8 +167,7 @@ const LoginModal = ({ closeModal, showMismatch }) => {
 
         {!isRegister ? (
           <>
-            <h3 className="text-xl font-semibold mb-4">Login with Email</h3>
-
+            <h3 className="text-xl font-semibold mb-4">Login as {role}</h3>
             <input
               type="email"
               placeholder="Email"
@@ -194,7 +175,6 @@ const LoginModal = ({ closeModal, showMismatch }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-
             <input
               type="password"
               placeholder="Password"
@@ -203,41 +183,33 @@ const LoginModal = ({ closeModal, showMismatch }) => {
               onChange={(e) => setPassword(e.target.value)}
             />
 
-          {role === "Admin" && (
-            <div className="relative mb-4">
-              <input
-                type={showadminCode ? "text" : "password"}
-                placeholder="Enter Admin Code"
-                className="w-full border p-3 rounded"
-                value={adminCode}
-                onChange={(e) => setAdminCode(e.target.value)}
-              />
-              {!showadminCode ? (
-                <IoEye
-                  className="absolute top-[17px] right-[12px] text-gray-500 w-[20px] h-[20px] cursor-pointer"
-                  onClick={() => setShowAdminCode(true)}
+            {role === "Admin" && (
+              <div className="relative mb-4">
+                <input
+                  type={showadminCode ? "text" : "password"}
+                  placeholder="Enter Admin Code"
+                  className="w-full border p-3 rounded"
+                  value={adminCode}
+                  onChange={(e) => setAdminCode(e.target.value)}
                 />
-              ) : (
-                <IoEyeOff
-                  className="absolute top-[17px] right-[12px] text-gray-500 w-[20px] h-[20px] cursor-pointer"
-                  onClick={() => setShowAdminCode(false)}
-                />
-              )}
-            </div>
-          )}
-            
-           
-          
+                <div 
+                  className="absolute top-[17px] right-[12px] cursor-pointer"
+                  onClick={() => setShowAdminCode(!showadminCode)}
+                >
+                  {showadminCode ? <IoEyeOff className="text-gray-500" /> : <IoEye className="text-gray-500" />}
+                </div>
+              </div>
+            )}
 
             <button
               onClick={loginUser}
-              className="w-full bg-blue-900 text-white py-3 rounded font-semibold"
+              className="w-full bg-blue-900 text-white py-3 rounded font-semibold hover:bg-blue-800"
             >
               Login
             </button>
 
             <p className="mt-4 text-sm">
-              New User?{" "}
+              New {role}?{" "}
               <span
                 onClick={() => setIsRegister(true)}
                 className="text-blue-700 font-semibold cursor-pointer"
@@ -248,15 +220,13 @@ const LoginModal = ({ closeModal, showMismatch }) => {
           </>
         ) : (
           <>
-            <h3 className="text-xl font-semibold mb-4">Create Account</h3>
-
+            <h3 className="text-xl font-semibold mb-4">Create {role} Account</h3>
             <input
               placeholder="Full Name"
               className="w-full border p-3 rounded mb-3"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-
             <input
               type="email"
               placeholder="Email"
@@ -264,7 +234,6 @@ const LoginModal = ({ closeModal, showMismatch }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-
             <input
               type="password"
               placeholder="Password"
@@ -275,7 +244,7 @@ const LoginModal = ({ closeModal, showMismatch }) => {
 
             <button
               onClick={registerUser}
-              className="w-full bg-green-600 text-white py-3 rounded font-semibold"
+              className="w-full bg-green-600 text-white py-3 rounded font-semibold hover:bg-green-700"
             >
               Create Account
             </button>
@@ -295,11 +264,10 @@ const LoginModal = ({ closeModal, showMismatch }) => {
         {/* CLOSE BUTTON */}
         <button
           onClick={closeModal}
-          className="absolute top-3 right-3 text-xl font-bold"
+          className="absolute top-3 right-3 text-xl font-bold text-gray-400 hover:text-black"
         >
           ✕
         </button>
-
       </div>
     </div>
   );
