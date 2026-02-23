@@ -166,13 +166,10 @@ const router = createBrowserRouter([
         path: "/tour/:id",
         element: <TourDetails />,
       },
-<<<<<<< HEAD
-=======
       {
         path: "/tours",
         element: <ToursSection />,
       },
->>>>>>> 3646680f20580e7f0d59a180d919fff7a5a85ceb
     ],
   },
 ]);

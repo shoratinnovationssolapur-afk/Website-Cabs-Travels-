@@ -6,9 +6,11 @@ const AdminRoute = ({ children }) => {
 
   if (loading) return <div>Loading...</div>;
 
-  if (!user) return <Navigate to="/admin" />;
+  // CHANGE THIS: If no user, send them to the main homepage or public login
+  if (!user) return <Navigate to="/" />; 
 
-  if (role !== "Admin") return <Navigate to="/admin" />;
+  // If they are logged in but NOT an admin, also send them away
+  if (role !== "Admin") return <Navigate to="/" />;
 
   return children;
 };
