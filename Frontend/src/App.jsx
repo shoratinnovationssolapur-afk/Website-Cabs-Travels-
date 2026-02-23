@@ -30,8 +30,12 @@ import {
   RouterProvider,
   Outlet,
 } from "react-router-dom";
+<<<<<<< HEAD
 import UserLayout from "./pages/UserLayout";
 import UserRoute from "./components/UserRoute";
+=======
+import Tours from "./pages/Tours";
+>>>>>>> 248fbef0dcda052ed2261e4ef909cff196be7c9a
 
 
 // ================= LAYOUT =================
@@ -143,6 +147,7 @@ const router = createBrowserRouter([
       },
 
       {
+<<<<<<< HEAD
         path: "/admin/drivers",
         element: (
           <AdminRoute>
@@ -165,6 +170,12 @@ const router = createBrowserRouter([
         path: "/tour/:id",
         element: <TourDetails />,
       },
+=======
+        path: "/tours",
+        element: <Tours />
+      },
+
+>>>>>>> 248fbef0dcda052ed2261e4ef909cff196be7c9a
     ],
   },
 ]);
