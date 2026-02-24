@@ -8,6 +8,7 @@ import BookingDetails from "./pages/BookingDetails";
 import DriverDashboard from "./pages/DriverDashboard"; // Create this file from previous code
 import DriverLogin from "./pages/DriverLogin";         // Create this file from previous code
 import DriverRoute from "./components/DriverRoute";   // Add this helper
+import UserDashboard from "./pages/UserDashboard";
 import "leaflet/dist/leaflet.css";
 
 import AdminVehicles from "./pages/AdminVehicles";
@@ -101,7 +102,12 @@ const router = createBrowserRouter([
             <UserLayout />
           </UserRoute>
         ),
-      },
+ 
+      children: [
+    { index: true, element: <UserDashboard /> }, // matches "/user"
+    { path: "dashboard", element: <UserDashboard /> }, // matches "/user/dashboard"
+    { path: "profile", element: <UserProfile /> },
+  ],},
 
       // ================= DRIVER SECTION =================
       {

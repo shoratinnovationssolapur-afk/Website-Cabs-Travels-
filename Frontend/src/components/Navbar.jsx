@@ -23,25 +23,33 @@ const goHome = () => {
   };
   
 
-// ⭐ UPDATED TOGGLE LOGIC
-  const toggleSB = () => {
-    if (role === "Driver") {
-      // If already inside driver section, go home. Else go to driver dashboard
-      if (location.pathname.startsWith("/driver")) {
-        navigate("/");
-      } else {
-        navigate("/driver/dashboard");
-      }
-    } else if (role === "User") {
-      if (location.pathname === "/user") {
-        navigate("/");
-      } else {
-        navigate("/user");
-      }
-    } else {
-      navigate("/");
-    }
-  };
+const toggleSB = () => {
+  // 1. Handle Unauthenticated (Non-Logged) Users
+  if (!user) {
+    openLogin(); // Use the prop function instead of navigate("/login")
+    return;
+  }
+
+  // 2. Admin Logic
+  if (role === "Admin") {
+    location.pathname.startsWith("/admin") ? navigate("/") : navigate("/admin/dashboard");
+  } 
+  
+  // 3. Driver Logic
+  else if (role === "Driver") {
+    location.pathname.startsWith("/driver") ? navigate("/") : navigate("/driver/dashboard");
+  } 
+  
+  // 4. User/Customer Logic
+  else if (role === "User") {
+    // This will now work because we added the route in App.jsx
+    location.pathname.startsWith("/user") ? navigate("/") : navigate("/user/dashboard");
+  } 
+  
+  else {
+    navigate("/");
+  }
+};
 
 const [username, setUsername] = useState("");
 

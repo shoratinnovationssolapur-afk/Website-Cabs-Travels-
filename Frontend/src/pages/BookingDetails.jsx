@@ -7,6 +7,7 @@ import {
   Car, Loader2, Minus, Plus, IndianRupee, ShieldCheck, ChevronLeft
 } from 'lucide-react';
 import { getAuth } from "firebase/auth"; // <--- Add this
+import { autoAssignDriver } from "../utils/autoAssignDriver";
 
 
 const auth = getAuth(); // <--- Initialize auth
