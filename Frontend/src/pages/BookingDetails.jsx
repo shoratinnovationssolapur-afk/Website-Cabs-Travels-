@@ -82,8 +82,8 @@ const BookingDetails = () => {
     setPassengers(updated);
 
     if (i === 0 && field === "dateTime") {
-    setDateTime(value);
-  }
+      setDateTime(value);
+    }
   };
 
   const addPassenger = () => {
@@ -94,16 +94,18 @@ const BookingDetails = () => {
   };
 
   // ================= RECEIVE DISTANCE FROM ROUTEFARE =================
-  const handleFareUpdate = ({ distance, fare}) => {
+  const handleFareUpdate = ({ distance, fare }) => {
     setDistance(distance);
     setRouteFare(fare);
     // setDateTime(dateTime);
     // setName(name);
-   
+
   };
 
   // ================= TOTAL COST =================
-  const baseFare = vehicle?.pricePerKm?parseInt(vehicle.pricePerKm)*20:20; // minimum charge
+  const pricePerKm = vehicle?.pricePerKm || 0;
+  const basefare = 20
+  const baseFare = vehicle?.pricePerKm ? parseInt(vehicle.pricePerKm) + 20 : 20; // minimum charge
 
   const totalAmount =
     tripType === "outstation"
@@ -111,31 +113,71 @@ const BookingDetails = () => {
       : routeFare + baseFare;
 
   // ================= CREATE BOOKING =================
+  // const handleFinalBooking = async () => {
+  //   try {
+  //     if (!auth.currentUser) return alert("Please login first");
+
+  //     if (!pickup || !drop) {
+  //       alert("Please enter route");
+  //       return;
+  //     }
+
+  //     const bookingRef = await addDoc(collection(db, "bookings"), {
+  //       vehicleId: vehicle.id,
+  //       vehicleName: vehicle.name,
+  //       pickup,
+  //       drop,
+  //       dateTime,
+  //       tripType,
+  //       durationDays: tripType === "outstation" ? days : 1,
+  //       distance,
+  //       totalFare: totalAmount,
+  //       passengers,
+  //       status: "pending",
+  //       userId: auth.currentUser.uid,
+  //       createdAt: serverTimestamp(),
+  //     });
+
+  //     const id = bookingRef.id;
+  //     setBookingId(id);
+
+  //     await autoAssignDriver(id);
+
+  //     alert("Booking Created Successfully");
+
+  //     navigate("/booking-success", {
+  //       state: { bookingId: id },
+  //     });
+
+  //   } catch (err) {
+  //     alert(err.message);
+  //   }
+  // };
+
+
   const handleFinalBooking = async () => {
     try {
       if (!auth.currentUser) return alert("Please login first");
+      if (!pickup || !drop) return alert("Please enter route");
 
-      if (!pickup || !drop) {
-        alert("Please enter route");
-        return;
-      }
+      // Get the first passenger as the primary contact
+      const primaryPassenger = passengers[0];
 
-      const bookingRef = await addDoc(collection(db, "bookings"), {
+      await addDoc(collection(db, "bookings"), {
         vehicleId: vehicle.id,
         vehicleName: vehicle.name,
         pickup,
         drop,
         dateTime,
-        tripType,
-        durationDays: tripType === "outstation" ? days : 1,
-        distance,
-        totalFare: totalAmount,
+        // Add these two lines:
+        name: primaryPassenger.name || "N/A",
+        phone: primaryPassenger.phone || "N/A",
+        // ... keep everything else
         passengers,
         status: "pending",
         userId: auth.currentUser.uid,
         createdAt: serverTimestamp(),
       });
-
       const id = bookingRef.id;
       setBookingId(id);
 
@@ -151,6 +193,8 @@ const BookingDetails = () => {
       alert(err.message);
     }
   };
+
+  // ... rest of your code
 
   // ================= REALTIME STATUS =================
   useEffect(() => {
@@ -348,7 +392,17 @@ const BookingDetails = () => {
           </div>
 
           <div className="flex justify-between mb-3">
+            <span>PricePerKm</span>
+            <span>₹{pricePerKm}</span>
+          </div>
+
+          <div className="flex justify-between mb-3">
             <span>Base Fare</span>
+            <span>₹{basefare}</span>
+          </div>
+
+          <div className="flex justify-between mb-3">
+            <span>Base Fare + PricePerKm</span>
             <span>₹{baseFare}</span>
           </div>
 

@@ -10,6 +10,7 @@ import { autoAssignDriver } from "../utils/autoAssignDriver";
 
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
+  const [passenger,setPassenger]=useState([]);
 
   const fetchBookings = async () => {
     const snapshot = await getDocs(collection(db, "bookings"));
