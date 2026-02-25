@@ -1,266 +1,394 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { doc, getDoc, addDoc, collection, serverTimestamp,onSnapshot,getDocs,updateDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  addDoc,
+  collection,
+  serverTimestamp,
+  onSnapshot,
+} from "firebase/firestore";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { 
-  Calendar, MapPin, CheckCircle, Info, 
-  Car, Loader2, Minus, Plus, IndianRupee, ShieldCheck, ChevronLeft
-} from 'lucide-react';
-import { getAuth } from "firebase/auth"; // <--- Add this
+import {
+  Loader2,
+  Minus,
+  Plus,
+  CheckCircle,
+  ShieldCheck,
+  ChevronLeft,
+  MapPin,
+} from "lucide-react";
+import { getAuth } from "firebase/auth";
+import LocationInputs from "../components/pickupanddrop";
+import RouteFare from "../components/RouteFare";   // ⭐ ADD
+import { autoAssignDriver } from "../utils/autoAssignDriver";
 
-
-const auth = getAuth(); // <--- Initialize auth
+const auth = getAuth();
 
 const BookingDetails = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
+
+  // ROUTE
+  const [pickup, setPickup] = useState("");
+  const [drop, setDrop] = useState("");
+  const [dateTime, setDateTime] = useState("");
+
+  // VEHICLE
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [days, setDays] = useState(1);
-  const [bookingId, setBookingId] = useState(null);
-const [rideStatus, setRideStatus] = useState(null);
-  
-  const vehicleId = searchParams.get("vehicle_id");
-  const pickupLocation = searchParams.get("pickup") || "Solapur City";
-  const dropLocation = searchParams.get("drop") || "Pune Airport";
 
+  // TRIP
+  const [tripType, setTripType] = useState("city");
+  const [days, setDays] = useState(1);
+
+  // PASSENGERS
+  const [passengers, setPassengers] = useState([
+    { name: "", age: "", phone: "", dateTime: "", type: "Adult" },
+  ]);
+
+  // BOOKING STATUS
+  const [bookingId, setBookingId] = useState(null);
+  const [rideStatus, setRideStatus] = useState(null);
+
+  // ⭐ DISTANCE DATA FROM ROUTEFARE
+  const [routeFare, setRouteFare] = useState(0);
+  const [distance, setDistance] = useState(0);
+
+  const vehicleId = searchParams.get("vehicle_id");
+
+  // ================= FETCH VEHICLE =================
   useEffect(() => {
     const fetchVehicle = async () => {
-      if (vehicleId) {
-        try {
-          const docRef = doc(db, "vehicles", vehicleId);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setVehicle({ id: docSnap.id, ...docSnap.data() });
-          }
-        } catch (error) { console.error("Firestore Error:", error); }
+      if (!vehicleId) return;
+
+      const snap = await getDoc(doc(db, "vehicles", vehicleId));
+      if (snap.exists()) {
+        setVehicle({ id: snap.id, ...snap.data() });
       }
       setLoading(false);
     };
+
     fetchVehicle();
   }, [vehicleId]);
 
-// const handleFinalBooking = async () => {
-//   try {
-//     await addDoc(collection(db, "bookings"), { // Changed to 'bookings'
-//       vehicleId: vehicle.id,
-//       vehicleName: vehicle.name,
-//       pickup: pickupLocation,
-//       drop: dropLocation,
-//       durationDays: days,
-//       totalFare: totalAmount,
-//       status: "pending", // Set to pending for Admin review
-//       userId: auth.currentUser.uid, // Required so you can read it back later
-//       createdAt: serverTimestamp()
-//     });
-//     alert("🚀 Request sent to Admin for confirmation!");
-//     navigate(`/my-booking/${docRef.id}`)
-//     // navigate('/');
-//   } catch (error) { 
-//     alert("Error: " + error.message); 
-//   }
-// };
-const handleFinalBooking = async () => {
-  try {
+  // ================= PASSENGERS =================
+  const updatePassenger = (i, field, value) => {
+    const updated = [...passengers];
+    updated[i][field] = value;
+    setPassengers(updated);
 
-    // 🔴 Ensure user logged in
-    if (!auth.currentUser) {
-      alert("Please login first");
-      return;
+    if (i === 0 && field === "dateTime") {
+    setDateTime(value);
+  }
+  };
+
+  const addPassenger = () => {
+    setPassengers([
+      ...passengers,
+      { name: "", age: "", phone: "", dateTime: "", type: "Adult" },
+    ]);
+  };
+
+  // ================= RECEIVE DISTANCE FROM ROUTEFARE =================
+  const handleFareUpdate = ({ distance, fare,dateTime }) => {
+    setDistance(distance);
+    setRouteFare(fare);
+    setDateTime(dateTime);
+   
+  };
+
+  // ================= TOTAL COST =================
+  const baseFare = 200; // minimum charge
+
+  const totalAmount =
+    tripType === "outstation"
+      ? (routeFare + baseFare) * days
+      : routeFare + baseFare;
+
+  // ================= CREATE BOOKING =================
+  const handleFinalBooking = async () => {
+    try {
+      if (!auth.currentUser) return alert("Please login first");
+
+      if (!pickup || !drop) {
+        alert("Please enter route");
+        return;
+      }
+
+      const bookingRef = await addDoc(collection(db, "bookings"), {
+        vehicleId: vehicle.id,
+        vehicleName: vehicle.name,
+        pickup,
+        drop,
+        dateTime,
+        tripType,
+        durationDays: tripType === "outstation" ? days : 1,
+        distance,
+        totalFare: totalAmount,
+        passengers,
+        status: "pending",
+        userId: auth.currentUser.uid,
+        createdAt: serverTimestamp(),
+      });
+
+      const id = bookingRef.id;
+      setBookingId(id);
+
+      await autoAssignDriver(id);
+
+      alert("Booking Created Successfully");
+
+      navigate("/booking-success", {
+        state: { bookingId: id },
+      });
+
+    } catch (err) {
+      alert(err.message);
     }
+  };
 
-    // 1️⃣ CREATE BOOKING
-    const bookingRef = await addDoc(collection(db, "bookings"), {
-      vehicleId: vehicle.id,
-      vehicleName: vehicle.name,
-      pickup: pickupLocation,
-      drop: dropLocation,
-      durationDays: days,
-      totalFare: totalAmount,
-      status: "pending",
-      userId: auth.currentUser.uid,
-      createdAt: serverTimestamp()
+  // ================= REALTIME STATUS =================
+  useEffect(() => {
+    if (!bookingId) return;
+
+    const unsub = onSnapshot(doc(db, "bookings", bookingId), (snap) => {
+      if (snap.exists()) setRideStatus(snap.data().status);
     });
 
-    // 🔥 IMPORTANT — booking ID
-    const bookingId = bookingRef.id;
+    return () => unsub();
+  }, [bookingId]);
 
-    if (!bookingId) {
-      alert("Booking ID missing");
-      return;
-    }
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-yellow-500" size={48} />
+      </div>
+    );
 
-    // 2️⃣ AUTO ASSIGN DRIVER
-    await autoAssignDriver(bookingId);
-
-    alert("🚀 Booking created & driver assigned!");
-
-    navigate("/");
-
-  } catch (error) {
-    alert("Error: " + error.message);
-  }
-};
-
-
-
-useEffect(() => {
-  if (!bookingId) return;
-
-  const unsubscribe = onSnapshot(
-    doc(db, "bookings", bookingId),
-    (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
-        setRideStatus(data.status);
-      }
-    }
-  );
-
-  return () => unsubscribe();
-}, [bookingId]);
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-yellow-500" size={48} /></div>;
-
-  const dailyRate = vehicle?.pricePerKm ? parseInt(vehicle.pricePerKm) * 10 : 2500;
-  const totalAmount = dailyRate * days;
-
+  // ================= UI =================
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* 1. LARGE HERO IMAGE SECTION */}
-      <div className="relative w-full h-[450px] bg-black">
-        <img 
-          src={vehicle?.imageUrl} 
-          alt={vehicle?.name} 
+
+      {/* HERO */}
+      <div className="relative h-[420px] bg-black">
+        <img
+          src={vehicle?.imageUrl}
+          alt={vehicle?.name}
           className="w-full h-full object-cover opacity-80"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30"></div>
-        
-        {/* Back Button Overlay */}
-        <button 
+
+        <button
           onClick={() => navigate(-1)}
-          className="absolute top-6 left-6 bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-white/40 transition"
+          className="absolute top-6 left-6 bg-white/20 p-2 rounded-full text-white"
         >
           <ChevronLeft size={28} />
         </button>
 
-        {/* Floating Vehicle Title */}
-        <div className="absolute bottom-10 left-6 md:left-20 text-white">
-          <span className="bg-yellow-400 text-black px-3 py-1 rounded-md text-xs font-bold uppercase tracking-widest">
-            {vehicle?.type || 'Premium'}
-          </span>
-          <h1 className="text-4xl md:text-6xl font-black mt-2 drop-shadow-lg uppercase tracking-tight">
-            {vehicle?.name}
-          </h1>
-          <p className="text-gray-300 mt-2 font-medium flex items-center gap-2">
-            <CheckCircle size={18} className="text-yellow-400" /> Professional Grade Cab Service
-          </p>
+        <div className="absolute bottom-10 left-8 text-white">
+          <h1 className="text-5xl font-black">{vehicle?.name}</h1>
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-10 -mt-10 relative z-10">
-        
-        {/* Left Column: Details */}
+      <main className="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-8 -mt-10">
+
+        {/* LEFT */}
         <div className="lg:col-span-2 space-y-6">
-          
-          {/* Trip Summary Card */}
-          <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
-             <div className="flex justify-between items-center mb-8">
-                <h3 className="text-2xl font-bold flex items-center gap-3">
-                   <MapPin className="text-yellow-500" /> Route Details
-                </h3>
-                <div className="bg-gray-100 px-4 py-2 rounded-2xl">
-                   <p className="text-[10px] text-gray-500 uppercase font-bold text-center">Duration</p>
-                   <p className="font-bold text-gray-800">{days} Days Trip</p>
-                </div>
-             </div>
 
-             <div className="grid md:grid-cols-2 gap-10 relative">
-                {/* Vertical Line Decor */}
-                <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-0.5 bg-gray-100"></div>
-                
-                <div className="space-y-1">
-                   <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">From</p>
-                   <p className="text-xl font-bold text-gray-800">{pickupLocation}</p>
-                </div>
+          {/* ROUTE */}
+          <div className="bg-white p-6 mt-20 rounded-2xl shadow">
+            <h3 className="font-bold text-xl mb-4 flex gap-2">
+              <MapPin className="text-yellow-500" /> Route
+            </h3>
 
-                <div className="space-y-1 md:text-right">
-                   <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">To</p>
-                   <p className="text-xl font-bold text-gray-800">{dropLocation}</p>
-                </div> 
-             </div>
+            <LocationInputs
+              pickup={pickup}
+              setPickup={setPickup}
+              drop={drop}
+              setDrop={setDrop}
+            />
+
+            {/* ⭐ ROUTE FARE COMPONENT */}
+            <RouteFare
+              pickup={pickup}
+              drop={drop}
+              dateTime={dateTime}
+              onFareCalculated={handleFareUpdate}
+            />
           </div>
 
-          {/* Duration Selector */}
-          <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
-             <div>
-                <h3 className="text-xl font-bold">Extend Your Trip?</h3>
-                <p className="text-gray-500">Adjust the number of days you need the vehicle.</p>
-             </div>
-             <div className="flex items-center gap-6 bg-gray-50 p-3 rounded-2xl border border-gray-100">
-                <button 
-                  onClick={() => setDays(Math.max(1, days - 1))}
-                  className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-md hover:text-yellow-500 transition"
-                >
-                  <Minus size={20}/>
-                </button>
-                <span className="text-3xl font-black min-w-[40px] text-center">{days}</span>
-                <button 
-                  onClick={() => setDays(days + 1)}
-                  className="w-12 h-12 flex items-center justify-center bg-white rounded-xl shadow-md hover:text-yellow-500 transition"
-                >
-                  <Plus size={20}/>
-                </button>
-             </div>
-          </div>
-        </div>
+          {/* TRIP TYPE */}
+          <div className="bg-white p-6 rounded-2xl shadow">
+            <h3 className="font-bold mb-3">Trip Type</h3>
 
-        {/* Right Column: Pricing */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-[40px] p-8 shadow-2xl border border-gray-100 sticky top-24">
-            <h3 className="text-2xl font-bold mb-8">Fare Details</h3>
-            
-            <div className="space-y-5 mb-10">
-              <div className="flex justify-between text-gray-500 font-medium">
-                <span>Daily Rate</span>
-                <span>₹{dailyRate}</span>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setTripType("city")}
+                className={`px-6 py-3 rounded-xl border ${tripType === "city"
+                  ? "bg-yellow-400"
+                  : "bg-white border-gray-300"
+                  }`}
+              >
+                🏙️ City
+              </button>
+
+              <button
+                onClick={() => setTripType("outstation")}
+                className={`px-6 py-3 rounded-xl border ${tripType === "outstation"
+                  ? "bg-yellow-400"
+                  : "bg-white border-gray-300"
+                  }`}
+              >
+                🚗 Outstation
+              </button>
+            </div>
+          </div>
+
+          {/* DURATION */}
+          {tripType === "outstation" && (
+            <div className="bg-white p-6 rounded-2xl shadow flex justify-between">
+              <div>
+                <h3 className="font-bold">Trip Duration</h3>
+                <p>{days} Days</p>
               </div>
-              <div className="flex justify-between text-gray-500 font-medium">
-                <span>Total Days</span>
-                <span>x {days}</span>
-              </div>
-              <div className="border-t border-dashed pt-5 mt-5 flex justify-between items-end">
-                <span className="font-bold text-gray-400">GRAND TOTAL</span>
-                <div className="text-right">
-                  <p className="text-4xl font-black text-black">₹{totalAmount}</p>
-                  <p className="text-[10px] text-green-600 font-bold tracking-widest uppercase">No Hidden Taxes</p>
-                </div>
+
+              <div className="flex gap-4">
+                <button onClick={() => setDays(Math.max(1, days - 1))}>
+                  <Minus />
+                </button>
+                <button onClick={() => setDays(days + 1)}>
+                  <Plus />
+                </button>
               </div>
             </div>
-            {rideStatus && (
-  <div className="mt-6 bg-blue-50 border border-blue-200 p-4 rounded-xl">
-    <p className="font-semibold text-blue-800">
-      🚦 Ride Status: {rideStatus.toUpperCase()}
-    </p>
-  </div>
-)}
+          )}
 
-            <button 
-              onClick={handleFinalBooking}
-              className="w-full bg-yellow-400 text-black py-5 rounded-2xl font-black text-lg hover:bg-yellow-500 transition-all shadow-xl shadow-yellow-200 active:scale-95 flex items-center justify-center gap-3"
+          {/* PASSENGERS */}
+          <div className="bg-white p-6 rounded-2xl shadow">
+            <h3 className="font-bold mb-3">Passenger List</h3>
+
+            {passengers.map((p, i) => (
+              <div key={i} className="grid md:grid-cols-4 gap-3 mb-2">
+                <input
+                  placeholder="Name"
+                  value={p.name}
+                  onChange={(e) =>
+                    updatePassenger(i, "name", e.target.value)
+                  }
+                  className="border p-2 rounded"
+                />
+
+                <input
+                  placeholder="Phone"
+                  value={p.phone}
+                  onChange={(e) =>
+                    updatePassenger(i, "phone", e.target.value)
+                  }
+                  className="border p-2 rounded"
+                />
+
+                <input
+                  type="number"
+                  placeholder="Age"
+                  value={p.age}
+                  onChange={(e) =>
+                    updatePassenger(i, "age", e.target.value)
+                  }
+                  className="border p-2 rounded"
+                />
+
+
+                <select
+                  value={p.type}
+                  onChange={(e) =>
+                    updatePassenger(i, "type", e.target.value)
+                  }
+                  className="border p-2 rounded"
+                >
+                  <option>Adult</option>
+                  <option>Child</option>
+                </select>
+
+                <input
+                  type="datetime-local"
+                  value={p.dateTime}
+                  onChange={(e) => updatePassenger(i, "dateTime", e.target.value)}
+                  className="border p-3 rounded-lg md:col-span-4"
+                />
+
+              </div>
+            ))}
+
+            <button
+              onClick={addPassenger}
+              className="bg-yellow-400 px-4 py-2 rounded mt-2"
             >
-              CONFIRM NOW <CheckCircle size={22} />
+              + Add Passenger
             </button>
-
-            <div className="mt-8 p-4 bg-gray-50 rounded-2xl flex gap-3 border border-gray-100">
-              <ShieldCheck className="text-green-500 shrink-0" size={24} />
-              <p className="text-[11px] text-gray-600 leading-relaxed font-medium">
-                <strong>Safety First:</strong> All Rathod Cabs drivers are verified and follow strict safety protocols. Pay the driver directly upon arrival.
-              </p>
-            </div>
           </div>
         </div>
+
+        {/* RIGHT — FARE */}
+        <div className="bg-white p-8 mt-20 rounded-3xl shadow sticky top-20">
+
+          <h3 className="text-2xl font-bold mb-6">Fare Details</h3>
+
+          <div className="flex justify-between mb-3">
+            <span>Distance</span>
+            <span>{distance ? distance.toFixed(1) : 0} km</span>
+          </div>
+
+          <div className="flex justify-between mb-3">
+            <span>Distance Fare</span>
+            <span>₹{routeFare}</span>
+          </div>
+
+          <div className="flex justify-between mb-3">
+            <span>Base Fare</span>
+            <span>₹{baseFare}</span>
+          </div>
+
+          {tripType === "outstation" && (
+            <div className="flex justify-between mb-3">
+              <span>Days</span>
+              <span>x {days}</span>
+            </div>
+          )}
+
+          <div className="border-t pt-4 flex justify-between text-2xl font-bold">
+            <span>Total</span>
+            <span>₹{totalAmount}</span>
+          </div>
+
+          <div className="flex justify-between mb-3">
+            <span>Trip</span>
+            <span>{tripType}</span>
+          </div>
+
+          {/* <div className="border-t pt-4 flex justify-between text-2xl font-bold">
+            <span>Total</span>
+            <span>₹{totalAmount.toFixed(0)}</span>
+          </div> */}
+
+          {rideStatus && (
+            <div className="mt-4 p-3 bg-blue-50 rounded">
+              Status: {rideStatus}
+            </div>
+          )}
+
+          <button
+            onClick={handleFinalBooking}
+            className="w-full bg-yellow-400 py-4 rounded-xl font-bold mt-6"
+          >
+            CONFIRM BOOKING
+          </button>
+
+          <div className="mt-6 flex gap-2 text-sm text-gray-600">
+            <ShieldCheck className="text-green-500" />
+            Verified drivers & safe travel
+          </div>
+        </div>
+
       </main>
     </div>
   );

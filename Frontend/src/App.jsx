@@ -10,6 +10,7 @@ import DriverLogin from "./pages/DriverLogin";         // Create this file from 
 import DriverRoute from "./components/DriverRoute";   // Add this helper
 import "leaflet/dist/leaflet.css";
 
+
 import AdminVehicles from "./pages/AdminVehicles";
 import AdminBookings from "./pages/AdminBookings";
 import AdminUsers from "./pages/AdminUsers";
@@ -38,6 +39,7 @@ import {
 } from "react-router-dom";
 import UserLayout from "./pages/UserLayout";
 import UserRoute from "./components/UserRoute";
+import BookingSuccess from "./pages/BookingSuccess";
 
 
 // ================= LAYOUT =================
@@ -191,6 +193,10 @@ const router = createBrowserRouter([
         path: "/tours",
         element: <ToursSection />,
       },
+      {
+      path: "/booking-success",
+      element:<BookingSuccess />
+    },
     ],
   },
 ]);
