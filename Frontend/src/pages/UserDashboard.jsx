@@ -1,8 +1,10 @@
 import React from 'react';
 import { useAuthContext } from "../context/AuthContext";
+import { Navigate,useNavigate } from 'react-router-dom';
 
 const UserDashboard = () => {
   const { user } = useAuthContext();
+  const navigate = useNavigate();
 
   return (
     <div className="p-6">
@@ -13,7 +15,7 @@ const UserDashboard = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
           <div className="border p-4 rounded hover:bg-gray-50 cursor-pointer">
-            <h3 className="font-bold">My Bookings</h3>
+            <h3 className="font-bold" onClick={() => navigate("/bookings")}>My Bookings</h3>
             <p className="text-sm text-gray-500">View and manage your cab requests.</p>
           </div>
           <div className="border p-4 rounded hover:bg-gray-50 cursor-pointer">
