@@ -52,7 +52,7 @@ function FixMapSize() {
 
 
 // ================= MAIN COMPONENT =================
-export default function RouteFare({ pickup, drop, dateTime }) {
+export default function RouteFare({ pickup, drop, dateTime,onFareCalculated }) {
   const [route, setRoute] = useState([]);
   const [distance, setDistance] = useState(null);
   const [fare, setFare] = useState(null);
@@ -122,11 +122,21 @@ export default function RouteFare({ pickup, drop, dateTime }) {
 
       const distKm = data.routes[0].distance / 1000;
 
-      setRoute(coords);
-      setDistance(distKm.toFixed(1));
+setRoute(coords);
+setDistance(distKm.toFixed(1));
 
-      const pricePerKm = 15;
-      setFare((distKm * pricePerKm).toFixed(0));
+const pricePerKm = 10;
+const calculatedFare = distKm * pricePerKm;
+
+setFare(calculatedFare.toFixed(0));
+
+// ⭐ SEND TO BOOKING PAGE
+if (onFareCalculated) {
+  onFareCalculated({
+    distance: distKm,
+    fare: calculatedFare
+  });
+}
 
     } catch (err) {
       alert("Error fetching route");

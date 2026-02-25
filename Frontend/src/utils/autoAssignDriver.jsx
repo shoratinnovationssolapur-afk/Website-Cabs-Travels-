@@ -1,36 +1,34 @@
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+
+import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
-export const autoAssignDriver = async (bookingId) => {
-  try {
-    const driversSnap = await getDocs(collection(db, "drivers"));
-    const availableDrivers = driversSnap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(d => d.available === true);
 
-    if (availableDrivers.length === 0) {
-      alert("No drivers are currently marked as available.");
-      return;
-    }
+export const autoAssignDriver = async (bookingId, vehicleType) => {
 
-    const driver = availableDrivers[0];
+  const driversSnap = await getDocs(collection(db, "drivers"));
 
-    // 1. Update Booking
-    await updateDoc(doc(db, "bookings", bookingId), {
-      driverId: driver.id,
-      driverName: driver.name || "Assigned Driver",
-      status: "assigned"
-    });
+  const availableDrivers = driversSnap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(d =>
+      d.available &&
+      d.vehicleType === vehicleType
+    );
 
-    // 2. Update Driver Availability
-    await updateDoc(doc(db, "drivers", driver.id), {
-      available: false,
-      currentRideId: bookingId
-    });
-
-    alert(`Driver ${driver.name} assigned successfully!`);
-  } catch (error) {
-    console.error("Assignment Error:", error);
-   
+  if (!availableDrivers.length) {
+    alert("No suitable drivers available");
+    return;
   }
+
+  const driver = availableDrivers[0];
+
+  await updateDoc(doc(db, "bookings", bookingId), {
+    driverId: driver.id,
+    driverName: driver.name,
+    status: "assigned",
+  });
+
+  await updateDoc(doc(db, "drivers", driver.id), {
+    available: false,
+    currentRideId: bookingId,
+  });
 };
