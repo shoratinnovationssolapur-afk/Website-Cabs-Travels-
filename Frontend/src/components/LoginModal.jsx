@@ -5,29 +5,25 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, 
+  signInWithEmailAndPassword,
   signOut
-
 } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 
-//Regex for validating form format3
+// Regex for validating form format
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^[6-9]\d{9}$/; // Indian numbers: starts with 6-9 and total 10 digits
-const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/; // Min 8 chars, 1 Upper, 1 Lower, 1 Number
+const PHONE_REGEX = /^[6-9]\d{9}$/; 
+const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 const LoginModal = ({ closeModal, showMismatch }) => {
   const [showadminCode, setShowAdminCode] = useState(false);
-  const [showPassword,setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
-  
-  // Basic Fields
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  
-  // Driver Specific Fields
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
 
@@ -43,22 +39,38 @@ const LoginModal = ({ closeModal, showMismatch }) => {
     else navigate("/");
   };
 
-  // ================= REGISTER =================
-  const registerUser = async () => {
-    if (!validateForm()) return;
-        // Validation for Driver
-    if (role === "Driver") {
-      if (!phone || !address) {
-        alert("Phone and Address are required for Drivers");
-        return;
+  const validateForm = () => {
+    if (isRegister && name.trim().length < 3) {
+      alert("Please enter a valid full name (min 3 characters).");
+      return false;
+    }
+    if (!EMAIL_REGEX.test(email)) {
+      alert("Please enter a valid email address.");
+      return false;
+    }
+    if (!PWD_REGEX.test(password)) {
+      alert("Password must be at least 8 characters long and include an uppercase, lowercase, and a number.");
+      return false;
+    }
+    if (isRegister && role === "Driver") {
+      if (!PHONE_REGEX.test(phone)) {
+        alert("Please enter a valid 10-digit Indian phone number.");
+        return false;
+      }
+      if (address.trim().length < 10) {
+        alert("Please enter a more detailed address.");
+        return false;
       }
     }
+    return true;
+  };
 
+  const registerUser = async () => {
+    if (!validateForm()) return;
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const uid = userCred.user.uid;
 
-      // 1. Always create entry in 'users' collection for Auth reference
       await setDoc(doc(db, "users", uid), {
         name,
         email,
@@ -66,11 +78,10 @@ const LoginModal = ({ closeModal, showMismatch }) => {
         createdAt: serverTimestamp()
       });
 
-      // 2. If Driver, create entry in 'drivers' collection with your specific schema
       if (role === "Driver") {
         await setDoc(doc(db, "drivers", uid), {
           name,
-          email, // adding email for reference
+          email,
           phone,
           address,
           available: false,
@@ -83,8 +94,6 @@ const LoginModal = ({ closeModal, showMismatch }) => {
 
       alert("Account Created. Please login.");
       await signOut(auth);
-      
-      // Reset logic
       setIsRegister(false);
       setPhone("");
       setAddress("");
@@ -92,20 +101,19 @@ const LoginModal = ({ closeModal, showMismatch }) => {
       alert(error.message);
     }
   };
-  // ================= GOOGLE LOGIN =================
+
   const signInWithGoogle = async () => {
     try {
       if (role === "Admin" && adminCode !== ADMIN_SECRET) {
         alert("Invalid Admin Code");
         return;
       }
-
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
       const userRef = doc(db, "users", user.uid);
-      const snap = await getDoc(userRef);
+      let snap = await getDoc(userRef);
 
       if (!snap.exists()) {
         await setDoc(userRef, {
@@ -113,12 +121,12 @@ const LoginModal = ({ closeModal, showMismatch }) => {
           email: user.email,
           photo: user.photoURL,
           role,
-          createdAt: new Date()
+          createdAt: serverTimestamp()
         });
+        snap = await getDoc(userRef);
       }
 
-      const userData = (await getDoc(userRef)).data();
-
+      const userData = snap.data();
       if (role !== userData.role) {
         showMismatch(`You are registered as ${userData.role}. Please login as ${userData.role}.`);
         await signOut(auth);
@@ -133,51 +141,16 @@ const LoginModal = ({ closeModal, showMismatch }) => {
     }
   };
 
-  const validateForm = () => {
-  if (isRegister && name.trim().length < 3) {
-    alert("Please enter a valid full name (min 3 characters).");
-    return false;
-  }
-
-  if (!EMAIL_REGEX.test(email)) {
-    alert("Please enter a valid email address.");
-    return false;
-  }
-
-  if (!PWD_REGEX.test(password)) {
-    alert("Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, and a number.");
-    return false;
-  }
-
-  if (isRegister && role === "Driver") {
-    if (!PHONE_REGEX.test(phone)) {
-      alert("Please enter a valid 10-digit Indian phone number.");
-      return false;
-    }
-    if (address.trim().length < 10) {
-      alert("Please enter a more detailed address.");
-      return false;
-    }
-  }
-
-  return true;
-};
-
-
-  // ================= LOGIN =================
   const loginUser = async () => {
+    if (!EMAIL_REGEX.test(email)) return alert("Invalid email format.");
+    if (role === "Admin" && adminCode !== ADMIN_SECRET) {
+      alert("Unauthorized: Incorrect Admin Code");
+      return;
+    }
 
-    // Only validate email/password format for login
-  if (!EMAIL_REGEX.test(email)) return alert("Invalid email format.");
-  
-  if (role === "Admin" && adminCode !== ADMIN_SECRET) {
-    alert("Unauthorized: Incorrect Admin Code");
-    return;
-  }
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      const user = auth.currentUser;
-      const snap = await getDoc(doc(db, "users", user.uid));
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      const snap = await getDoc(doc(db, "users", userCred.user.uid));
 
       if (!snap.exists()) {
         alert("User profile not found");
@@ -185,7 +158,6 @@ const LoginModal = ({ closeModal, showMismatch }) => {
       }
 
       const userData = snap.data();
-
       if (role !== userData.role) {
         showMismatch(`You are registered as ${userData.role}. Please login as ${userData.role}.`);
         await signOut(auth);
@@ -196,25 +168,20 @@ const LoginModal = ({ closeModal, showMismatch }) => {
       redirectByRole(userData.role);
       closeModal();
     } catch (error) {
-    // Check specific Firebase Error Codes
-    switch (error.code) {
-      case 'auth/user-not-found':
-        alert("No account found with this email. Please register first.");
-        break;
-      case 'auth/wrong-password':
-        alert("Incorrect password. Please try again.");
-        break;
-      case 'auth/invalid-email':
-        alert("The email address is badly formatted.");
-        break;
-      default:
+      // Improved error handling
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        alert("No account found or invalid credentials. Please check or register.");
+      } else if (error.code === 'auth/wrong-password') {
+        alert("Incorrect password.");
+      } else {
         alert(error.message);
+      }
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-[450px] p-8 relative max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl w-full max-w-md p-8 relative max-h-[90vh] overflow-y-auto shadow-2xl">
         
         {/* ROLE SELECTOR */}
         <div className="flex justify-between mb-6 bg-gray-100 p-1 rounded-lg">
@@ -229,91 +196,82 @@ const LoginModal = ({ closeModal, showMismatch }) => {
           ))}
         </div>
 
-        {/* GOOGLE BUTTON - Hidden for Drivers */}
         {role !== "Driver" && (
           <>
-            {/* GOOGLE BUTTON */}
             <button
               onClick={signInWithGoogle}
-              className="w-full flex items-center justify-center gap-3 border py-3 rounded font-semibold hover:bg-gray-100 mb-4"
+              className="w-full flex items-center justify-center gap-3 border py-3 rounded font-semibold hover:bg-gray-50 mb-4 transition"
             >
-              <img
-                src="https://www.svgrepo.com/show/475656/google-color.svg"
-                alt="Google"
-                className="w-5 h-5"
-              />
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
               Sign in with Google
             </button>
-
             <div className="text-center mb-4 text-gray-400 text-xs">— OR —</div>
           </>
         )}
 
-        <h3 className="text-xl font-bold mb-4">{isRegister ? 'Create Account' : 'Login'}</h3>
+        <h3 className="text-xl font-bold mb-4 text-gray-800">{isRegister ? 'Create Account' : 'Login'}</h3>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {isRegister && (
             <input
               placeholder="Full Name"
-              className="w-full border p-3 rounded"
+              className="w-full border p-3 rounded outline-blue-500"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required
             />
           )}
 
           <input
             type="email"
             placeholder="Email Address"
-            className="w-full border p-3 rounded"
+            className="w-full border p-3 rounded outline-blue-500"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            className="w-full border p-3 rounded"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-           <div className="absolute right-15 top-80 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
-                   {showPassword ? <IoEyeOff /> : <IoEye />}
-                </div>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              className="w-full border p-3 rounded outline-blue-500 pr-12"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500 text-xl" onClick={() => setShowPassword(!showPassword)}>
+              {showPassword ? <IoEyeOff /> : <IoEye />}
+            </div>
+          </div>
 
-          {/* DRIVER SPECIFIC FIELDS */}
           {isRegister && role === "Driver" && (
             <>
               <input
                 placeholder="Phone Number"
-                className="w-full border p-3 rounded"
+                className="w-full border p-3 rounded outline-blue-500"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                required
               />
               <textarea
                 placeholder="Home Address"
-                className="w-full border p-3 rounded"
+                className="w-full border p-3 rounded outline-blue-500 min-h-[80px]"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                required
               />
             </>
           )}
 
           {role === "Admin" && !isRegister && (
-             <div className="relative">
-                <input
-                  type={showadminCode ? "text" : "password"}
-                  placeholder="Enter Admin Code"
-                  className="w-full border p-3 rounded"
-                  value={adminCode}
-                  onChange={(e) => setAdminCode(e.target.value)}
-                />
-                <div className="absolute right-3 top-4 cursor-pointer" onClick={() => setShowAdminCode(!showadminCode)}>
-                   {showadminCode ? <IoEyeOff /> : <IoEye />}
-                </div>
-             </div>
+            <div className="relative">
+              <input
+                type={showadminCode ? "text" : "password"}
+                placeholder="Enter Admin Code"
+                className="w-full border p-3 rounded outline-blue-500 pr-12"
+                value={adminCode}
+                onChange={(e) => setAdminCode(e.target.value)}
+              />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500 text-xl" onClick={() => setShowAdminCode(!showadminCode)}>
+                {showadminCode ? <IoEyeOff /> : <IoEye />}
+              </div>
+            </div>
           )}
 
           <button
@@ -339,5 +297,5 @@ const LoginModal = ({ closeModal, showMismatch }) => {
     </div>
   );
 };
-}
+
 export default LoginModal;
