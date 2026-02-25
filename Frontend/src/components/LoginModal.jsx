@@ -152,7 +152,19 @@ const LoginModal = ({ closeModal, showMismatch }) => {
       redirectByRole(userData.role);
       closeModal();
     } catch (error) {
-      alert(error.message);
+    // Check specific Firebase Error Codes
+    switch (error.code) {
+      case 'auth/user-not-found':
+        alert("No account found with this email. Please register first.");
+        break;
+      case 'auth/wrong-password':
+        alert("Incorrect password. Please try again.");
+        break;
+      case 'auth/invalid-email':
+        alert("The email address is badly formatted.");
+        break;
+      default:
+        alert(error.message);
     }
   };
 
@@ -215,12 +227,15 @@ const LoginModal = ({ closeModal, showMismatch }) => {
           />
 
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="Password"
             className="w-full border p-3 rounded"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+           <div className="absolute right-15 top-80 cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
+                   {showPassword ? <IoEyeOff /> : <IoEye />}
+                </div>
 
           {/* DRIVER SPECIFIC FIELDS */}
           {isRegister && role === "Driver" && (
@@ -280,5 +295,5 @@ const LoginModal = ({ closeModal, showMismatch }) => {
     </div>
   );
 };
-
+}
 export default LoginModal;

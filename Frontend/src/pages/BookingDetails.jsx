@@ -51,9 +51,12 @@ const BookingDetails = () => {
   const [bookingId, setBookingId] = useState(null);
   const [rideStatus, setRideStatus] = useState(null);
 
+
   // ⭐ DISTANCE DATA FROM ROUTEFARE
   const [routeFare, setRouteFare] = useState(0);
   const [distance, setDistance] = useState(0);
+
+  const [name, setName] = useState("");
 
   const vehicleId = searchParams.get("vehicle_id");
 
@@ -91,15 +94,16 @@ const BookingDetails = () => {
   };
 
   // ================= RECEIVE DISTANCE FROM ROUTEFARE =================
-  const handleFareUpdate = ({ distance, fare,dateTime }) => {
+  const handleFareUpdate = ({ distance, fare}) => {
     setDistance(distance);
     setRouteFare(fare);
-    setDateTime(dateTime);
+    // setDateTime(dateTime);
+    // setName(name);
    
   };
 
   // ================= TOTAL COST =================
-  const baseFare = 200; // minimum charge
+  const baseFare = vehicle?.pricePerKm?parseInt(vehicle.pricePerKm)*20:20; // minimum charge
 
   const totalAmount =
     tripType === "outstation"
