@@ -44,7 +44,6 @@ import DriverHistory from "./pages/DriverHistory";
 import DriverEarnings from "./pages/DriverEarnings";
 import BookingSuccess from "./pages/BookingSuccess";
 
-
 // ================= LAYOUT =================
 function Layout() {
   const [showLogin, setShowLogin] = useState(false);

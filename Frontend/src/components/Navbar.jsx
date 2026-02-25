@@ -82,7 +82,7 @@ useEffect(() => {
   const goAdminVehicles = () => navigate("/admin/vehicles");
   const goAdminBookings = () => navigate("/admin/bookings");
 
-  if (loading) return null;
+  // if (loading) return null;
 
   return (
     <nav className="text-white bg-black px-3 py-2 flex justify-between items-center">
