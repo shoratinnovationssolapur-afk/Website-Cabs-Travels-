@@ -8,6 +8,7 @@ import BookingDetails from "./pages/BookingDetails";
 import DriverDashboard from "./pages/DriverDashboard"; // Create this file from previous code
 import DriverLogin from "./pages/DriverLogin";         // Create this file from previous code
 import DriverRoute from "./components/DriverRoute";   // Add this helper
+import UserDashboard from "./pages/UserDashboard";
 import "leaflet/dist/leaflet.css";
 
 
@@ -40,6 +41,8 @@ import {
 import UserLayout from "./pages/UserLayout";
 import UserRoute from "./components/UserRoute";
 import BookingSuccess from "./pages/BookingSuccess";
+import DriverHistory from "./pages/DriverHistory";
+import DriverEarnings from "./pages/DriverEarnings";
 
 
 // ================= LAYOUT =================
@@ -103,7 +106,12 @@ const router = createBrowserRouter([
             <UserLayout />
           </UserRoute>
         ),
-      },
+ 
+      children: [
+    { index: true, element: <UserDashboard /> }, // matches "/user"
+    { path: "dashboard", element: <UserDashboard /> }, // matches "/user/dashboard"
+    { path: "profile", element: <UserProfile /> },
+  ],},
 
       // ================= DRIVER SECTION =================
       {
@@ -120,8 +128,8 @@ const router = createBrowserRouter([
   children: [
     { path: "dashboard", element: <DriverDashboard /> },
     { path: "profile", element: <DriverProfile /> }, // This is where you use it
-    { path: "history", element: <div className="p-10">Ride History Page</div> },
-    { path: "earnings", element: <div className="p-10">Earnings Page Data</div> },
+    { path: "history", element: <DriverHistory /> },
+    { path: "earnings", element: <DriverEarnings /> },
   ]
 },
 

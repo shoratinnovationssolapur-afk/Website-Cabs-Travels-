@@ -506,7 +506,7 @@ const HomePage = () => {
       {/* ================= SERVICES ================= */}
       <section className="py-24 px-6 bg-gradient-to-br from-indigo-100 via-white to-blue-100">
 
-        <h2 className="text-4xl font-bold text-center mb-16">
+        <h2 className="text-8xl font-bold text-center mb-16">
           Our Services
         </h2>
 
@@ -601,7 +601,7 @@ const HomePage = () => {
       <section className="py-20 px-6 bg-gray-100">
         <div className="max-w-6xl mx-auto text-center">
 
-          <h2 className="text-4xl font-bold mb-12">
+          <h2 className="text-8xl font-bold mb-12">
             Why Choose Us
           </h2>
 
@@ -609,7 +609,7 @@ const HomePage = () => {
 
             {/* SAFE & RELIABLE */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">🛡️</div>
+              <div className="text-8xl mb-4">🛡️</div>
               <h3 className="text-xl font-semibold mb-2">
                 Safe & Reliable
               </h3>
@@ -621,7 +621,7 @@ const HomePage = () => {
 
             {/* ON-TIME SERVICE */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">⏱️</div>
+              <div className="text-8xl mb-4">⏱️</div>
               <h3 className="text-xl font-semibold mb-2">
                 Always On Time
               </h3>
@@ -634,7 +634,7 @@ const HomePage = () => {
 
             {/* AFFORDABLE PRICING */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">💰</div>
+              <div className="text-8xl mb-4">💰</div>
               <h3 className="text-xl font-semibold mb-2">
                 Transparent Pricing
               </h3>
@@ -646,7 +646,7 @@ const HomePage = () => {
 
             {/* 24x7 SUPPORT */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">📞</div>
+              <div className="text-8xl mb-4">📞</div>
               <h3 className="text-xl font-semibold mb-2">
                 24×7 Customer Support
               </h3>
@@ -658,7 +658,7 @@ const HomePage = () => {
 
             {/* CLEAN VEHICLES */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">✨</div>
+              <div className="text-8xl mb-4">✨</div>
               <h3 className="text-xl font-semibold mb-2">
                 Clean & Comfortable
               </h3>
@@ -670,7 +670,7 @@ const HomePage = () => {
 
             {/* WIDE COVERAGE */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-4xl mb-4">🌍</div>
+              <div className="text-8xl mb-4">🌍</div>
               <h3 className="text-xl font-semibold mb-2">
                 Wide Service Area
               </h3>

@@ -5,12 +5,17 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
+  signInWithEmailAndPassword, 
   signOut
 
 } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+
+//Regex for validating form format3
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[6-9]\d{9}$/; // Indian numbers: starts with 6-9 and total 10 digits
+const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/; // Min 8 chars, 1 Upper, 1 Lower, 1 Number
 
 const LoginModal = ({ closeModal, showMismatch }) => {
   const [showadminCode, setShowAdminCode] = useState(false);
@@ -40,7 +45,8 @@ const LoginModal = ({ closeModal, showMismatch }) => {
 
   // ================= REGISTER =================
   const registerUser = async () => {
-    // Validation for Driver
+    if (!validateForm()) return;
+        // Validation for Driver
     if (role === "Driver") {
       if (!phone || !address) {
         alert("Phone and Address are required for Drivers");
@@ -127,9 +133,47 @@ const LoginModal = ({ closeModal, showMismatch }) => {
     }
   };
 
+  const validateForm = () => {
+  if (isRegister && name.trim().length < 3) {
+    alert("Please enter a valid full name (min 3 characters).");
+    return false;
+  }
+
+  if (!EMAIL_REGEX.test(email)) {
+    alert("Please enter a valid email address.");
+    return false;
+  }
+
+  if (!PWD_REGEX.test(password)) {
+    alert("Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, and a number.");
+    return false;
+  }
+
+  if (isRegister && role === "Driver") {
+    if (!PHONE_REGEX.test(phone)) {
+      alert("Please enter a valid 10-digit Indian phone number.");
+      return false;
+    }
+    if (address.trim().length < 10) {
+      alert("Please enter a more detailed address.");
+      return false;
+    }
+  }
+
+  return true;
+};
+
 
   // ================= LOGIN =================
   const loginUser = async () => {
+
+    // Only validate email/password format for login
+  if (!EMAIL_REGEX.test(email)) return alert("Invalid email format.");
+  
+  if (role === "Admin" && adminCode !== ADMIN_SECRET) {
+    alert("Unauthorized: Incorrect Admin Code");
+    return;
+  }
     try {
       await signInWithEmailAndPassword(auth, email, password);
       const user = auth.currentUser;
