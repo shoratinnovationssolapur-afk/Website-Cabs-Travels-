@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
-import { collection, addDoc, serverTimestamp,getDocs,getDoc,doc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp,getDocs,getDoc,doc,onSnapshot,
+  query, 
+  where} from "firebase/firestore";
 
 
 import innova from "../assets/innova.avif";
@@ -60,25 +62,48 @@ const HomePage = () => {
 
 
 
-  useEffect(() => {
-    const fetchVehicles = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, "vehicles"));
+  // useEffect(() => {
+  //   const fetchVehicles = async () => {
+  //     try {
+  //       const snapshot = await getDocs(collection(db, "vehicles"));
 
-        const vehicleList = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+  //       const vehicleList = snapshot.docs.map(doc => ({
+  //         id: doc.id,
+  //         ...doc.data()
+  //       }));
 
-        setVehicles(vehicleList);
+  //       setVehicles(vehicleList);
 
-      } catch (error) {
-        console.error("Error fetching vehicles:", error);
-      }
-    };
+  //     } catch (error) {
+  //       console.error("Error fetching vehicles:", error);
+  //     }
+  //   };
 
-    fetchVehicles();
-  }, []);
+  //   fetchVehicles();
+  // }, []);
+
+useEffect(() => {
+  // 1. Create a query to the vehicles collection
+  const q = query(collection(db, "vehicles"),where("available", "==", true));
+
+  // 2. Set up the real-time listener
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const vehicleList = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    setVehicles(vehicleList);
+  }, (error) => {
+    console.error("Error listening to vehicles:", error);
+  });
+
+  // 3. Clean up the listener when the component unmounts
+  return () => unsubscribe();
+}, []);
+
+
+
   useEffect(() => {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("vehicle_id");
@@ -158,48 +183,104 @@ const HomePage = () => {
 
 
 
-  const submitBooking = async () => {
+//   const submitBooking = async () => {
 
-    if (
-      !name.trim() ||
-      !phone.trim() ||
-      !pickup.trim() ||
-      !drop.trim() ||
-      !carType ||
-      !dateTime
-    ) {
-      alert("Please first fill the booking form");
-      return;
-    }
+//     if (
+//       !name.trim() ||
+//       !phone.trim() ||
+//       !pickup.trim() ||
+//       !drop.trim() ||
+//       !carType ||
+//       !dateTime
+//     ) {
+//       alert("Please first fill the booking form");
+//       return;
+//     }
 
-    const user = auth.currentUser;
+//     const user = auth.currentUser;
 
-    if (!user) {
-      alert("Please login to book a ride");
-      return;
-    }
+//     if (!user) {
+//       alert("Please login to book a ride");
+//       return;
+//     }
 
-    try {
-      await addDoc(collection(db, "bookings"), {
-  userId: user.uid,
-  userEmail: user.email,
-  vehicleId: selectedVehicleId,   // ⭐ IMPORTANT
-  name,
-  phone,
-  pickup,
-  drop,
-  carType,
-  tripType,
-  dateTime,
-  status: "pending",
-  createdAt: serverTimestamp()
-});
-      alert("Booking request submitted successfully!");
+//     try {
+//       await addDoc(collection(db, "bookings"), {
+//   userId: user.uid,
+//   userEmail: user.email,
+//   vehicleId: selectedVehicleId,   // ⭐ IMPORTANT
+//   name,
+//   phone,
+//   pickup,
+//   drop,
+//   carType,
+//   tripType,
+//   dateTime,
+//   status: "pending",
+//   createdAt: serverTimestamp()
+// });
+//       alert("Booking request submitted successfully!");
 
-    } catch (error) {
-      alert(error.message);
-    }
-  };
+//     } catch (error) {
+//       alert(error.message);
+//     }
+//   };
+
+const submitBooking = async () => {
+  if (
+    !name.trim() ||
+    !phone.trim() ||
+    !pickup.trim() ||
+    !drop.trim() ||
+    !carType ||
+    !dateTime
+  ) {
+    alert("Please first fill the booking form");
+    return;
+  }
+
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Please login to book a ride");
+    return;
+  }
+
+  try {
+    const bookingData = {
+      userId: user.uid,
+      userEmail: user.email,
+      vehicleId: selectedVehicleId || "quick_choice", // Fallback if no specific ID
+      name: name,   // Top-level name
+      phone: phone, // Top-level phone
+      pickup,
+      drop,
+      carType,
+      tripType,
+      dateTime,
+      status: "pending",
+      createdAt: serverTimestamp(),
+      
+      // ADD THESE TWO FIELDS for consistency with the Admin Panel:
+      bookingMethod: "quick_booking", 
+      passengers: [] // Empty array so your .map() doesn't crash on Admin side
+    };
+
+    const docRef = await addDoc(collection(db, "bookings"), bookingData);
+    
+    // Auto-assign driver for quick bookings too
+    await autoAssignDriver(docRef.id);
+
+    alert("Booking request submitted successfully!");
+    
+    // Optional: Reset form fields here
+    setName("");
+    setPhone("");
+  } catch (error) {
+    alert("Booking failed: " + error.message);
+  }
+};
+
+
 
   const handleHeroFare = () => {
     if (!heroPickup.trim() || !heroDrop.trim()) {

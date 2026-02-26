@@ -1,72 +1,101 @@
 import React, { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { serverTimestamp } from "firebase/firestore";
 import {
   collection,
   addDoc,
-  getDocs,
   deleteDoc,
   doc,
-  updateDoc // Added for toggling availability manually
+  updateDoc,
+  onSnapshot,
+  serverTimestamp
 } from "firebase/firestore";
-import { MapPin, Phone, UserCheck, UserX } from "lucide-react"; // Icons for better UI
+import { MapPin, Phone, UserCheck, UserX, Search } from "lucide-react"; // Added Search icon
 
 const AdminDrivers = () => {
   const [drivers, setDrivers] = useState([]);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [searchQuery, setSearchQuery] = useState(""); // New state for search
 
-  const fetchDrivers = async () => {
-    const snapshot = await getDocs(collection(db, "drivers"));
-    const list = snapshot.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
-    setDrivers(list);
-  };
-
+  // Auto-refresh logic using onSnapshot
   useEffect(() => {
-    fetchDrivers();
-  }, []);
-
-  const addDriver = async () => {
-    if (!name || !phone) return alert("Fill all fields");
-
-    await addDoc(collection(db, "drivers"), {
-      name,
-      phone,
-      available: true,
-      status: "active",
-      rating: 5,
-      // Default location for new drivers
-      currentLocation: { lat: 17.6599, lng: 75.9064, address: "Solapur HQ" }, 
-      createdAt: serverTimestamp()
+    const unsubscribe = onSnapshot(collection(db, "drivers"), (snapshot) => {
+      const list = snapshot.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }));
+      setDrivers(list);
     });
 
-    setName("");
-    setPhone("");
-    fetchDrivers();
+    return () => unsubscribe(); 
+  }, []);
+
+  // Filter drivers based on search query
+  const filteredDrivers = drivers.filter(d => 
+    d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    d.phone.includes(searchQuery)
+  );
+
+  const addDriver = async () => {
+    if (!name.trim() || !phone.trim()) return alert("Fill all fields");
+
+    try {
+      await addDoc(collection(db, "drivers"), {
+        name,
+        phone,
+        available: true,
+        status: "active",
+        rating: 5,
+        currentLocation: { lat: 17.6599, lng: 75.9064, address: "Solapur HQ" }, 
+        createdAt: serverTimestamp()
+      });
+
+      setName("");
+      setPhone("");
+    } catch (error) {
+      alert("Error adding driver: " + error.message);
+    }
   };
 
-  const deleteDriver = async (id) => {
-    if (window.confirm("Are you sure you want to delete this driver?")) {
-      await deleteDoc(doc(db, "drivers", id));
-      fetchDrivers();
+  const deleteDriver = async (id, driverName) => {
+    if (window.confirm(`Are you sure you want to delete ${driverName}?`)) {
+      try {
+        await deleteDoc(doc(db, "drivers", id));
+      } catch (error) {
+        alert("Error deleting driver: " + error.message);
+      }
     }
   };
 
   const toggleAvailability = async (id, currentStatus) => {
-    await updateDoc(doc(db, "drivers", id), {
-      available: !currentStatus
-    });
-    fetchDrivers();
+    try {
+      await updateDoc(doc(db, "drivers", id), {
+        available: !currentStatus
+      });
+    } catch (error) {
+      alert("Error updating status: " + error.message);
+    }
   };
 
   return (
     <div className="p-10 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-black mb-8 text-gray-800">
-        Fleet Management — Drivers
-      </h1>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <h1 className="text-3xl font-black text-gray-800">
+          Fleet Management — Drivers
+        </h1>
+
+        {/* SEARCH BAR */}
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input 
+            type="text"
+            placeholder="Search by name or phone..."
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none transition shadow-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
 
       {/* ADD DRIVER FORM */}
       <div className="bg-white p-8 rounded-2xl shadow-sm mb-10 border border-gray-100 flex flex-wrap gap-4 items-end">
@@ -100,64 +129,64 @@ const AdminDrivers = () => {
 
       {/* DRIVER CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {drivers.map(d => (
-          <div
-            key={d.id}
-            className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition relative overflow-hidden"
-          >
-            {/* Availability Badge */}
-            <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-              d.available ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-            }`}>
-              {d.available ? "Online" : "On Trip / Offline"}
-            </div>
+        {filteredDrivers.length > 0 ? (
+          filteredDrivers.map(d => (
+            <div
+              key={d.id}
+              className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition relative overflow-hidden"
+            >
+              <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                d.available ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+              }`}>
+                {d.available ? "Online" : "On Trip / Offline"}
+              </div>
 
-            <h2 className="text-xl font-bold text-gray-800 mb-1">{d.name}</h2>
-            
-            <div className="flex items-center gap-2 text-gray-500 mb-4">
-              <Phone size={14} />
-              <span className="text-sm">{d.phone}</span>
-            </div>
+              <h2 className="text-xl font-bold text-gray-800 mb-1">{d.name}</h2>
+              
+              <div className="flex items-center gap-2 text-gray-500 mb-4">
+                <Phone size={14} />
+                <span className="text-sm">{d.phone}</span>
+              </div>
 
-            <hr className="mb-4 border-gray-50" />
+              <hr className="mb-4 border-gray-50" />
 
-            {/* Location Info */}
-            <div className="bg-gray-50 p-4 rounded-2xl mb-4">
-              <div className="flex items-start gap-3">
-                <MapPin className="text-yellow-600 shrink-0 mt-1" size={18} />
-                <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase">Current Location</p>
-                  <p className="text-sm font-semibold text-gray-700">
-                    {d.currentLocation?.address || "Location Unknown"}
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-1 italic">
-                    {d.currentLocation?.lat.toFixed(4)}, {d.currentLocation?.lng.toFixed(4)}
-                  </p>
+              <div className="bg-gray-50 p-4 rounded-2xl mb-4">
+                <div className="flex items-start gap-3">
+                  <MapPin className="text-yellow-600 shrink-0 mt-1" size={18} />
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">Current Location</p>
+                    <p className="text-sm font-semibold text-gray-700">
+                      {d.currentLocation?.address || "Location Unknown"}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Actions */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => toggleAvailability(d.id, d.available)}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-bold transition ${
-                  d.available ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"
-                }`}
-              >
-                {d.available ? <UserX size={16} /> : <UserCheck size={16} />}
-                {d.available ? "Go Offline" : "Set Online"}
-              </button>
-              
-              <button
-                onClick={() => deleteDriver(d.id)}
-                className="bg-gray-100 text-gray-400 hover:bg-red-600 hover:text-white px-4 py-2 rounded-xl transition"
-              >
-                Delete
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => toggleAvailability(d.id, d.available)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-bold transition ${
+                    d.available ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"
+                  }`}
+                >
+                  {d.available ? <UserX size={16} /> : <UserCheck size={16} />}
+                  {d.available ? "Go Offline" : "Set Online"}
+                </button>
+                
+                <button
+                  onClick={() => deleteDriver(d.id, d.name)}
+                  className="bg-gray-100 text-gray-400 hover:bg-red-600 hover:text-white px-4 py-2 rounded-xl transition"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-20 text-gray-400 font-medium">
+            No drivers found matching "{searchQuery}"
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
