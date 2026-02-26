@@ -12,31 +12,51 @@ export default function DriverDashboard() {
   const [loading, setLoading] = useState(true);
 
   // 1. Monitor Driver Status & Current Ride ID
-  useEffect(() => {
-    if (!auth.currentUser) return;
+// 1. Monitor Driver Info
+useEffect(() => {
+  if (!auth.currentUser) return;
 
-    const unsubDriver = onSnapshot(doc(db, "drivers", auth.currentUser.uid), (snap) => {
-      const data = snap.data();
-      setDriverInfo(data);
+  const unsubDriver = onSnapshot(
+    doc(db, "drivers", auth.currentUser.uid),
+    (snap) => {
+      if (snap.exists()) {
+        setDriverInfo(snap.data());
+      } else {
+        console.warn("No driver profile found for this user.");
+      }
+      // Always stop loading once the driver doc is checked
+      setLoading(false);
+    },
+    (err) => {
+      console.error("Driver Watch Error:", err);
+      setLoading(false);
+    }
+  );
 
-      if (data?.currentRideId) {
-        // If a ride is assigned, listen to that booking in real-time
-        const unsubRide = onSnapshot(doc(db, "bookings", data.currentRideId), (rideSnap) => {
-          if (rideSnap.exists()) {
-            setRide({ id: rideSnap.id, ...rideSnap.data() });
-          } else {
-            setRide(null);
-          }
-        });
-        return () => unsubRide();
+  return () => unsubDriver();
+}, []);
+
+// 2. Monitor Ride Info (Depends on driverInfo.currentRideId)
+useEffect(() => {
+  if (!driverInfo?.currentRideId) {
+    setRide(null);
+    return;
+  }
+
+  const unsubRide = onSnapshot(
+    doc(db, "bookings", driverInfo.currentRideId),
+    (rideSnap) => {
+      if (rideSnap.exists()) {
+        setRide({ id: rideSnap.id, ...rideSnap.data() });
       } else {
         setRide(null);
       }
-      setLoading(false);
-    });
+    },
+    (err) => console.error("Ride Watch Error:", err)
+  );
 
-    return () => unsubDriver();
-  }, []);
+  return () => unsubRide();
+}, [driverInfo?.currentRideId]); // Only restarts if the ID changes
 
   // 2. Real-time Location Tracking (Updates Firestore as driver moves)
   useEffect(() => {
@@ -93,7 +113,7 @@ export default function DriverDashboard() {
         </button>
       </div>
 
-      {!ride ? (
+      {(!ride || !driverInfo?.available) ? (
         <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="text-5xl mb-4">🚕</div>
           <h3 className="text-xl font-bold text-gray-700">Waiting for Ride Requests</h3>
