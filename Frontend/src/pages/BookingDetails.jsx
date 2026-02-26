@@ -156,43 +156,50 @@ const BookingDetails = () => {
 
 
   const handleFinalBooking = async () => {
-    try {
-      if (!auth.currentUser) return alert("Please login first");
-      if (!pickup || !drop) return alert("Please enter route");
+  try {
+    if (!auth.currentUser) return alert("Please login first");
+    if (!pickup || !drop) return alert("Please enter route");
 
-      // Get the first passenger as the primary contact
-      const primaryPassenger = passengers[0];
+    // Get the first passenger as the primary contact
+    const primaryPassenger = passengers[0];
 
-      await addDoc(collection(db, "bookings"), {
-        vehicleId: vehicle.id,
-        vehicleName: vehicle.name,
-        pickup,
-        drop,
-        dateTime,
-        // Add these two lines:
-        name: primaryPassenger.name || "N/A",
-        phone: primaryPassenger.phone || "N/A",
-        // ... keep everything else
-        passengers,
-        status: "pending",
-        userId: auth.currentUser.uid,
-        createdAt: serverTimestamp(),
-      });
-      const id = bookingRef.id;
-      setBookingId(id);
+    // Create the booking object
+    const bookingData = {
+      vehicleId: vehicle.id,
+      vehicleName: vehicle.name,
+      pickup,
+      drop,
+      dateTime,
+      // CRITICAL: Save primary details at top level for easy Admin access
+      name: primaryPassenger.name || "N/A",
+      phone: primaryPassenger.phone || "N/A",
+      passengers: passengers,
+      
+      // IDENTIFIER: This helps you distinguish from "Quick Booking"
+      bookingMethod: "car_specific", 
+      
+      status: "pending",
+      userId: auth.currentUser.uid,
+      createdAt: serverTimestamp(),
+      tripType,
+      durationDays: tripType === "outstation" ? days : 1,
+      distance,
+      totalFare: totalAmount,
+    };
 
-      await autoAssignDriver(id);
+    const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
+    const id = bookingRef.id;
+    setBookingId(id);
 
-      alert("Booking Created Successfully");
+    await autoAssignDriver(id);
 
-      navigate("/booking-success", {
-        state: { bookingId: id },
-      });
+    alert("Booking Created Successfully");
+    navigate("/booking-success", { state: { bookingId: id } });
 
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
   // ... rest of your code
 

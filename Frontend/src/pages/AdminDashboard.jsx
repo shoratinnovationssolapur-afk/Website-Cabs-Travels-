@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs,onSnapshot } from "firebase/firestore";
 
 import {
   LineChart,
@@ -28,53 +28,112 @@ export default function AdminDashboard() {
   const [monthlyData, setMonthlyData] = useState([]);
   const [statusData, setStatusData] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const bookingsSnap = await getDocs(collection(db, "bookings"));
-      const bookings = bookingsSnap.docs.map(d => d.data());
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const bookingsSnap = await getDocs(collection(db, "bookings"));
+  //     const bookings = bookingsSnap.docs.map(d => d.data());
 
-      const usersSnap = await getDocs(collection(db, "users"));
-      const vehiclesSnap = await getDocs(collection(db, "vehicles"));
+  //     const usersSnap = await getDocs(collection(db, "users"));
+  //     const vehiclesSnap = await getDocs(collection(db, "vehicles"));
 
-      setStats({
-        bookings: bookings.length,
-        users: usersSnap.size,
-        vehicles: vehiclesSnap.size,
-        revenue: bookings.length * 1200,
-      });
+  //     setStats({
+  //       bookings: bookings.length,
+  //       users: usersSnap.size,
+  //       vehicles: vehiclesSnap.size,
+  //       revenue: bookings.length * 1200,
+  //     });
 
-      const monthMap = {};
-      bookings.forEach(b => {
-        if (!b.createdAt) return;
-        const date = b.createdAt.toDate();
-        const m = date.toLocaleString("default", { month: "short" });
-        monthMap[m] = (monthMap[m] || 0) + 1;
-      });
+  //     const monthMap = {};
+  //     bookings.forEach(b => {
+  //       if (!b.createdAt) return;
+  //       const date = b.createdAt.toDate();
+  //       const m = date.toLocaleString("default", { month: "short" });
+  //       monthMap[m] = (monthMap[m] || 0) + 1;
+  //     });
 
-      setMonthlyData(
-        Object.keys(monthMap).map(m => ({
-          name: m,
-          bookings: monthMap[m],
-        }))
-      );
+  //     setMonthlyData(
+  //       Object.keys(monthMap).map(m => ({
+  //         name: m,
+  //         bookings: monthMap[m],
+  //       }))
+  //     );
 
-      const statusMap = {};
-      bookings.forEach(b => {
-        const s = b.status || "pending";
-        statusMap[s] = (statusMap[s] || 0) + 1;
-      });
+  //     const statusMap = {};
+  //     bookings.forEach(b => {
+  //       const s = b.status || "pending";
+  //       statusMap[s] = (statusMap[s] || 0) + 1;
+  //     });
 
-      setStatusData(
-        Object.keys(statusMap).map(k => ({
-          name: k,
-          value: statusMap[k],
-        }))
-      );
-    };
+  //     setStatusData(
+  //       Object.keys(statusMap).map(k => ({
+  //         name: k,
+  //         value: statusMap[k],
+  //       }))
+  //     );
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
+useEffect(() => {
+  // 1. Listen to Bookings (Real-time)
+  const unsubBookings = onSnapshot(collection(db, "bookings"), (snapshot) => {
+    const bookings = snapshot.docs.map(d => d.data());
 
+    // Update Bookings and Revenue Count
+    setStats(prev => ({
+      ...prev,
+      bookings: bookings.length,
+      revenue: bookings.length * 1200,
+    }));
+
+    // Process Monthly Data for Charts
+    const monthMap = {};
+    bookings.forEach(b => {
+      if (!b.createdAt) return;
+      const date = b.createdAt.toDate();
+      const m = date.toLocaleString("default", { month: "short" });
+      monthMap[m] = (monthMap[m] || 0) + 1;
+    });
+
+    setMonthlyData(
+      Object.keys(monthMap).map(m => ({
+        name: m,
+        bookings: monthMap[m],
+      }))
+    );
+
+    // Process Status Data for Pie Chart
+    const statusMap = {};
+    bookings.forEach(b => {
+      const s = b.status || "pending";
+      statusMap[s] = (statusMap[s] || 0) + 1;
+    });
+
+    setStatusData(
+      Object.keys(statusMap).map(k => ({
+        name: k,
+        value: statusMap[k],
+      }))
+    );
+  });
+
+  // 2. Listen to Users (Real-time)
+  const unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+    setStats(prev => ({ ...prev, users: snapshot.size }));
+  });
+
+  // 3. Listen to Vehicles (Real-time)
+  const unsubVehicles = onSnapshot(collection(db, "vehicles"), (snapshot) => {
+    setStats(prev => ({ ...prev, vehicles: snapshot.size }));
+  });
+
+  // Cleanup all listeners on unmount
+  return () => {
+    unsubBookings();
+    unsubUsers();
+    unsubVehicles();
+  };
+}, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8">
 
