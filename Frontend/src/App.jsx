@@ -17,6 +17,7 @@ import AdminBookings from "./pages/AdminBookings";
 import AdminUsers from "./pages/AdminUsers";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminDrivers from "./pages/AdminDrivers";
+import AdminVendorManagement from "./pages/AdminVendorManagement";
 
 import AdminRoute from "./components/AdminRoute";
 import { AuthProvider } from "./context/AuthContext";
@@ -29,6 +30,7 @@ import AdminTours from "./pages/AdminTours";
 import HomePage from "./pages/HomePage";
 import UserBookings from "./pages/UserBookings";
 import ToursSection from "./utils/ToursSection";
+
 
 
 
@@ -179,6 +181,14 @@ const router = createBrowserRouter([
         element: (
           <AdminRoute>
             <AdminDrivers />
+          </AdminRoute>
+        ),
+      },
+            {
+        path: "/admin/vendors",
+        element: (
+          <AdminRoute>
+            <AdminVendorManagement />
           </AdminRoute>
         ),
       },

@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
-import {
-  doc,
-  updateDoc,
-  onSnapshot
-} from "firebase/firestore";
+import { doc, updateDoc, onSnapshot, addDoc, collection, serverTimestamp } from "firebase/firestore"; // Add addDoc, collection, serverTimestamp
 
 export default function DriverDashboard() {
   const [ride, setRide] = useState(null);
@@ -84,16 +80,35 @@ useEffect(() => {
     });
   };
 
-  const updateRideStatus = async (status) => {
-    await updateDoc(doc(db, "bookings", ride.id), { status });
-    
+const updateRideStatus = async (status) => {
+  try {
     if (status === "completed") {
+      // 1. Create the History Record
+      await addDoc(collection(db, "confirmed_bookings"), {
+        driverId: auth.currentUser.uid,
+        rideId: ride.id,
+        pickup: ride.pickup,
+        drop: ride.drop,
+        totalFare: ride.fare || 0, // Ensure your booking doc has a fare field
+        createdAt: serverTimestamp(),
+        status: "completed"
+      });
+
+      // 2. Clear the current ride from Driver & set to available
       await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
         currentRideId: "",
-        available: true // Set back to available after finishing a ride
+        available: true 
       });
     }
-  };
+
+    // 3. Update the original booking status
+    await updateDoc(doc(db, "bookings", ride.id), { status });
+    
+  } catch (error) {
+    console.error("Error updating ride status:", error);
+    alert("Failed to complete ride. Please try again.");
+  }
+};
 
   if (loading) return <div className="p-10 text-center">Loading Driver Console...</div>;
 
