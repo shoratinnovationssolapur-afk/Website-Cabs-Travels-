@@ -12,6 +12,7 @@ import UserDashboard from "./pages/UserDashboard";
 import "leaflet/dist/leaflet.css";
 
 
+
 import AdminVehicles from "./pages/AdminVehicles";
 import AdminBookings from "./pages/AdminBookings";
 import AdminUsers from "./pages/AdminUsers";
@@ -47,6 +48,7 @@ import DriverHistory from "./pages/DriverHistory";
 import DriverEarnings from "./pages/DriverEarnings";
 import BookingSuccess from "./pages/BookingSuccess";
 import AdminTourBookings from "./pages/AdminTourBookings";
+import BookRide from "./pages/BookRide";
 
 // ================= LAYOUT =================
 function Layout() {
@@ -301,6 +303,10 @@ const router = createBrowserRouter([
         path: "rent-your-car", 
         element: <UserRoute><RentCarPage /></UserRoute> 
       },
+      {
+      path : "/bookride",
+      element : <BookRide />
+      }
     ],
   },
 ]);
