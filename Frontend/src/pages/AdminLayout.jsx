@@ -5,6 +5,7 @@ import AdminVehicles from "./AdminVehicles";
 import AdminUsers from "./AdminUsers";
 import AdminDashboard from "./AdminDashboard";
 import AdminVendorManagement from "./AdminVendorManagement";
+import AdminTourBookings from "./AdminTourBookings"
 
 export default function AdminLayout() {
 
@@ -61,7 +62,7 @@ export default function AdminLayout() {
         {active === "vehicles" && <AdminVehicles />}
         {active === "users" && <AdminUsers />}
         {active === "vendors" && <AdminVendorManagement />}
-        {active === "TourBooking" && <TourBookings />}
+        {active === "TourBooking" && <AdminTourBookings />}
 
       </main>
 

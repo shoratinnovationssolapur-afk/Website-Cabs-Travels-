@@ -1,62 +1,73 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../firebase'; // Adjust path
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../firebase';
+import { collection, onSnapshot } from 'firebase/firestore'; 
 import { useNavigate } from 'react-router-dom';
+import ToursSection from '../utils/ToursSection'; 
 
 const Tours = () => {
-  const [trips, setTrips] = useState([]);
+  const [tours, setTours] = useState([]); // Renamed from trips for clarity
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // 🔄 Real-time listener for "tours" collection
   useEffect(() => {
-    const fetchTrips = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "trips"));
-        const tripsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setTrips(tripsData);
-      } catch (error) {
-        console.error("Error fetching trips:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTrips();
+    // Pointing to "tours" instead of "trips"
+    const q = collection(db, "tours"); 
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const toursData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setTours(toursData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching tours:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const handleBookNow = (trip) => {
-    // Navigate to your booking form, passing the trip details
-    navigate('/book', { state: { trip } });
+  const handleBookNow = (tour) => {
+    // Navigate using the tour ID to match your TourDetails route
+    navigate(`/tour/${tour.id}`);
   };
 
-  if (loading) return <div className="loader">Loading Adventures...</div>;
+  if (loading) return <div className="loader text-center py-20 font-bold">Loading Adventures...</div>;
 
   return (
     <div style={styles.container}>
-      {/* Hero Section */}
       <header style={styles.hero}>
-        <h1 style={styles.heroTitle}>Explore the World With Us</h1>
+        <h1 style={styles.heroTitle}>Explore the Cities With Us</h1>
         <p style={styles.heroSubtitle}>Handpicked tour packages for your next escape.</p>
       </header>
 
-      {/* Tours Grid */}
+      <section style={{ marginBottom: '60px' }}>
+        <ToursSection />
+      </section>
+
+      <hr style={{ border: '0', borderTop: '1px solid #ddd', marginBottom: '60px' }} />
+
+      <h2 style={{ textAlign: 'center', fontSize: '2.5rem', marginBottom: '40px', fontWeight: 'bold' }}>
+        All Adventure Packages
+      </h2>
+      
       <div style={styles.grid}>
-        {trips.map((trip) => (
-          <div key={trip.id} style={styles.card}>
-            <img src={trip.image || 'https://via.placeholder.com/300x200'} alt={trip.title} style={styles.cardImage} />
+        {tours.map((tour) => (
+          <div key={tour.id} style={styles.card} className="hover:scale-105 transition-transform">
+            {/* Updated to use imageUrl field */}
+            <img src={tour.imageUrl || 'https://via.placeholder.com/300x200'} alt={tour.title} style={styles.cardImage} />
             <div style={styles.cardContent}>
-              <h3 style={styles.tripTitle}>{trip.title}</h3>
-              <p style={styles.tripDuration}>🕒 {trip.duration || '3 Days / 2 Nights'}</p>
-              <p style={styles.tripDesc}>{trip.description?.substring(0, 100)}...</p>
+              <h3 style={styles.tripTitle}>{tour.title}</h3>
+              <p style={styles.tripDuration}>🕒 {tour.duration || 'Flexible Duration'}</p>
+              <p style={styles.tripDesc}>{tour.description?.substring(0, 100)}...</p>
               <div style={styles.cardFooter}>
-                <span style={styles.price}>₹{trip.price}</span>
+                <span style={styles.price}>₹{tour.price}</span>
                 <button 
-                  onClick={() => handleBookNow(trip)} 
+                  onClick={() => handleBookNow(tour)} 
                   style={styles.bookBtn}
                 >
-                  Book Request
+                  View Details
                 </button>
               </div>
             </div>
@@ -67,7 +78,7 @@ const Tours = () => {
   );
 };
 
-// Quick Inline Styles (Or move to CSS file)
+// Styles remain the same
 const styles = {
   container: { padding: '20px', backgroundColor: '#f9f9f9', minHeight: '100vh' },
   hero: { 
@@ -92,7 +103,6 @@ const styles = {
     borderRadius: '10px', 
     overflow: 'hidden', 
     boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-    transition: 'transform 0.2s'
   },
   cardImage: { width: '100%', height: '200px', objectFit: 'cover' },
   cardContent: { padding: '20px' },

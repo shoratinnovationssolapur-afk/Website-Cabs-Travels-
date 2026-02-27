@@ -29,8 +29,9 @@ import TourDetails from "./utils/TourDetails";
 import AdminTours from "./pages/AdminTours";
 import HomePage from "./pages/HomePage";
 import UserBookings from "./pages/UserBookings";
-import ToursSection from "./utils/ToursSection";
-
+// import ToursSection from "./utils/ToursSection";
+// import AdminTourBookings from "./pages/AdminTourBookings";
+import Tours from "./pages/Tours"
 
 
 
@@ -45,6 +46,7 @@ import UserRoute from "./components/UserRoute";
 import DriverHistory from "./pages/DriverHistory";
 import DriverEarnings from "./pages/DriverEarnings";
 import BookingSuccess from "./pages/BookingSuccess";
+import AdminTourBookings from "./pages/AdminTourBookings";
 
 // ================= LAYOUT =================
 function Layout() {
@@ -97,7 +99,7 @@ const router = createBrowserRouter([
       { path: "rent-your-car", element: <RentCarPage /> },
       { path: "bookings", element: <UserBookings /> },
       { path: "tour/:id", element: <TourDetails /> },
-      { path: "tours", element: <ToursSection /> },
+      
 
       // ================= USER DASHBOARD =================
       {
@@ -200,6 +202,14 @@ const router = createBrowserRouter([
           </AdminRoute>
         ),
       },
+      {
+        path: "/admin/tourbookings",
+        element:(
+          <AdminRoute>
+            <AdminTourBookings />
+          </AdminRoute>
+        )
+      },
 
       // ================= PUBLIC TOUR PAGE =================
       {
@@ -207,12 +217,12 @@ const router = createBrowserRouter([
         element: <TourDetails />,
       },
       {
-        path: "/tours",
-        element: <ToursSection />,
+      path : "/tours",
+      element : <Tours />,
       },
       {
       path: "/booking-success",
-      element:<BookingSuccess />
+      element: <BookingSuccess />,
     },
     ],
   },
