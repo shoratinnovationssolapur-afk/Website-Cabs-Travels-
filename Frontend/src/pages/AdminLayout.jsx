@@ -43,6 +43,9 @@ export default function AdminLayout() {
                     <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("vendors")}>
             Vendors
           </button>
+           <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("TourBooking")}>
+            Tour Bookings
+          </button>
 
         </nav>
 
@@ -58,6 +61,7 @@ export default function AdminLayout() {
         {active === "vehicles" && <AdminVehicles />}
         {active === "users" && <AdminUsers />}
         {active === "vendors" && <AdminVendorManagement />}
+        {active === "TourBooking" && <TourBookings />}
 
       </main>
 
