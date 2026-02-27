@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
 import { collection, onSnapshot } from 'firebase/firestore'; 
 import { useNavigate } from 'react-router-dom';
-import ToursSection from '../utils/ToursSection'; 
+// import ToursSection from '../utils/ToursSection'; 
 
 const Tours = () => {
   const [tours, setTours] = useState([]); // Renamed from trips for clarity
@@ -42,9 +42,9 @@ const Tours = () => {
         <p style={styles.heroSubtitle}>Handpicked tour packages for your next escape.</p>
       </header>
 
-      <section style={{ marginBottom: '60px' }}>
+      {/* <section style={{ marginBottom: '60px' }}>
         <ToursSection />
-      </section>
+      </section> */}
 
       <hr style={{ border: '0', borderTop: '1px solid #ddd', marginBottom: '60px' }} />
 

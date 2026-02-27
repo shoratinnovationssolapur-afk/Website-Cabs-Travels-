@@ -89,148 +89,225 @@ function Layout() {
 
 
 // ================= ROUTER =================
-const router = createBrowserRouter([
-  {
-    element: <Layout />,
-    children: [
-      { path: "/", element: <HomePage /> },
-      { path: "booking", element: <BookingDetails /> },
-      { path: "profile", element: <UserProfile /> },
-      { path: "rent-your-car", element: <RentCarPage /> },
-      { path: "bookings", element: <UserBookings /> },
-      { path: "tour/:id", element: <TourDetails /> },
+
+
+// const router = createBrowserRouter([
+//   {
+//     element: <Layout />,
+//     children: [
+//       { path: "/", element: <HomePage /> },
+//       { path: "booking", element: <BookingDetails /> },
+//       { path: "profile", element: <UserProfile /> },
+//       { path: "rent-your-car", element: <RentCarPage /> },
+//       { path: "bookings", element: <UserBookings /> },
+//       { path: "tour/:id", element: <TourDetails /> },
       
 
-      // ================= USER DASHBOARD =================
-      {
-        path: "/user",
-        element: (
-          <UserRoute>
-            <UserLayout />
-          </UserRoute>
-        ),
+//       // ================= USER DASHBOARD =================
+//       {
+//         path: "/user",
+//         element: (
+//           <UserRoute>
+//             <UserLayout />
+//           </UserRoute>
+//         ),
  
-      children: [
-    { index: true, element: <UserDashboard /> }, // matches "/user"
-    { path: "dashboard", element: <UserDashboard /> }, // matches "/user/dashboard"
-    { path: "profile", element: <UserProfile /> },
-  ],},
+//       children: [
+//     { index: true, element: <UserDashboard /> }, // matches "/user"
+//     { path: "dashboard", element: <UserDashboard /> }, // matches "/user/dashboard"
+//     { path: "profile", element: <UserProfile /> },
+//   ],},
 
-      // ================= DRIVER SECTION =================
-      {
-        path: "/driver-login",
-        element: <DriverLogin />,
-      },
-   {
-  path: "/driver",
-  element: (
-    <DriverRoute>
-      <DriverLayout />
-    </DriverRoute>
-  ),
-  children: [
-    { path: "dashboard", element: <DriverDashboard /> },
-    { path: "profile", element: <DriverProfile /> }, // This is where you use it
-    { path: "history", element: <DriverHistory /> },
-    { path: "earnings", element: <DriverEarnings /> },
-  ]
-},
+//       // ================= DRIVER SECTION =================
+//       {
+//         path: "/driver-login",
+//         element: <DriverLogin />,
+//       },
+//    {
+//   path: "/driver",
+//   element: (
+//     <DriverRoute>
+//       <DriverLayout />
+//     </DriverRoute>
+//   ),
+//   children: [
+//     { path: "dashboard", element: <DriverDashboard /> },
+//     { path: "profile", element: <DriverProfile /> }, // This is where you use it
+//     { path: "history", element: <DriverHistory /> },
+//     { path: "earnings", element: <DriverEarnings /> },
+//   ]
+// },
 
-      // ================= ADMIN DASHBOARD =================
+//       // ================= ADMIN DASHBOARD =================
+//       {
+//         path: "/admin",
+//         element: (
+//           <AdminRoute>
+//             <AdminLayout />
+//           </AdminRoute>
+//         ),
+//         // If your AdminLayout also has an <Outlet />, you can move admin pages here as children
+//       },
+//       {
+//         path: "/admin/dashboard",
+//         element: (
+//           <AdminRoute>
+//             <AdminDashboard />
+//           </AdminRoute>
+//         ),
+//       },
+//       {
+//         path: "/admin/vehicles",
+//         element: (
+//           <AdminRoute>
+//             <AdminVehicles />
+//           </AdminRoute>
+//         ),
+//       },
+//       {
+//         path: "/admin/bookings",
+//         element: (
+//           <AdminRoute>
+//             <AdminBookings />
+//           </AdminRoute>
+//         ),
+//       },
+//       {
+//         path: "/admin/users",
+//         element: (
+//           <AdminRoute>
+//             <AdminUsers />
+//           </AdminRoute>
+//         ),
+//       },
+//       {
+//         path: "/admin/drivers",
+//         element: (
+//           <AdminRoute>
+//             <AdminDrivers />
+//           </AdminRoute>
+//         ),
+//       },
+//             {
+//         path: "/admin/vendors",
+//         element: (
+//           <AdminRoute>
+//             <AdminVendorManagement />
+//           </AdminRoute>
+//         ),
+//       },
+//       {
+//         path: "/admin/tours",
+//         element: (
+//           <AdminRoute>
+//             <AdminTours />
+//           </AdminRoute>
+//         ),
+//       },
+//       {
+//         path: "/admin/tourbookings",
+//         element:(
+//           <AdminRoute>
+//             <AdminTourBookings />
+//           </AdminRoute>
+//         )
+//       },
+
+//       // ================= PUBLIC TOUR PAGE =================
+//       {
+//         path: "/tour/:id",
+//         element: <TourDetails />,
+//       },
+//       {
+//       path : "/tours",
+//       element : <Tours />,
+//       },
+//       {
+//       path: "/booking-success",
+//       element: <BookingSuccess />,
+//     },
+//     ],
+//   },
+// ]);
+
+
+
+// ================= APP =================
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      // ================= PUBLIC ROUTES =================
+      { path: "/", element: <HomePage /> },
+      { path: "tours", element: <Tours /> },
+      { path: "tour/:id", element: <TourDetails /> },
+      { path: "driver-login", element: <DriverLogin /> },
+
+      // ================= PROTECTED USER ROUTES =================
       {
-        path: "/admin",
-        element: (
-          <AdminRoute>
-            <AdminLayout />
-          </AdminRoute>
-        ),
-        // If your AdminLayout also has an <Outlet />, you can move admin pages here as children
-      },
-      {
-        path: "/admin/dashboard",
-        element: (
-          <AdminRoute>
-            <AdminDashboard />
-          </AdminRoute>
-        ),
-      },
-      {
-        path: "/admin/vehicles",
-        element: (
-          <AdminRoute>
-            <AdminVehicles />
-          </AdminRoute>
-        ),
-      },
-      {
-        path: "/admin/bookings",
-        element: (
-          <AdminRoute>
-            <AdminBookings />
-          </AdminRoute>
-        ),
-      },
-      {
-        path: "/admin/users",
-        element: (
-          <AdminRoute>
-            <AdminUsers />
-          </AdminRoute>
-        ),
-      },
-      {
-        path: "/admin/drivers",
-        element: (
-          <AdminRoute>
-            <AdminDrivers />
-          </AdminRoute>
-        ),
-      },
-            {
-        path: "/admin/vendors",
-        element: (
-          <AdminRoute>
-            <AdminVendorManagement />
-          </AdminRoute>
-        ),
-      },
-      {
-        path: "/admin/tours",
-        element: (
-          <AdminRoute>
-            <AdminTours />
-          </AdminRoute>
-        ),
-      },
-      {
-        path: "/admin/tourbookings",
-        element:(
-          <AdminRoute>
-            <AdminTourBookings />
-          </AdminRoute>
-        )
+        path: "user",
+        element: <UserRoute><UserLayout /></UserRoute>,
+        children: [
+          { index: true, element: <UserDashboard /> },
+          { path: "dashboard", element: <UserDashboard /> },
+          { path: "profile", element: <UserProfile /> },
+          { path: "bookings", element: <UserBookings /> },
+          { path: "booking-success", element: <BookingSuccess /> },
+        ],
       },
 
-      // ================= PUBLIC TOUR PAGE =================
+      // ================= PROTECTED DRIVER ROUTES =================
       {
-        path: "/tour/:id",
-        element: <TourDetails />,
+        path: "driver",
+        element: <DriverRoute><DriverLayout /></DriverRoute>,
+        children: [
+          { path: "dashboard", element: <DriverDashboard /> },
+          { path: "profile", element: <DriverProfile /> },
+          { path: "history", element: <DriverHistory /> },
+          { path: "earnings", element: <DriverEarnings /> },
+        ],
       },
+
+      // ================= PROTECTED ADMIN ROUTES =================
       {
-      path : "/tours",
-      element : <Tours />,
+        path: "admin",
+        element: <AdminRoute><AdminLayout /></AdminRoute>,
+        children: [
+          { index: true, element: <AdminDashboard /> },
+          { path: "dashboard", element: <AdminDashboard /> },
+          { path: "vehicles", element: <AdminVehicles /> },
+          { path: "bookings", element: <AdminBookings /> },
+          { path: "users", element: <AdminUsers /> },
+          { path: "drivers", element: <AdminDrivers /> },
+          { path: "vendors", element: <AdminVendorManagement /> },
+          { path: "tours", element: <AdminTours /> },
+          { path: "tourbookings", element: <AdminTourBookings /> },
+        ],
       },
-      {
-      path: "/booking-success",
-      element: <BookingSuccess />,
-    },
+      
+      // Additional standalone protected route
+      { 
+        path: "booking", 
+        element: <UserRoute><BookingDetails /></UserRoute> 
+      },
+      { 
+        path: "rent-your-car", 
+        element: <UserRoute><RentCarPage /></UserRoute> 
+      },
     ],
   },
 ]);
 
 
 
-// ================= APP =================
+
+
+
+
+
+
 function App() {
   return (
     <AuthProvider>
