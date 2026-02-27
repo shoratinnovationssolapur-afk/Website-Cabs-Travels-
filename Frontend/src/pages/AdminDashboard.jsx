@@ -14,7 +14,8 @@ import {
   Cell,
 } from "recharts";
 
-const COLORS = ["#6366F1", "#22C55E", "#F59E0B", "#EF4444"];
+// Updated COLORS to match the KPI card themes in the image
+const COLORS = ["#8B5CF6", "#10B981", "#F59E0B", "#EC4899", "#0EA5E9", "#64748B"];
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -34,10 +35,7 @@ export default function AdminDashboard() {
     const unsubBookings = onSnapshot(collection(db, "bookings"), (snapshot) => {
       const bookings = snapshot.docs.map(d => d.data());
       
-      // FIX: Summing totalFare for ALL valid car bookings
-      // Based on your Firestore data, we sum where 'totalFare' exists
       const cabRevenue = bookings.reduce((acc, curr) => {
-        // Only count revenue for orders that are confirmed/finished
         if (curr.status === "approved" || curr.status === "completed") {
           return acc + (Number(curr.totalFare) || 0);
         }
@@ -54,7 +52,6 @@ export default function AdminDashboard() {
         };
       });
 
-      // --- Chart Processing logic remains the same ---
       const monthMap = {};
       bookings.forEach(b => {
         if (!b.createdAt) return;
@@ -105,46 +102,45 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white p-8">
-      <h1 className="text-4xl font-bold mb-8 text-yellow-400">Admin Dashboard</h1>
+    <div className="min-h-screen bg-[#0a0a0b] text-white p-8">
+      <h1 className="text-4xl font-bold mb-8 text-yellow-500">Admin Dashboard</h1>
 
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-10">
-        <Card title="Total Bookings" value={stats.bookings} color="from-indigo-600 to-purple-700" />
-        <Card title="Booking Revenue" value={`₹ ${stats.revenue.toLocaleString('en-IN')}`} color="from-green-600 to-emerald-700" />
-        <Card title="Tour Revenue" value={`₹ ${stats.tourRevenue.toLocaleString('en-IN')}`} color="from-yellow-600 to-orange-700" />
-        <Card title="Total Revenue" value={`₹ ${stats.totalRevenue.toLocaleString('en-IN')}`} color="from-pink-600 to-rose-700" />
-        <Card title="Users" value={stats.users} color="from-blue-600 to-cyan-700" />
-        <Card title="Vehicles" value={stats.vehicles} color="from-gray-600 to-slate-700" />
+      {/* Adjusted Grid to match 6-column layout in screenshot */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-10">
+        <Card title="Total Bookings" value={stats.bookings} color="from-[#7c3aed] to-[#6d28d9]" />
+        <Card title="Booking Revenue" value={`₹ ${stats.revenue.toLocaleString('en-IN')}`} color="from-[#059669] to-[#047857]" />
+        <Card title="Tour Revenue" value={`₹ ${stats.tourRevenue.toLocaleString('en-IN')}`} color="from-[#ea580c] to-[#c2410c]" />
+        <Card title="Total Revenue" value={`₹ ${stats.totalRevenue.toLocaleString('en-IN')}`} color="from-[#db2777] to-[#be185d]" />
+        <Card title="Users" value={stats.users} color="from-[#0284c7] to-[#0369a1]" />
+        <Card title="Vehicles" value={stats.vehicles} color="from-[#4b5563] to-[#374151]" />
       </div>
       
-      {/* Charts Section */}
       <div className="grid md:grid-cols-2 gap-8">
-        <div className="bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl">
-          <h2 className="font-bold mb-6 text-xl text-gray-300">Monthly Bookings</h2>
+        <div className="bg-[#141416] p-6 rounded-2xl shadow-2xl border border-white/5">
+          <h2 className="font-bold mb-6 text-xl text-gray-200 uppercase tracking-tight">Monthly Bookings</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={monthlyData}>
-              <XAxis dataKey="name" stroke="#666" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="#666" fontSize={12} tickLine={false} axisLine={false} />
+              <XAxis dataKey="name" stroke="#e2e2eb" fontSize={12} tickLine={false} axisLine={true} />
+              <YAxis stroke="#e2e2eb" fontSize={12} tickLine={false} axisLine={true} />
               <Tooltip 
-                contentStyle={{ backgroundColor: "#111", border: "none", borderRadius: "10px", color: "#fff" }}
+                contentStyle={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "12px", color: "#fff" }}
               />
-              <Line type="monotone" dataKey="bookings" stroke="#FACC15" strokeWidth={4} dot={{ r: 6, fill: "#FACC15" }} activeDot={{ r: 8 }} />
+              <Line type="monotone" dataKey="bookings" stroke="#eab308" strokeWidth={4} dot={{ r: 6, fill: "#eab308" }} activeDot={{ r: 8 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl">
-          <h2 className="font-bold mb-6 text-xl text-gray-300">Booking Status</h2>
+        <div className="bg-[#141416] p-6 rounded-2xl shadow-2xl border border-white/5">
+          <h2 className="font-bold mb-6 text-xl text-gray-200 uppercase tracking-tight">Booking Status</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
-              <Pie data={statusData} dataKey="value" nameKey="name" outerRadius={100} innerRadius={60} paddingAngle={5}>
+              <Pie data={statusData} dataKey="value" nameKey="name" outerRadius={100} innerRadius={65} paddingAngle={8}>
                 {statusData.map((entry, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="none" />
                 ))}
               </Pie>
               <Tooltip 
-                contentStyle={{ backgroundColor: "#111", border: "none", borderRadius: "10px", color: "#fff" }}
+                contentStyle={{ backgroundColor: "#ffffff", border: "1px solid #010101", borderRadius: "12px", fontWeight: "bold", color: "#000" }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -156,9 +152,9 @@ export default function AdminDashboard() {
 
 function Card({ title, value, color }) {
   return (
-    <div className={`bg-gradient-to-br ${color} p-6 rounded-3xl shadow-xl hover:translate-y-[-5px] transition-all duration-300`}>
-      <p className="text-white/70 text-[10px] font-black uppercase tracking-widest">{title}</p>
-      <h2 className="text-2xl font-black mt-1">{value}</h2>
+    <div className={`bg-gradient-to-br ${color} p-5 rounded-2xl shadow-lg hover:scale-105 transition-transform duration-300`}>
+      <p className="text-white/80 text-[11px] font-bold uppercase tracking-wider leading-none mb-3">{title}</p>
+      <h2 className="text-3xl font-black">{value}</h2>
     </div>
   );
 }
