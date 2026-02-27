@@ -227,6 +227,14 @@ useEffect(() => {
 //   };
 
 const submitBooking = async () => {
+
+// 1. ADD THE CONSTRAINT CHECK HERE
+  if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
+    alert("Pickup and Drop locations cannot be the same. Please choose different locations.");
+    return;
+  }
+
+
   if (
     !name.trim() ||
     !phone.trim() ||

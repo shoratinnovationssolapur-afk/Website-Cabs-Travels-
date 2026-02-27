@@ -4,6 +4,7 @@ import AdminTours from "./AdminTours";
 import AdminVehicles from "./AdminVehicles";
 import AdminUsers from "./AdminUsers";
 import AdminDashboard from "./AdminDashboard";
+import AdminVendorManagement from "./AdminVendorManagement";
 
 export default function AdminLayout() {
 
@@ -39,6 +40,12 @@ export default function AdminLayout() {
           <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("users")}>
             Users
           </button>
+                    <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("vendors")}>
+            Vendors
+          </button>
+           <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("TourBooking")}>
+            Tour Bookings
+          </button>
 
         </nav>
 
@@ -53,6 +60,8 @@ export default function AdminLayout() {
         {active === "tours" && <AdminTours />}
         {active === "vehicles" && <AdminVehicles />}
         {active === "users" && <AdminUsers />}
+        {active === "vendors" && <AdminVendorManagement />}
+        {active === "TourBooking" && <TourBookings />}
 
       </main>
 

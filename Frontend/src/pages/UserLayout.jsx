@@ -1,11 +1,11 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
-import { useState } from "react";
+// import { useState } from "react";
 
 const UserLayout = () => {
   const navigate = useNavigate();
-  const [openSidebar, setOpenSidebar] = useState(true);
+  
 
   const logout = async () => {
     await signOut(auth);

@@ -7,6 +7,7 @@ import { db } from "../firebase";
 const UserDashboard = () => {
   const { user } = useAuthContext();
   const [userName, setUserName] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchName = async () => {
