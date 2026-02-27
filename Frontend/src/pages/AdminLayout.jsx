@@ -1,71 +1,68 @@
-import { useState } from "react";
-import AdminProfile from "./AdminProfile";
-import AdminTours from "./AdminTours";
-import AdminVehicles from "./AdminVehicles";
-import AdminUsers from "./AdminUsers";
-import AdminDashboard from "./AdminDashboard";
-import AdminVendorManagement from "./AdminVendorManagement";
-import AdminTourBookings from "./AdminTourBookings"
+import { Outlet, useNavigate } from "react-router-dom";
+// Remove local imports of the pages here if they are already 
+// handled by the router in App.jsx
 
 export default function AdminLayout() {
-
-  const [active, setActive] = useState("dashboard");
+  const navigate = useNavigate();
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-
       {/* ===== SIDEBAR ===== */}
       <aside className="w-64 bg-black text-white p-6">
-
-        <h2 className="text-xl font-bold mb-8">
-          Admin Panel
-        </h2>
+        <h2 className="text-xl font-bold mb-8">Admin Panel</h2>
 
         <nav className="flex flex-col gap-4">
-          <button className="hover:bg-white hover:text-black cursor-pointer" onClick={() => setActive("profile")}>
-            Profile
-          </button>
-
-          <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("dashboard")}>
+          <button 
+            className="text-left hover:bg-white hover:text-black cursor-pointer p-2 transition" 
+            onClick={() => navigate("/admin/dashboard")}
+          >
             Dashboard
           </button>
 
-          <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("tours")}>
+          <button 
+            className="text-left hover:bg-white hover:text-black cursor-pointer p-2 transition" 
+            onClick={() => navigate("/admin/tours")}
+          >
             Add Tours
           </button>
 
-          <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("vehicles")}>
+          <button 
+            className="text-left hover:bg-white hover:text-black cursor-pointer p-2 transition" 
+            onClick={() => navigate("/admin/vehicles")}
+          >
             Vehicles
           </button>
 
-          <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("users")}>
+          <button 
+            className="text-left hover:bg-white hover:text-black cursor-pointer p-2 transition" 
+            onClick={() => navigate("/admin/users")}
+          >
             Users
           </button>
-                    <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("vendors")}>
+
+          <button 
+            className="text-left hover:bg-white hover:text-black cursor-pointer p-2 transition" 
+            onClick={() => navigate("/admin/vendors")}
+          >
             Vendors
           </button>
-           <button className="hover:bg-white cursor-pointer hover:text-black" onClick={() => setActive("TourBooking")}>
+
+          <button 
+            className="text-left hover:bg-white hover:text-black cursor-pointer p-2 transition" 
+            onClick={() => navigate("/admin/tourbookings")}
+          >
             Tour Bookings
           </button>
-
         </nav>
-
       </aside>
-
 
       {/* ===== CONTENT AREA ===== */}
       <main className="flex-1 p-8">
-
-       {active === "dashboard" && <AdminDashboard />}
-        {active === "profile" && <AdminProfile />}
-        {active === "tours" && <AdminTours />}
-        {active === "vehicles" && <AdminVehicles />}
-        {active === "users" && <AdminUsers />}
-        {active === "vendors" && <AdminVendorManagement />}
-        {active === "TourBooking" && <AdminTourBookings />}
-
+        {/* The Outlet renders whichever child route is active 
+            based on the URL in the address bar.
+        */}
+        <Outlet />
       </main>
-
     </div>
   );
 }

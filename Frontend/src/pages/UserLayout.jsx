@@ -5,7 +5,6 @@ import { auth } from "../firebase";
 
 const UserLayout = () => {
   const navigate = useNavigate();
-  
 
   const logout = async () => {
     await signOut(auth);
@@ -14,45 +13,44 @@ const UserLayout = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-
       {/* SIDEBAR */}
-
-       {/* <div
-        className={`w-64 bg-black text-white p-6 transition-transform duration-300
-        ${openSidebar ? "translate-x-0" : "-translate-x-full"}`}
-      > */}
       <div className="w-64 bg-black text-white p-6 space-y-6">
-        <h2 className="text-xl font-bold text-yellow-400">
-          User Panel
-        </h2>
+        <h2 className="text-xl font-bold text-yellow-400">User Panel</h2>
 
-
-        <button onClick={() => navigate("/bookings")}
-          className="block w-full text-left hover:text-yellow-400">
+        {/* ADD THE LEADING SLASH (/) BELOW */}
+        <button 
+          onClick={() => navigate("/user/bookings")} 
+          className="block w-full text-left hover:text-yellow-400"
+        >
           My Bookings
         </button>
 
-        <button onClick={()=> navigate("/tours")} className="block w-full text-left hover:text-yellow-400">
+        <button 
+          onClick={() => navigate("/tours")} 
+          className="block w-full text-left hover:text-yellow-400"
+        >
           Tours
         </button>
 
-        <button onClick={() => navigate("/profile")}
-          className="block w-full text-left hover:text-yellow-400">
+        <button 
+          onClick={() => navigate("/user/profile")} 
+          className="block w-full text-left hover:text-yellow-400"
+        >
           Profile
         </button>
 
-        <button onClick={logout}
-          className="block w-full text-left text-red-400">
+        <button 
+          onClick={logout}
+          className="block w-full text-left text-red-400"
+        >
           Logout
         </button>
       </div>
-      {/* </div> */}
 
       {/* MAIN CONTENT */}
       <div className="flex-1 p-8">
         <Outlet />
       </div>
-
     </div>
   );
 };
