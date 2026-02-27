@@ -167,7 +167,7 @@ const BookRide = () => {
       <main className="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-8 -mt-10">
         <div className="lg:col-span-2 space-y-6">
           {/* ROUTE */}
-          <div className="bg-white p-6 rounded-2xl shadow">
+          <div className="bg-white p-6 rounded-2xl shadow mt-19">
             <h3 className="font-bold text-xl mb-4 flex gap-2">
               <MapPin className="text-yellow-500" /> Route
             </h3>
@@ -235,7 +235,7 @@ const BookRide = () => {
         </div>
 
         {/* FARE DETAILS */}
-        <div className="bg-white p-8 rounded-3xl shadow sticky top-20 h-fit">
+        <div className="bg-white p-8 rounded-3xl shadow mt-20 h-fit">
           <h3 className="text-2xl font-bold mb-6">Fare Details</h3>
           <div className="space-y-3 mb-6">
             <div className="flex justify-between">

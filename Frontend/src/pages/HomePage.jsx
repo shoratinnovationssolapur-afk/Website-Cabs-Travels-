@@ -367,8 +367,8 @@ const submitBooking = async () => {
             </a>
 
             <a
-            onClick={navigate("/bookride")}
-              className="border border-white px-8 py-3 rounded-full hover:bg-white hover:text-black transition"
+            onClick={()=>navigate("/bookride")}
+              className="border border-white px-8 py-3 rounded-full hover:bg-white hover:text-black transition cursor-pointer"
             >
               Book Ride
             </a>
