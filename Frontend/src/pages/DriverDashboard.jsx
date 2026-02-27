@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
+import { completeRide } from "../utils/completeRide";
 import { doc, updateDoc, onSnapshot, addDoc, collection, serverTimestamp } from "firebase/firestore"; // Add addDoc, collection, serverTimestamp
 
 export default function DriverDashboard() {
@@ -31,6 +32,13 @@ useEffect(() => {
 
   return () => unsubDriver();
 }, []);
+
+// Example: Calling it when a "Mark as Completed" button is clicked
+const handleFinishTrip = (bookingId, driverId) => {
+  if (window.confirm("Has the passenger reached their destination?")) {
+    completeRide(bookingId, driverId);
+  }
+};
 
 // 2. Monitor Ride Info (Depends on driverInfo.currentRideId)
 useEffect(() => {
@@ -89,15 +97,17 @@ const updateRideStatus = async (status) => {
         rideId: ride.id,
         pickup: ride.pickup,
         drop: ride.drop,
-        totalFare: ride.fare || 0, // Ensure your booking doc has a fare field
+        totalFare: ride.totalFare || 0, // Matches your Firestore 'totalFare' field
         createdAt: serverTimestamp(),
         status: "completed"
       });
 
-      // 2. Clear the current ride from Driver & set to available
+      // 2. RESET ON-TRIP STATUS
+      // We keep 'available' as whatever it was (likely true)
+      // but we flip 'onTrip' to false so the Admin can see them again.
       await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
         currentRideId: "",
-        available: true 
+        onTrip: false // <--- This allows the admin to assign them again
       });
     }
 
