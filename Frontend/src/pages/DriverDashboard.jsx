@@ -9,73 +9,108 @@ export default function DriverDashboard() {
   const [loading, setLoading] = useState(true);
 
   // 1. Monitor Driver Status & Current Ride ID
-// 1. Monitor Driver Info
-useEffect(() => {
-  if (!auth.currentUser) return;
+  // 1. Monitor Driver Info
+  useEffect(() => {
+    if (!auth.currentUser) return;
 
-  const unsubDriver = onSnapshot(
-    doc(db, "drivers", auth.currentUser.uid),
-    (snap) => {
-      if (snap.exists()) {
-        setDriverInfo(snap.data());
-      } else {
-        console.warn("No driver profile found for this user.");
+    const unsubDriver = onSnapshot(
+      doc(db, "drivers", auth.currentUser.uid),
+      (snap) => {
+        if (snap.exists()) {
+          setDriverInfo(snap.data());
+        } else {
+          console.warn("No driver profile found for this user.");
+        }
+        // Always stop loading once the driver doc is checked
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Driver Watch Error:", err);
+        setLoading(false);
       }
-      // Always stop loading once the driver doc is checked
-      setLoading(false);
-    },
-    (err) => {
-      console.error("Driver Watch Error:", err);
-      setLoading(false);
+    );
+
+    return () => unsubDriver();
+  }, []);
+
+  // Example: Calling it when a "Mark as Completed" button is clicked
+  const handleFinishTrip = (bookingId, driverId) => {
+    if (window.confirm("Has the passenger reached their destination?")) {
+      completeRide(bookingId, driverId);
     }
-  );
+  };
 
-  return () => unsubDriver();
-}, []);
+  // 2. Monitor Ride Info (Depends on driverInfo.currentRideId)
+  useEffect(() => {
+    if (!driverInfo?.currentRideId) {
+      setRide(null);
+      return;
+    }
 
-// Example: Calling it when a "Mark as Completed" button is clicked
-const handleFinishTrip = (bookingId, driverId) => {
-  if (window.confirm("Has the passenger reached their destination?")) {
-    completeRide(bookingId, driverId);
-  }
-};
+    const unsubRide = onSnapshot(
+      doc(db, "bookings", driverInfo.currentRideId),
+      (rideSnap) => {
+        if (rideSnap.exists()) {
+          setRide({ id: rideSnap.id, ...rideSnap.data() });
+        } else {
+          setRide(null);
+        }
+      },
+      (err) => console.error("Ride Watch Error:", err)
+    );
 
-// 2. Monitor Ride Info (Depends on driverInfo.currentRideId)
-useEffect(() => {
-  if (!driverInfo?.currentRideId) {
-    setRide(null);
-    return;
-  }
-
-  const unsubRide = onSnapshot(
-    doc(db, "bookings", driverInfo.currentRideId),
-    (rideSnap) => {
-      if (rideSnap.exists()) {
-        setRide({ id: rideSnap.id, ...rideSnap.data() });
-      } else {
-        setRide(null);
-      }
-    },
-    (err) => console.error("Ride Watch Error:", err)
-  );
-
-  return () => unsubRide();
-}, [driverInfo?.currentRideId]); // Only restarts if the ID changes
+    return () => unsubRide();
+  }, [driverInfo?.currentRideId]); // Only restarts if the ID changes
 
   // 2. Real-time Location Tracking (Updates Firestore as driver moves)
+  // useEffect(() => {
+  //   const watchId = navigator.geolocation.watchPosition(
+  //     async (pos) => {
+  //       const { latitude, longitude } = pos.coords;
+  //       if (auth.currentUser) {
+  //         await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
+  //           location: { lat: latitude, lng: longitude },
+  //           lastUpdated: new Date()
+  //         });
+  //       }
+  //     },
+  //     (err) => console.error("Location Error:", err),
+  //     { enableHighAccuracy: true }
+  //   );
+  //   return () => navigator.geolocation.clearWatch(watchId);
+  // }, []);
+
+
+  // 2. Real-time Location Tracking (Updates Firestore with Lat/Lng AND Address)
   useEffect(() => {
     const watchId = navigator.geolocation.watchPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
         if (auth.currentUser) {
-          await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
-            location: { lat: latitude, lng: longitude },
-            lastUpdated: new Date()
-          });
+          try {
+            // 🌍 Reverse Geocode to get the address string
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+            );
+            const data = await res.json();
+            const addressStr = data.display_name;
+
+            // Update Firestore with both coordinates and the readable address
+            await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
+              location: {
+                lat: latitude,
+                lng: longitude,
+                address: addressStr // This provides the "Live Location Address" you want
+              },
+              lastUpdated: serverTimestamp() // Better to use serverTimestamp for consistency
+            });
+          } catch (err) {
+            console.error("Reverse Geocode Error:", err);
+          }
         }
       },
       (err) => console.error("Location Error:", err),
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, distanceFilter: 10 } // distanceFilter helps prevent unnecessary API calls
     );
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
@@ -88,37 +123,37 @@ useEffect(() => {
     });
   };
 
-const updateRideStatus = async (status) => {
-  try {
-    if (status === "completed") {
-      // 1. Create the History Record
-      await addDoc(collection(db, "confirmed_bookings"), {
-        driverId: auth.currentUser.uid,
-        rideId: ride.id,
-        pickup: ride.pickup,
-        drop: ride.drop,
-        totalFare: ride.totalFare || 0, // Matches your Firestore 'totalFare' field
-        createdAt: serverTimestamp(),
-        status: "completed"
-      });
+  const updateRideStatus = async (status) => {
+    try {
+      if (status === "completed") {
+        // 1. Create the History Record
+        await addDoc(collection(db, "confirmed_bookings"), {
+          driverId: auth.currentUser.uid,
+          rideId: ride.id,
+          pickup: ride.pickup,
+          drop: ride.drop,
+          totalFare: ride.totalFare || 0, // Matches your Firestore 'totalFare' field
+          createdAt: serverTimestamp(),
+          status: "completed"
+        });
 
-      // 2. RESET ON-TRIP STATUS
-      // We keep 'available' as whatever it was (likely true)
-      // but we flip 'onTrip' to false so the Admin can see them again.
-      await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
-        currentRideId: "",
-        onTrip: false // <--- This allows the admin to assign them again
-      });
+        // 2. RESET ON-TRIP STATUS
+        // We keep 'available' as whatever it was (likely true)
+        // but we flip 'onTrip' to false so the Admin can see them again.
+        await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
+          currentRideId: "",
+          onTrip: false // <--- This allows the admin to assign them again
+        });
+      }
+
+      // 3. Update the original booking status
+      await updateDoc(doc(db, "bookings", ride.id), { status });
+
+    } catch (error) {
+      console.error("Error updating ride status:", error);
+      alert("Failed to complete ride. Please try again.");
     }
-
-    // 3. Update the original booking status
-    await updateDoc(doc(db, "bookings", ride.id), { status });
-    
-  } catch (error) {
-    console.error("Error updating ride status:", error);
-    alert("Failed to complete ride. Please try again.");
-  }
-};
+  };
 
   if (loading) return <div className="p-10 text-center">Loading Driver Console...</div>;
 
@@ -130,7 +165,7 @@ const updateRideStatus = async (status) => {
           <h2 className="text-lg font-bold">Duty Status</h2>
           <p className="text-sm">{driverInfo?.available ? "You are Online and visible to customers" : "You are currently Offline"}</p>
         </div>
-        <button 
+        <button
           onClick={toggleDuty}
           className={`px-6 py-2 rounded-full font-bold text-white transition-all ${driverInfo?.available ? 'bg-red-500 hover:bg-red-600' : 'bg-green-600 hover:bg-green-700'}`}
         >
@@ -152,7 +187,7 @@ const updateRideStatus = async (status) => {
               {ride.status}
             </span>
           </div>
-          
+
           <div className="p-8 space-y-6">
             <div className="flex gap-4">
               <div className="flex flex-col items-center">
@@ -174,16 +209,16 @@ const updateRideStatus = async (status) => {
 
             <div className="pt-4 grid grid-cols-2 gap-4">
               {ride.status === "assigned" && (
-                <button 
+                <button
                   onClick={() => updateRideStatus("on_the_way")}
                   className="bg-blue-600 text-white py-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg col-span-2"
                 >
                   Start Trip
                 </button>
               )}
-              
+
               {ride.status === "on_the_way" && (
-                <button 
+                <button
                   onClick={() => updateRideStatus("completed")}
                   className="bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 transition shadow-lg col-span-2"
                 >
