@@ -30,7 +30,6 @@ import AdminTours from "./pages/AdminTours";
 import HomePage from "./pages/HomePage";
 import UserBookings from "./pages/UserBookings";
 // import ToursSection from "./utils/ToursSection";
-// import AdminTourBookings from "./pages/AdminTourBookings";
 import Tours from "./pages/Tours"
 
 
