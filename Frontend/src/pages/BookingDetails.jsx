@@ -156,50 +156,88 @@ const BookingDetails = () => {
 
 
   const handleFinalBooking = async () => {
-  try {
-    if (!auth.currentUser) return alert("Please login first");
-    if (!pickup || !drop) return alert("Please enter route");
+    try {
+      // 1. ADD THE CONSTRAINT CHECK HERE
+      if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
+        alert("Pickup and Drop locations cannot be the same. Please choose different locations.");
+        return;
+      }
 
-    // Get the first passenger as the primary contact
+
+      if (!auth.currentUser) return alert("Please login first");
+      if (!pickup || !drop) return alert("Please enter route");
+
+
+
+      for (let i = 0; i < passengers.length; i++) {
+      const p = passengers[i];
+      const passengerNum = i + 1;
+
+      // Check for empty names
+      if (!p.name.trim()) {
+        alert(`Please enter a name for Passenger ${passengerNum}`);
+        return;
+      }
+
+      // Phone Number Validation (Standard 10 digits)
+      const phoneRegex = /^[6-9]\d{9}$/;
+      if (!phoneRegex.test(p.phone)) {
+        alert(`Passenger ${passengerNum}: Please enter a valid 10-digit phone number.`);
+        return;
+      }
+
+      // Age Validation (Check if numeric and within reasonable range)
+      const ageNum = parseInt(p.age);
+      if (isNaN(ageNum) || ageNum <= 0 || ageNum > 110) {
+        alert(`Passenger ${passengerNum}: Please enter a valid age between 1 and 110.`);
+        return;
+      }
+      
+      // Ensure Date/Time is selected for the ride
+      if (!p.dateTime) {
+        alert(`Passenger ${passengerNum}: Please select a date and time for the booking.`);
+        return;
+      }
+    }
+
+    // ... rest of your existing booking logic (creating bookingData and addDoc)
     const primaryPassenger = passengers[0];
+     const bookingData = {
+        vehicleId: vehicle.id,
+        vehicleName: vehicle.name,
+        pickup,
+        drop,
+        dateTime,
+        // CRITICAL: Save primary details at top level for easy Admin access
+        name: primaryPassenger.name || "N/A",
+        phone: primaryPassenger.phone || "N/A",
+        passengers: passengers,
 
-    // Create the booking object
-    const bookingData = {
-      vehicleId: vehicle.id,
-      vehicleName: vehicle.name,
-      pickup,
-      drop,
-      dateTime,
-      // CRITICAL: Save primary details at top level for easy Admin access
-      name: primaryPassenger.name || "N/A",
-      phone: primaryPassenger.phone || "N/A",
-      passengers: passengers,
-      
-      // IDENTIFIER: This helps you distinguish from "Quick Booking"
-      bookingMethod: "car_specific", 
-      
-      status: "pending",
-      userId: auth.currentUser.uid,
-      createdAt: serverTimestamp(),
-      tripType,
-      durationDays: tripType === "outstation" ? days : 1,
-      distance,
-      totalFare: totalAmount,
-    };
+        // IDENTIFIER: This helps you distinguish from "Quick Booking"
+        bookingMethod: "car_specific",
 
-    const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
-    const id = bookingRef.id;
-    setBookingId(id);
+        status: "pending",
+        userId: auth.currentUser.uid,
+        createdAt: serverTimestamp(),
+        tripType,
+        durationDays: tripType === "outstation" ? days : 1,
+        distance,
+        totalFare: totalAmount,
+      };
 
-    await autoAssignDriver(id);
+      const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
+      const id = bookingRef.id;
+      setBookingId(id);
 
-    alert("Booking Created Successfully");
-    navigate("/booking-success", { state: { bookingId: id } });
+      await autoAssignDriver(id);
 
-  } catch (err) {
-    alert(err.message);
-  }
-};
+      alert("Booking Created Successfully");
+      navigate("/booking-success", { state: { bookingId: id } });
+
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   // ... rest of your code
 
