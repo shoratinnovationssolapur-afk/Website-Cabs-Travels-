@@ -22,6 +22,7 @@ export default function TourDetails() {
     await addDoc(collection(db, "tour_bookings"), {
       tourId: tour.id,
       tourTitle: tour.title,
+      price : tour.price,
       userId: auth.currentUser.uid,
       status: "pending",
       createdAt: new Date()

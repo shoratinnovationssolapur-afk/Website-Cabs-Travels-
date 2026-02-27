@@ -227,6 +227,14 @@ useEffect(() => {
 //   };
 
 const submitBooking = async () => {
+
+// 1. ADD THE CONSTRAINT CHECK HERE
+  if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
+    alert("Pickup and Drop locations cannot be the same. Please choose different locations.");
+    return;
+  }
+
+
   if (
     !name.trim() ||
     !phone.trim() ||
@@ -259,7 +267,8 @@ const submitBooking = async () => {
       dateTime,
       status: "pending",
       createdAt: serverTimestamp(),
-      
+
+      totalFare: Number(totalFare), // Ensure it is saved as a number
       // ADD THESE TWO FIELDS for consistency with the Admin Panel:
       bookingMethod: "quick_booking", 
       passengers: [] // Empty array so your .map() doesn't crash on Admin side
