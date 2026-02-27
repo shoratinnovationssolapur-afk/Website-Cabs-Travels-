@@ -270,22 +270,27 @@ const router = createBrowserRouter([
         ],
       },
 
-      // ================= PROTECTED ADMIN ROUTES =================
-      {
-        path: "admin",
-        element: <AdminRoute><AdminLayout /></AdminRoute>,
-        children: [
-          { index: true, element: <AdminDashboard /> },
-          { path: "dashboard", element: <AdminDashboard /> },
-          { path: "vehicles", element: <AdminVehicles /> },
-          { path: "bookings", element: <AdminBookings /> },
-          { path: "users", element: <AdminUsers /> },
-          { path: "drivers", element: <AdminDrivers /> },
-          { path: "vendors", element: <AdminVendorManagement /> },
-          { path: "tours", element: <AdminTours /> },
-          { path: "tourbookings", element: <AdminTourBookings /> },
-        ],
-      },
+  // ================= PROTECTED ADMIN ROUTES =================
+  {
+    path: "admin",
+    element: (
+      <AdminRoute>
+        <AdminLayout />
+      </AdminRoute>
+    ),
+    children: [
+      { index: true, element: <AdminDashboard /> }, 
+      { path: "dashboard", element: <AdminDashboard /> },
+      { path: "vehicles", element: <AdminVehicles /> },
+      { path: "bookings", element: <AdminBookings /> },
+      { path: "users", element: <AdminUsers /> },
+      { path: "drivers", element: <AdminDrivers /> },
+      { path: "vendors", element: <AdminVendorManagement /> },
+      { path: "tours", element: <AdminTours /> },
+      { path: "tourbookings", element: <AdminTourBookings /> },
+    ],
+  },
+
       
       // Additional standalone protected route
       { 
