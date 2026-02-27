@@ -105,6 +105,7 @@ const LoginModal = ({ closeModal, showMismatch }) => {
   const signInWithGoogle = async () => {
     try {
       if (role === "Admin" && adminCode !== ADMIN_SECRET) {
+
         alert("Invalid Admin Code");
         return;
       }
@@ -196,18 +197,18 @@ const LoginModal = ({ closeModal, showMismatch }) => {
           ))}
         </div>
 
-        {role !== "Driver" && (
-          <>
-            <button
-              onClick={signInWithGoogle}
-              className="w-full flex items-center justify-center gap-3 border py-3 rounded font-semibold hover:bg-gray-50 mb-4 transition"
-            >
-              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
-              Sign in with Google
-            </button>
-            <div className="text-center mb-4 text-gray-400 text-xs">— OR —</div>
-          </>
-        )}
+        {role !== "Driver" && role !== "Admin" && (
+  <>
+    <button
+      onClick={signInWithGoogle}
+      className="w-full flex items-center justify-center gap-3 border py-3 rounded font-semibold hover:bg-gray-50 mb-4 transition"
+    >
+      <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+      Sign in with Google
+    </button>
+    <div className="text-center mb-4 text-gray-400 text-xs">— OR —</div>
+  </>
+)}
 
         <h3 className="text-xl font-bold mb-4 text-gray-800">{isRegister ? 'Create Account' : 'Login'}</h3>
 
