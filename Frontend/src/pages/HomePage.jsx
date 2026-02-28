@@ -4,7 +4,7 @@ import { auth, db } from "../firebase";
 import { collection, addDoc, serverTimestamp,getDocs,getDoc,doc,onSnapshot,
   query, 
   where} from "firebase/firestore";
- 
+
 
 
 import innova from "../assets/innova.avif";
@@ -22,7 +22,7 @@ import RangeRover from "../assets/Luxurycar2.webp";
 import BMW from "../assets/Luxurycar3.webp";
 import Audi from "../assets/Luxurycar4.webp";
 import VolvoXC90 from "../assets/Luxurycar5.webp";
-
+import { autoAssignDriver } from "../utils/autoAssignDriver"; // Adjust the path if needed
 import outstationcar from "../assets/OutstationCab.webp";
 
 import LocationInputs from "../components/pickupanddrop";
@@ -40,6 +40,7 @@ const HomePage = () => {
   const [phone, setPhone] = useState("");
   const [carType, setCarType] = useState("");
   const [dateTime, setDateTime] = useState("");
+  const [totalFare, setTotalFare] = useState(0);
 
   // For LocationInputs integration (important)
   const [pickup, setPickup] = useState("");
@@ -82,6 +83,12 @@ const HomePage = () => {
 
   //   fetchVehicles();
   // }, []);
+
+useEffect(() => {
+  if (pickup === drop) {
+    setTotalFare(0);
+  }
+}, [pickup, drop]);
 
 useEffect(() => {
   // 1. Create a query to the vehicles collection
@@ -228,64 +235,80 @@ useEffect(() => {
 //   };
 
 const submitBooking = async () => {
-
-// 1. ADD THE CONSTRAINT CHECK HERE
-  if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
-    alert("Pickup and Drop locations cannot be the same. Please choose different locations.");
+  // 1. Validation
+  if (!name.trim() || !phone.trim() || !pickup.trim() || !drop.trim() || !dateTime) {
+    alert("Please fill all booking details.");
     return;
   }
 
-
-  if (
-    !name.trim() ||
-    !phone.trim() ||
-    !pickup.trim() ||
-    !drop.trim() ||
-    !carType ||
-    !dateTime
-  ) {
-    alert("Please first fill the booking form");
+  // 🛑 Check if fare is calculated
+  if (totalFare <= 0) {
+    alert("Please wait for the fare to be calculated based on your route.");
     return;
   }
 
   const user = auth.currentUser;
-  if (!user) {
-    alert("Please login to book a ride");
-    return;
-  }
+  if (!user) return alert("Please login to book a ride.");
 
   try {
+    // 2. SEARCH FOR DRIVER
+    console.log("Searching for available drivers...");
+    const driversRef = collection(db, "drivers");
+    const q = query(
+      driversRef, 
+      where("available", "==", true), 
+      where("onTrip", "==", false),
+      where("status", "==", "active")
+    );
+
+    const driverSnap = await getDocs(q);
+
+    if (driverSnap.empty) {
+      alert("No drivers are currently online and free. Please try again in a few minutes.");
+      return; // Stops here, no booking created
+    }
+
+    const availableDriverId = driverSnap.docs[0].id;
+    const availableDriverName = driverSnap.docs[0].data().name;
+    console.log("Found Driver:", availableDriverName, "(ID:", availableDriverId, ")");
+
+    // 3. PREPARE DATA
     const bookingData = {
       userId: user.uid,
       userEmail: user.email,
-      vehicleId: selectedVehicleId || "quick_choice", // Fallback if no specific ID
-      name: name,   // Top-level name
-      phone: phone, // Top-level phone
+      vehicleId: selectedVehicleId || "quick_choice",
+      name,
+      phone,
       pickup,
       drop,
       carType,
       tripType,
       dateTime,
-      status: "pending",
+      totalFare: Number(totalFare),
+      status: "pending", // Utility will update this to 'assigned'
       createdAt: serverTimestamp(),
-
-      totalFare: Number(totalFare), // Ensure it is saved as a number
-      // ADD THESE TWO FIELDS for consistency with the Admin Panel:
-      bookingMethod: "quick_booking", 
-      passengers: [] // Empty array so your .map() doesn't crash on Admin side
+      bookingMethod: "quick_booking",
+      passengers: [] 
     };
 
+    // 4. CREATE BOOKING
     const docRef = await addDoc(collection(db, "bookings"), bookingData);
-    
-    // Auto-assign driver for quick bookings too
-    await autoAssignDriver(docRef.id);
+    console.log("Booking created with ID:", docRef.id);
 
-    alert("Booking request submitted successfully!");
+    // 5. CALL ASSIGNMENT UTILITY
+    // We pass the NEW booking ID and the DRIVER ID we just found
+    await autoAssignDriver(docRef.id, availableDriverId);
+
+    alert(`Success! Driver ${availableDriverName} has been assigned.`);
     
-    // Optional: Reset form fields here
+    // Clear form
     setName("");
     setPhone("");
+    setPickup("");
+    setDrop("");
+
   } catch (error) {
+    console.error("Critical Booking Error:", error);
     alert("Booking failed: " + error.message);
   }
 };
@@ -516,82 +539,87 @@ const submitBooking = async () => {
       </section>
 
 
-      {/* ================= QUICK BOOKING ================= */}
-      <section id="booking" className="py-16 px-6 max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-10">
-          Quick Booking
-        </h2>
+        {/* ================= QUICK BOOKING ================= */}
+        <section id="booking" className="py-16 px-6 max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-10">
+            Quick Booking
+          </h2>
 
-        <div className="grid md:grid-cols-3 gap-6 ">
+          <div className="grid md:grid-cols-3 gap-6 ">
 
-          <input
-            className="border p-3 rounded-lg placeholder-black "
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+            <input
+              className="border p-3 rounded-lg placeholder-black "
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
 
-          <input
-            className="border p-3 rounded-lg placeholder-black"
-            placeholder="Mobile Number"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
+            <input
+              className="border p-3 rounded-lg placeholder-black"
+              placeholder="Mobile Number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
 
-          {/* <div className="md:col-span-2"> */}
-          <LocationInputs
-            pickup={pickup}
-            setPickup={setPickup}
-            drop={drop}
-            setDrop={setDrop}
-          />
-          <RouteFare pickup={pickup} drop={drop} dateTime={dateTime} />
-
-
-          {/* </div> */}
-
-
-          <select
-            className="border p-3 rounded-lg"
-            value={tripType}
-            onChange={(e) => setTripType(e.target.value)}
-          >
-            <option value="">Trip Type</option>
-            <option>One Day</option>
-            <option>3 Day</option>
-            <option>5 Day</option>
-            <option>Outstation</option>
-          </select>
-
-          <select
-            className="border p-3 rounded-lg"
-            value={carType}
-            onChange={(e) => setCarType(e.target.value)}
-          >
-            <option value="">Car Type</option>
-            <option>Sedan</option>
-            <option>SUV</option>
-            <option>Luxury</option>
-          </select>
+            {/* <div className="md:col-span-2"> */}
+            <LocationInputs
+              pickup={pickup}
+              setPickup={setPickup}
+              drop={drop}
+              setDrop={setDrop}
+            />
+<RouteFare 
+  pickup={pickup} 
+  drop={drop} 
+  dateTime={dateTime} 
+  onFareCalculated={({ fare }) => setTotalFare(fare)}
+/>
 
 
+            {/* </div> */}
 
-          <input
-            type="datetime-local"
-            className="border p-3 rounded-lg md:col-span-3"
-            value={dateTime}
-            onChange={(e) => setDateTime(e.target.value)}
-          />
 
-          <button
-            className="bg-yellow-500 text-white py-3 rounded-lg md:col-span-3 font-bold hover:bg-blue-800 transition cursor-pointer "
-            onClick={submitBooking}
-          >
-            Submit Booking Request
-          </button>
+            <select
+              className="border p-3 rounded-lg"
+              value={tripType}
+              onChange={(e) => setTripType(e.target.value)}
+            >
+              <option value="">Trip Type</option>
+              <option>One Day</option>
+              <option>3 Day</option>
+              <option>5 Day</option>
+              <option>Outstation</option>
+            </select>
 
-        </div>
-      </section>
+            <select
+              className="border p-3 rounded-lg"
+              value={carType}
+              onChange={(e) => setCarType(e.target.value)}
+            >
+              <option value="">Car Type</option>
+              <option>Sedan</option>
+              <option>SUV</option>
+              <option>Luxury</option>
+            </select>
+
+
+
+            <input
+              type="datetime-local"
+              className="border p-3 rounded-lg md:col-span-3"
+              value={dateTime}
+              onChange={(e) => setDateTime(e.target.value)}
+            />
+
+            <button
+              className="bg-yellow-500 text-white py-3 rounded-lg md:col-span-3 font-bold hover:bg-blue-800 transition cursor-pointer "
+              onClick={submitBooking}
+            >
+              Submit Booking Request
+            </button>
+
+          </div>
+        </section>
 
 
       {/* ================= SERVICES ================= */}

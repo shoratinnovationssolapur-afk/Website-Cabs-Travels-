@@ -80,13 +80,14 @@ const UserBookings = () => {
                         <p className="text-xs text-gray-400 font-bold uppercase">Booking ID: #{b.id.slice(-6)}</p>
                       </div>
                     </div>
-                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                      b.status === 'completed' ? 'bg-green-100 text-green-700' : 
-                      b.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                      'bg-blue-100 text-blue-700'
-                    }`}>
-                      {b.status || 'pending'}
-                    </span>
+<span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+  b.status === 'completed' ? 'bg-green-100 text-green-700' : 
+  b.status === 'approved' ? 'bg-yellow-100 text-yellow-700' : // Added for 'approved'
+  b.status === 'rejected' ? 'bg-red-100 text-red-700' :
+  'bg-blue-100 text-blue-700'
+}`}>
+  {b.status || 'pending'}
+</span>
                   </div>
 
                   {/* Date & Time Row */}
@@ -130,12 +131,16 @@ const UserBookings = () => {
                 </div>
 
                 {/* Footer Link (Optional) */}
-                <div className="bg-gray-50 px-6 py-3 flex justify-between items-center border-t border-gray-50">
-                  <span className="text-xs font-bold text-gray-400">Total Fare: ₹{b.price || b.totalAmount || "TBA"}</span>
-                  <button className="text-blue-600 text-xs font-black uppercase flex items-center gap-1 hover:underline">
-                    View Details <ChevronRight size={14} />
-                  </button>
-                </div>
+{/* Update this section in your map function */}
+<div className="bg-gray-50 px-6 py-3 flex justify-between items-center border-t border-gray-50">
+  <span className="text-xs font-bold text-gray-400">
+    {/* We changed b.price/b.totalAmount to b.totalFare */}
+    Total Fare: ₹{b.totalFare ? Number(b.totalFare).toFixed(2) : "TBA"}
+  </span>
+  <button className="text-blue-600 text-xs font-black uppercase flex items-center gap-1 hover:underline">
+    View Details <ChevronRight size={14} />
+  </button>
+</div>
               </div>
             );
           })}

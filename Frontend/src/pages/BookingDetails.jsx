@@ -155,67 +155,57 @@ const BookingDetails = () => {
   // };
 
 
-  const handleFinalBooking = async () => {
+const handleFinalBooking = async () => {
     try {
-      // 1. ADD THE CONSTRAINT CHECK HERE
+      // 1. Validations
       if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
-        alert("Pickup and Drop locations cannot be the same. Please choose different locations.");
+        alert("Pickup and Drop locations cannot be the same.");
         return;
       }
-
 
       if (!auth.currentUser) return alert("Please login first");
       if (!pickup || !drop) return alert("Please enter route");
 
-
-
+      // 2. Passenger Validations
       for (let i = 0; i < passengers.length; i++) {
-      const p = passengers[i];
-      const passengerNum = i + 1;
+        const p = passengers[i];
+        const passengerNum = i + 1;
+        if (!p.name.trim()) return alert(`Please enter a name for Passenger ${passengerNum}`);
+        if (!/^[6-9]\d{9}$/.test(p.phone)) return alert(`Passenger ${passengerNum}: Enter a valid 10-digit phone number.`);
+        if (!p.dateTime) return alert(`Passenger ${passengerNum}: Select date and time.`);
+      }
 
-      // Check for empty names
-      if (!p.name.trim()) {
-        alert(`Please enter a name for Passenger ${passengerNum}`);
+      // 3. FIND AVAILABLE DRIVER FIRST (CRITICAL STEP)
+      const { collection, query, where, getDocs } = await import("firebase/firestore"); // Ensure imports are available
+      const driversRef = collection(db, "drivers");
+      const q = query(
+        driversRef, 
+        where("available", "==", true), 
+        where("onTrip", "==", false),
+        where("status", "==", "active")
+      );
+
+      const driverSnap = await getDocs(q);
+
+      if (driverSnap.empty) {
+        alert("No drivers are currently available for this vehicle. Please try again in a few minutes.");
         return;
       }
 
-      // Phone Number Validation (Standard 10 digits)
-      const phoneRegex = /^[6-9]\d{9}$/;
-      if (!phoneRegex.test(p.phone)) {
-        alert(`Passenger ${passengerNum}: Please enter a valid 10-digit phone number.`);
-        return;
-      }
+      const availableDriverId = driverSnap.docs[0].id;
 
-      // Age Validation (Check if numeric and within reasonable range)
-      const ageNum = parseInt(p.age);
-      if (isNaN(ageNum) || ageNum <= 0 || ageNum > 110) {
-        alert(`Passenger ${passengerNum}: Please enter a valid age between 1 and 110.`);
-        return;
-      }
-      
-      // Ensure Date/Time is selected for the ride
-      if (!p.dateTime) {
-        alert(`Passenger ${passengerNum}: Please select a date and time for the booking.`);
-        return;
-      }
-    }
-
-    // ... rest of your existing booking logic (creating bookingData and addDoc)
-    const primaryPassenger = passengers[0];
-     const bookingData = {
+      // 4. PREPARE BOOKING DATA
+      const primaryPassenger = passengers[0];
+      const bookingData = {
         vehicleId: vehicle.id,
         vehicleName: vehicle.name,
         pickup,
         drop,
         dateTime,
-        // CRITICAL: Save primary details at top level for easy Admin access
         name: primaryPassenger.name || "N/A",
         phone: primaryPassenger.phone || "N/A",
         passengers: passengers,
-
-        // IDENTIFIER: This helps you distinguish from "Quick Booking"
         bookingMethod: "car_specific",
-
         status: "pending",
         userId: auth.currentUser.uid,
         createdAt: serverTimestamp(),
@@ -225,16 +215,20 @@ const BookingDetails = () => {
         totalFare: totalAmount,
       };
 
+      // 5. CREATE BOOKING
       const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
       const id = bookingRef.id;
       setBookingId(id);
 
-      await autoAssignDriver(id);
+      // 6. CALL AUTO-ASSIGN WITH BOTH IDs
+      // This matches your utility: autoAssignDriver(bookingId, driverId)
+      await autoAssignDriver(id, availableDriverId);
 
-      alert("Booking Created Successfully");
-      navigate("/booking-success", { state: { bookingId: id } });
+      alert("Booking Created and Driver Assigned Successfully");
+      navigate("/user/booking-success", { state: { bookingId: id } });
 
     } catch (err) {
+      console.error("Booking Error:", err);
       alert(err.message);
     }
   };
