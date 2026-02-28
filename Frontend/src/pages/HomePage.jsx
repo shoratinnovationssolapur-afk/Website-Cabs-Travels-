@@ -29,7 +29,7 @@ import LocationInputs from "../components/pickupanddrop";
 import ServiceCard from "../components/ServiceCard";
 import ServiceModal from "../components/ServiceModal";
 import RouteFare from "../components/RouteFare";
-import { autoAssignDriver } from "../utils/autoAssignDriver";
+
 
 
 
