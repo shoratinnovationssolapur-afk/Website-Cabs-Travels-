@@ -108,9 +108,9 @@ export default function AdminDashboard() {
       {/* Adjusted Grid to match 6-column layout in screenshot */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-10">
         <Card title="Total Bookings" value={stats.bookings} color="from-[#7c3aed] to-[#6d28d9]" />
-        <Card title="Booking Revenue" value={`₹ ${stats.revenue.toLocaleString('en-IN')}`} color="from-[#059669] to-[#047857]" />
-        <Card title="Tour Revenue" value={`₹ ${stats.tourRevenue.toLocaleString('en-IN')}`} color="from-[#ea580c] to-[#c2410c]" />
-        <Card title="Total Revenue" value={`₹ ${stats.totalRevenue.toLocaleString('en-IN')}`} color="from-[#db2777] to-[#be185d]" />
+        <Card title="Booking Revenue" value={`₹ ${Math.round(stats.revenue).toLocaleString('en-IN')}`} color="from-[#059669] to-[#047857]" />
+        <Card title="Tour Revenue" value={`₹ ${Math.round(stats.tourRevenue).toLocaleString('en-IN')}`} color="from-[#ea580c] to-[#c2410c]" />
+        <Card title="Total Revenue" value={`₹ ${Math.round(stats.totalRevenue).toLocaleString('en-IN')}`} color="from-[#db2777] to-[#be185d]" />
         <Card title="Users" value={stats.users} color="from-[#0284c7] to-[#0369a1]" />
         <Card title="Vehicles" value={stats.vehicles} color="from-[#4b5563] to-[#374151]" />
       </div>

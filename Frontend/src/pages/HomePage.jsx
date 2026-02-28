@@ -613,6 +613,7 @@ const submitBooking = async () => {
             onClick={() => {
               setTripType("Outstation");
               setSelectedService("Outstation Cab");
+
             }}
           />
 
@@ -625,6 +626,8 @@ const submitBooking = async () => {
             onClick={() => {
               setTripType("Corporate");
               setSelectedService("Corporate Travel");
+            
+            
             }}
           />
 

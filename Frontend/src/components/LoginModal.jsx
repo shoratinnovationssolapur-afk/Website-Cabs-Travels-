@@ -6,12 +6,12 @@ import {
   signInWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+  sendPasswordResetEmail // 1. Added this import
 } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 
-// Regex for validating form format
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^[6-9]\d{9}$/; 
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -32,6 +32,21 @@ const LoginModal = ({ closeModal, showMismatch }) => {
 
   const ADMIN_SECRET = "RATHOD_ADMIN_2026";
   const navigate = useNavigate();
+
+  // 2. Added Forgot Password Logic
+  const handleForgotPassword = async () => {
+    if (!email || !EMAIL_REGEX.test(email)) {
+      alert("Please enter your registered email address first to reset your password.");
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert("Password reset link sent to your email! Please check your inbox (and spam folder).");
+    } catch (error) {
+      alert("Error: " + error.message);
+    }
+  };
 
   const redirectByRole = (userRole) => {
     if (userRole === "Admin") navigate("/admin/dashboard");
@@ -105,7 +120,6 @@ const LoginModal = ({ closeModal, showMismatch }) => {
   const signInWithGoogle = async () => {
     try {
       if (role === "Admin" && adminCode !== ADMIN_SECRET) {
-
         alert("Invalid Admin Code");
         return;
       }
@@ -169,7 +183,6 @@ const LoginModal = ({ closeModal, showMismatch }) => {
       redirectByRole(userData.role);
       closeModal();
     } catch (error) {
-      // Improved error handling
       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
         alert("No account found or invalid credentials. Please check or register.");
       } else if (error.code === 'auth/wrong-password') {
@@ -198,17 +211,17 @@ const LoginModal = ({ closeModal, showMismatch }) => {
         </div>
 
         {role !== "Driver" && role !== "Admin" && (
-  <>
-    <button
-      onClick={signInWithGoogle}
-      className="w-full flex items-center justify-center gap-3 border py-3 rounded font-semibold hover:bg-gray-50 mb-4 transition"
-    >
-      <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
-      Sign in with Google
-    </button>
-    <div className="text-center mb-4 text-gray-400 text-xs">— OR —</div>
-  </>
-)}
+          <>
+            <button
+              onClick={signInWithGoogle}
+              className="w-full flex items-center justify-center gap-3 border py-3 rounded font-semibold hover:bg-gray-50 mb-4 transition"
+            >
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+              Sign in with Google
+            </button>
+            <div className="text-center mb-4 text-gray-400 text-xs">— OR —</div>
+          </>
+        )}
 
         <h3 className="text-xl font-bold mb-4 text-gray-800">{isRegister ? 'Create Account' : 'Login'}</h3>
 
@@ -242,6 +255,18 @@ const LoginModal = ({ closeModal, showMismatch }) => {
               {showPassword ? <IoEyeOff /> : <IoEye />}
             </div>
           </div>
+
+          {/* 3. Forgot Password Link - Only visible when NOT registering */}
+          {!isRegister && (
+            <div className="text-right">
+              <span 
+                onClick={handleForgotPassword}
+                className="text-xs text-blue-700 hover:underline cursor-pointer font-medium"
+              >
+                Forgot Password?
+              </span>
+            </div>
+          )}
 
           {isRegister && role === "Driver" && (
             <>
