@@ -29,6 +29,7 @@ import LocationInputs from "../components/pickupanddrop";
 import ServiceCard from "../components/ServiceCard";
 import ServiceModal from "../components/ServiceModal";
 import RouteFare from "../components/RouteFare";
+import { autoAssignDriver } from "../utils/autoAssignDriver";
 
 
 
@@ -51,6 +52,15 @@ const HomePage = () => {
   const [heroDrop, setHeroDrop] = useState("");
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+
+  const [calculatedFare, setCalculatedFare] = useState(0);
+  const [distance, setDistance] = useState(0);
+
+  // 3. ADD THIS HANDLER to receive data from RouteFare component
+  const handleFareUpdate = ({ fare, distance }) => {
+    setCalculatedFare(fare);
+    setDistance(distance);
+  };
 
   const navigate = useNavigate();
 
@@ -641,6 +651,7 @@ const submitBooking = async () => {
             onClick={() => {
               setTripType("Outstation");
               setSelectedService("Outstation Cab");
+
             }}
           />
 
@@ -653,6 +664,8 @@ const submitBooking = async () => {
             onClick={() => {
               setTripType("Corporate");
               setSelectedService("Corporate Travel");
+            
+            
             }}
           />
 

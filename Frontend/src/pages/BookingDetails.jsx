@@ -224,7 +224,7 @@ const handleFinalBooking = async () => {
       // This matches your utility: autoAssignDriver(bookingId, driverId)
       await autoAssignDriver(id, availableDriverId);
 
-      alert("Booking Created and Driver Assigned Successfully");
+      alert("Booking Created Successfully");
       navigate("/user/booking-success", { state: { bookingId: id } });
 
     } catch (err) {

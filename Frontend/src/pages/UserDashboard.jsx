@@ -34,7 +34,7 @@ const UserDashboard = () => {
             <h3 className="font-bold" >My Bookings</h3>
             <p className="text-sm text-gray-500">View and manage your cab requests.</p>
           </div>
-          <div className="border p-4 rounded hover:bg-gray-50 cursor-pointer">
+          <div className="border p-4 rounded hover:bg-gray-50 cursor-pointer" onClick={()=> navigate("/user/profile")}>
             <h3 className="font-bold">Account Settings</h3>
             <p className="text-sm text-gray-500">Update your personal information.</p>
           </div>
