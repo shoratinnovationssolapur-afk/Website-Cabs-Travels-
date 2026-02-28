@@ -232,7 +232,7 @@ const BookingDetails = () => {
       await autoAssignDriver(id);
 
       alert("Booking Created Successfully");
-      navigate("/booking-success", { state: { bookingId: id } });
+      navigate("/user/booking-success", { state: { bookingId: id } });
 
     } catch (err) {
       alert(err.message);
