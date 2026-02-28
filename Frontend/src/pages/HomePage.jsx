@@ -4,6 +4,7 @@ import { auth, db } from "../firebase";
 import { collection, addDoc, serverTimestamp,getDocs,getDoc,doc,onSnapshot,
   query, 
   where} from "firebase/firestore";
+ 
 
 
 import innova from "../assets/innova.avif";
@@ -366,8 +367,8 @@ const submitBooking = async () => {
             </a>
 
             <a
-              href="#booking"
-              className="border border-white px-8 py-3 rounded-full hover:bg-white hover:text-black transition"
+            onClick={()=>navigate("/bookride")}
+              className="border border-white px-8 py-3 rounded-full hover:bg-white hover:text-black transition cursor-pointer"
             >
               Book Ride
             </a>
