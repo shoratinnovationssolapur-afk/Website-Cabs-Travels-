@@ -75,7 +75,7 @@ const BookRide = () => {
   const baseFare = 50; // Standard base fare for city rides
   const totalAmount = routeFare + baseFare;
 
-  const handleFinalBooking = async () => {
+const handleFinalBooking = async () => {
     try {
       if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
         alert("Pickup and Drop locations cannot be the same.");
@@ -85,6 +85,7 @@ const BookRide = () => {
       if (!auth.currentUser) return alert("Please login first");
       if (!pickup || !drop) return alert("Please enter route");
 
+      // VALIDATION LOGIC
       for (let i = 0; i < passengers.length; i++) {
         const p = passengers[i];
         const passengerNum = i + 1;
@@ -120,25 +121,33 @@ const BookRide = () => {
         name: primaryPassenger.name || "N/A",
         phone: primaryPassenger.phone || "N/A",
         passengers: passengers,
-        bookingMethod: "quick_booking", // Changed to reflect generic booking
+        bookingMethod: "quick_booking", 
         status: "pending",
         userId: auth.currentUser.uid,
+        userEmail: auth.currentUser.email || "N/A", // Added for admin reference
         createdAt: serverTimestamp(),
         tripType,
         distance,
         totalFare: totalAmount,
+        // EXPLICIT NULLS so your driver logic doesn't crash
+        driverId: null,      
+        driverName: null,    
+        vehicleId: "city_ride" // Generic ID for city rides
       };
 
+      // 1. Create the booking
       const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
       const id = bookingRef.id;
       setBookingId(id);
 
-      await autoAssignDriver(id);
+      // 2. REMOVED autoAssignDriver(id);
+      // Now it stays 'pending' until the admin assigns it.
 
-      alert("Booking Created Successfully");
+      alert("Booking Request Sent! An admin will assign a driver soon.");
       navigate("/user/booking-success", { state: { bookingId: id } });
 
     } catch (err) {
+      console.error("Booking Error:", err);
       alert(err.message);
     }
   };
