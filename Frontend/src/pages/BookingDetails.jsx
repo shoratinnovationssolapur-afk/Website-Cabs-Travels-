@@ -197,23 +197,24 @@ const handleFinalBooking = async () => {
       // 4. PREPARE BOOKING DATA
       const primaryPassenger = passengers[0];
       const bookingData = {
-        vehicleId: vehicle.id,
-        vehicleName: vehicle.name,
-        pickup,
-        drop,
-        dateTime,
-        name: primaryPassenger.name || "N/A",
-        phone: primaryPassenger.phone || "N/A",
-        passengers: passengers,
-        bookingMethod: "car_specific",
-        status: "pending",
-        userId: auth.currentUser.uid,
-        createdAt: serverTimestamp(),
-        tripType,
-        durationDays: tripType === "outstation" ? days : 1,
-        distance,
-        totalFare: totalAmount,
-      };
+  vehicleId: vehicle.id,
+  vehicleName: vehicle.name,
+  pickup,
+  drop,
+  dateTime,
+  name: primaryPassenger.name || "N/A",
+  phone: primaryPassenger.phone || "N/A",
+  passengers: passengers,
+  bookingMethod: "car_specific",
+  status: "pending",
+  userId: auth.currentUser.uid,
+  createdAt: serverTimestamp(),
+  tripType,
+  durationDays: tripType === "outstation" ? days : 1,
+  // Ensure distance is captured from state and converted to a number
+  distance: Number(distance) || 0, 
+  totalFare: totalAmount,
+};
 
       // 5. CREATE BOOKING
       const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
