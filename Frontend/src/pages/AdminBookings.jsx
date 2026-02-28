@@ -66,7 +66,6 @@ const AdminBookings = () => {
     }
   };
 
-  // Filter drivers based on search input
   const filteredDrivers = availableDrivers.filter(d =>
     d.name?.toLowerCase().includes(driverSearch.toLowerCase()) ||
     d.phone?.includes(driverSearch)
@@ -95,74 +94,104 @@ const AdminBookings = () => {
       </div>
 
       <div className="space-y-4">
-        {bookings.map(b => (
-          <div key={b.id} className="bg-white p-6 rounded-2xl shadow-sm relative border-l-8 border-yellow-400">
-            {/* Fare Badge */}
-            <div className="absolute top-4 right-4 text-right">
-              <span className={`px-3 py-1 text-[10px] rounded-full font-black uppercase tracking-widest block mb-2 ${b.bookingMethod === "car_specific" ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+        {bookings.map(b => {
+          // ⭐ FIXED: Logic moved inside .map() so 'b' is accessible
+          const tripDate = b.dateTime 
+            ? new Date(b.dateTime).toLocaleDateString('en-GB', {
+                day: '2-digit', month: 'short', year: 'numeric'
+              })
+            : "Date N/A";
+
+          const tripTime = b.dateTime 
+            ? new Date(b.dateTime).toLocaleTimeString('en-US', {
+                hour: '2-digit', minute: '2-digit', hour12: true
+              })
+            : "Time N/A";
+
+          return (
+            <div key={b.id} className="bg-white p-6 rounded-2xl shadow-sm relative border-l-8 border-yellow-400">
+              
+              {/* Fare Badge */}
+              <div className="absolute top-4 right-4 text-right">
+                <span className={`px-3 py-1 text-[10px] rounded-full font-black uppercase tracking-widest block mb-2 ${
+                  b.bookingMethod === "car_specific" ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
                 }`}>
-                {b.bookingMethod === "car_specific" ? 'Car Specific' : 'Quick Booking'}
-              </span>
-              <p className="text-lg font-black text-green-600 flex items-center justify-end">
-                <IndianRupee size={16} /> {Math.round(b.totalFare || 0).toLocaleString('en-IN')}
-              </p>
-            </div>
-
-
-
-            <div className="flex flex-col md:flex-row justify-between gap-6 pr-32">
-              <div className="flex-1">
-                <h2 className="text-xl font-black text-gray-800 uppercase">{b.name || "Guest User"}</h2>
-                <p className="text-sm text-gray-500 font-bold">{b.phone}</p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex gap-6 text-xs font-bold text-gray-500">
-              <span className="bg-gray-100 px-2 py-1 rounded">Distance: {((b.distance || 0)).toFixed(2)} KM</span>
-              <span className="bg-gray-100 px-2 py-1 rounded uppercase">Type: {b.tripType || "City"}</span>
-            </div>
-
-
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm bg-gray-50 p-4 rounded-2xl">
-              <div>
-                <p className="text-[10px] text-gray-400 uppercase font-black mb-1">Pickup Location</p>
-                {/* Removed 'truncate' and added 'break-words' */}
-                <p className="text-gray-700 font-medium leading-tight break-words">
-                  {b.pickup || "No Pickup Address Found"}
+                  {b.bookingMethod === "car_specific" ? 'Car Specific' : 'Quick Booking'}
+                </span>
+                <p className="text-lg font-black text-green-600 flex items-center justify-end">
+                  <IndianRupee size={16} /> {Math.round(b.totalFare || 0).toLocaleString('en-IN')}
                 </p>
               </div>
-              <div>
-                <p className="text-[10px] text-gray-400 uppercase font-black mb-1">Drop Location</p>
-                {/* Removed 'truncate' and added 'break-words' */}
-                <p className="text-gray-700 font-medium leading-tight break-words">
-                  {b.drop || "No Drop Address Found"}
-                </p>
+
+              <div className="flex flex-col md:flex-row justify-between gap-6 pr-32">
+                <div className="flex-1">
+                  <h2 className="text-xl font-black text-gray-800 uppercase">{b.name || "Guest User"}</h2>
+                  <p className="text-sm text-gray-500 font-bold">{b.phone}</p>
+                </div>
+              </div>
+
+              {/* Date and Time Badges */}
+              <div className="flex gap-3 mt-4">
+                <div className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-3">
+                  <Calendar size={18} className="text-blue-600" />
+                  <div>
+                    <p className="text-[10px] text-blue-400 font-black uppercase">Date</p>
+                    <p className="text-sm font-bold text-blue-900">{tripDate}</p>
+                  </div>
+                </div>
+                <div className="bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 flex items-center gap-3">
+                  <Clock size={18} className="text-indigo-600" />
+                  <div>
+                    <p className="text-[10px] text-indigo-400 font-black uppercase">Time</p>
+                    <p className="text-sm font-bold text-indigo-900">{tripTime}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex gap-6 text-xs font-bold text-gray-500">
+                <span className="bg-gray-100 px-2 py-1 rounded">Distance: {(b.distance || 0).toFixed(2)} KM</span>
+                <span className="bg-gray-100 px-2 py-1 rounded uppercase">Type: {b.tripType || "City"}</span>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm bg-gray-50 p-4 rounded-2xl">
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase font-black mb-1">Pickup Location</p>
+                  <p className="text-gray-700 font-medium leading-tight break-words">
+                    {b.pickup || "No Pickup Address Found"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase font-black mb-1">Drop Location</p>
+                  <p className="text-gray-700 font-medium leading-tight break-words">
+                    {b.drop || "No Drop Address Found"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-between border-t pt-4">
+                <span className={`text-xs font-black uppercase px-2 py-1 rounded ${
+                  b.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {b.status}
+                </span>
+
+                <div className="flex gap-2">
+                  {b.status === "pending" && (
+                    <button onClick={() => updateStatus(b, "approved")} className="bg-green-600 text-white font-bold px-4 py-2 rounded-xl">Approve</button>
+                  )}
+                  {b.status !== "completed" && b.status !== "rejected" && (
+                    <button onClick={() => openAssignModal(b.id)} className="bg-black text-yellow-400 px-6 py-2 rounded-xl font-bold">
+                      Assign Driver
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-
-
-
-            <div className="mt-6 flex items-center justify-between border-t pt-4">
-              <span className={`text-xs font-black uppercase px-2 py-1 rounded ${b.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                {b.status}
-              </span>
-
-              <div className="flex gap-2">
-                {b.status === "pending" && (
-                  <button onClick={() => updateStatus(b, "approved")} className="bg-green-600 text-white font-bold px-4 py-2 rounded-xl">Approve</button>
-                )}
-                {b.status !== "completed" && b.status !== "rejected" && (
-                  <button onClick={() => openAssignModal(b.id)} className="bg-black text-yellow-400 px-6 py-2 rounded-xl font-bold">
-                    Assign Driver
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* DRIVER ASSIGNMENT MODAL (Fixed Content) */}
+      {/* DRIVER ASSIGNMENT MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl">
@@ -179,7 +208,7 @@ const AdminBookings = () => {
                 <input
                   type="text"
                   placeholder="Search by name or phone..."
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 shadow-sm"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border-none focus:ring-2 focus:ring-yellow-400 shadow-sm outline-none"
                   value={driverSearch}
                   onChange={(e) => setDriverSearch(e.target.value)}
                 />

@@ -29,6 +29,7 @@ import LocationInputs from "../components/pickupanddrop";
 import ServiceCard from "../components/ServiceCard";
 import ServiceModal from "../components/ServiceModal";
 import RouteFare from "../components/RouteFare";
+import { autoAssignDriver } from "../utils/autoAssignDriver";
 
 
 
@@ -50,6 +51,15 @@ const HomePage = () => {
   const [heroDrop, setHeroDrop] = useState("");
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+
+  const [calculatedFare, setCalculatedFare] = useState(0);
+  const [distance, setDistance] = useState(0);
+
+  // 3. ADD THIS HANDLER to receive data from RouteFare component
+  const handleFareUpdate = ({ fare, distance }) => {
+    setCalculatedFare(fare);
+    setDistance(distance);
+  };
 
   const navigate = useNavigate();
 
@@ -256,11 +266,17 @@ const submitBooking = async () => {
 
   try {
     const bookingData = {
-      userId: user.uid,
-      userEmail: user.email,
-      vehicleId: selectedVehicleId || "quick_choice", // Fallback if no specific ID
-      name: name,   // Top-level name
-      phone: phone, // Top-level phone
+      userId: auth.currentUser.uid,
+      userEmail: auth.currentUser.email,
+      
+      // 1. Ensure vehicleId is never undefined
+      vehicleId: selectedVehicleId || "quick_choice", 
+      
+      // 2. Add vehicleName so the Driver App knows what car to show
+      vehicleName: carType || "Standard Cab", 
+      
+      name: name,
+      phone: phone,
       pickup,
       drop,
       carType,
@@ -269,23 +285,29 @@ const submitBooking = async () => {
       status: "pending",
       createdAt: serverTimestamp(),
 
-      totalFare: Number(totalFare), // Ensure it is saved as a number
-      // ADD THESE TWO FIELDS for consistency with the Admin Panel:
+      // 3. Ensure these are numbers, not undefined
+      totalFare: Number(calculatedFare) || 0, 
+      distance: Number(distance) || 0,
+
       bookingMethod: "quick_booking", 
-      passengers: [] // Empty array so your .map() doesn't crash on Admin side
+      passengers: [] 
     };
 
+    // 4. Create the document
     const docRef = await addDoc(collection(db, "bookings"), bookingData);
     
-    // Auto-assign driver for quick bookings too
-    await autoAssignDriver(docRef.id);
+    // 5. Pass the ID directly from the ref
+    if (docRef.id) {
+       await autoAssignDriver(docRef.id);
+       alert("Booking request submitted successfully!");
+    } else {
+       throw new Error("Failed to generate Booking ID");
+    }
 
-    alert("Booking request submitted successfully!");
-    
-    // Optional: Reset form fields here
     setName("");
     setPhone("");
   } catch (error) {
+    console.error("Booking Error:", error);
     alert("Booking failed: " + error.message);
   }
 };
@@ -545,7 +567,7 @@ const submitBooking = async () => {
             drop={drop}
             setDrop={setDrop}
           />
-          <RouteFare pickup={pickup} drop={drop} dateTime={dateTime} />
+          <RouteFare pickup={pickup} drop={drop} dateTime={dateTime} onFareCalculated={handleFareUpdate} />
 
 
           {/* </div> */}
