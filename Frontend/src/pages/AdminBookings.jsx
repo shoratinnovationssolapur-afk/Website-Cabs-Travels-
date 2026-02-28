@@ -9,7 +9,7 @@ import {
   where
 } from "firebase/firestore";
 import { autoAssignDriver } from "../utils/autoAssignDriver";
-import { X, MapPin, UserCheck, Search, Clock, Calendar, IndianRupee, TrendingUp, User } from "lucide-react";
+import { X, Search, Clock, Calendar, IndianRupee, TrendingUp, User, UserCheck, AlertTriangle } from "lucide-react";
 
 const AdminBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -18,6 +18,7 @@ const AdminBookings = () => {
   const [activeBookingId, setActiveBookingId] = useState(null);
   const [driverSearch, setDriverSearch] = useState("");
 
+  // Calculate Rounded Total Revenue
   const totalRevenue = bookings.reduce((acc, curr) => acc + (Number(curr.totalFare) || 0), 0);
 
   useEffect(() => {
@@ -33,11 +34,13 @@ const AdminBookings = () => {
     const q = query(
       collection(db, "drivers"),
       where("status", "==", "active"),
-      where("available", "==", true),
-      where("onTrip", "==", false)
+      where("available", "==", true)
     );
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setAvailableDrivers(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      const driversList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Filter out drivers currently on a trip
+      const readyDrivers = driversList.filter(d => d.onTrip !== true);
+      setAvailableDrivers(readyDrivers);
     });
     return () => unsubscribe();
   }, []);
@@ -95,18 +98,17 @@ const AdminBookings = () => {
 
       <div className="space-y-4">
         {bookings.map(b => {
-          // ⭐ FIXED: Logic moved inside .map() so 'b' is accessible
+          // Date and Time Formatting
           const tripDate = b.dateTime 
-            ? new Date(b.dateTime).toLocaleDateString('en-GB', {
-                day: '2-digit', month: 'short', year: 'numeric'
-              })
+            ? new Date(b.dateTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
             : "Date N/A";
-
           const tripTime = b.dateTime 
-            ? new Date(b.dateTime).toLocaleTimeString('en-US', {
-                hour: '2-digit', minute: '2-digit', hour12: true
-              })
+            ? new Date(b.dateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
             : "Time N/A";
+
+          // Assignment Logic
+          const isAssigned = b.status === "assigned" || b.driverId;
+          const assignedDriverOffline = b.driverId && !availableDrivers.find(d => d.id === b.driverId);
 
           return (
             <div key={b.id} className="bg-white p-6 rounded-2xl shadow-sm relative border-l-8 border-yellow-400">
@@ -123,27 +125,30 @@ const AdminBookings = () => {
                 </p>
               </div>
 
+              {/* Driver Unavailable Alert */}
+              {assignedDriverOffline && b.status !== "completed" && (
+                <div className="mb-4 bg-red-50 border border-red-200 p-3 rounded-xl flex items-center gap-3 animate-pulse">
+                  <AlertTriangle className="text-red-600" size={20} />
+                  <p className="text-xs text-red-700 font-bold italic">
+                    Unfortunately, the driver previously assigned is now unavailable. Please reassign.
+                  </p>
+                </div>
+              )}
+
               <div className="flex flex-col md:flex-row justify-between gap-6 pr-32">
                 <div className="flex-1">
                   <h2 className="text-xl font-black text-gray-800 uppercase">{b.name || "Guest User"}</h2>
                   <p className="text-sm text-gray-500 font-bold">{b.phone}</p>
                 </div>
-              </div>
 
-              {/* Date and Time Badges */}
-              <div className="flex gap-3 mt-4">
-                <div className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-3">
-                  <Calendar size={18} className="text-blue-600" />
-                  <div>
-                    <p className="text-[10px] text-blue-400 font-black uppercase">Date</p>
-                    <p className="text-sm font-bold text-blue-900">{tripDate}</p>
+                <div className="flex gap-3">
+                  <div className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-2">
+                    <Calendar size={16} className="text-blue-600" />
+                    <span className="text-sm font-bold text-blue-900">{tripDate}</span>
                   </div>
-                </div>
-                <div className="bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 flex items-center gap-3">
-                  <Clock size={18} className="text-indigo-600" />
-                  <div>
-                    <p className="text-[10px] text-indigo-400 font-black uppercase">Time</p>
-                    <p className="text-sm font-bold text-indigo-900">{tripTime}</p>
+                  <div className="bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 flex items-center gap-2">
+                    <Clock size={16} className="text-indigo-600" />
+                    <span className="text-sm font-bold text-indigo-900">{tripTime}</span>
                   </div>
                 </div>
               </div>
@@ -153,35 +158,42 @@ const AdminBookings = () => {
                 <span className="bg-gray-100 px-2 py-1 rounded uppercase">Type: {b.tripType || "City"}</span>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm bg-gray-50 p-4 rounded-2xl">
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-2xl">
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase font-black mb-1">Pickup Location</p>
-                  <p className="text-gray-700 font-medium leading-tight break-words">
-                    {b.pickup || "No Pickup Address Found"}
-                  </p>
+                  <p className="text-[10px] text-gray-400 uppercase font-black mb-1">Pickup</p>
+                  <p className="text-gray-700 font-medium break-words leading-tight">{b.pickup}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-gray-400 uppercase font-black mb-1">Drop Location</p>
-                  <p className="text-gray-700 font-medium leading-tight break-words">
-                    {b.drop || "No Drop Address Found"}
-                  </p>
+                  <p className="text-[10px] text-gray-400 uppercase font-black mb-1">Drop</p>
+                  <p className="text-gray-700 font-medium break-words leading-tight">{b.drop}</p>
                 </div>
               </div>
 
               <div className="mt-6 flex items-center justify-between border-t pt-4">
                 <span className={`text-xs font-black uppercase px-2 py-1 rounded ${
-                  b.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                  b.status === 'completed' ? 'bg-green-100 text-green-700' : 
+                  assignedDriverOffline ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
                 }`}>
-                  {b.status}
+                  {assignedDriverOffline && b.status !== "completed" ? "NEEDS REASSIGNMENT" : b.status}
                 </span>
 
                 <div className="flex gap-2">
                   {b.status === "pending" && (
-                    <button onClick={() => updateStatus(b, "approved")} className="bg-green-600 text-white font-bold px-4 py-2 rounded-xl">Approve</button>
+                    <button onClick={() => updateStatus(b, "approved")} className="bg-green-600 text-white font-bold px-4 py-2 rounded-xl hover:bg-green-700 transition">Approve</button>
                   )}
                   {b.status !== "completed" && b.status !== "rejected" && (
-                    <button onClick={() => openAssignModal(b.id)} className="bg-black text-yellow-400 px-6 py-2 rounded-xl font-bold">
-                      Assign Driver
+                    <button 
+                      onClick={() => openAssignModal(b.id)} 
+                      disabled={isAssigned && !assignedDriverOffline}
+                      className={`px-6 py-2 rounded-xl font-bold transition shadow-md ${
+                        (isAssigned && !assignedDriverOffline) 
+                          ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none" 
+                          : assignedDriverOffline 
+                            ? "bg-red-600 text-white hover:bg-red-700 scale-105" 
+                            : "bg-black text-yellow-400 hover:bg-gray-800"
+                      }`}
+                    >
+                      {assignedDriverOffline ? "Reassign Now" : isAssigned ? "Driver Assigned" : "Assign Driver"}
                     </button>
                   )}
                 </div>
@@ -191,18 +203,17 @@ const AdminBookings = () => {
         })}
       </div>
 
-      {/* DRIVER ASSIGNMENT MODAL */}
+      {/* DRIVER MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl">
+          <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="p-6 bg-gray-900 text-white flex justify-between items-center">
               <h3 className="text-xl font-black uppercase tracking-tight">Select Driver</h3>
               <button onClick={() => setShowModal(false)} className="bg-gray-800 p-2 rounded-full hover:bg-red-500 transition">
                 <X size={20} />
               </button>
             </div>
-
-            <div className="p-4 bg-gray-100">
+            <div className="p-4 bg-gray-100 border-b">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
@@ -214,32 +225,20 @@ const AdminBookings = () => {
                 />
               </div>
             </div>
-
             <div className="max-h-[400px] overflow-y-auto p-4 space-y-3">
-              {filteredDrivers.length > 0 ? (
-                filteredDrivers.map(driver => (
-                  <div
-                    key={driver.id}
-                    className="bg-white p-4 rounded-2xl border border-gray-100 hover:border-yellow-400 cursor-pointer transition flex justify-between items-center group"
-                    onClick={() => handleFinalAssignment(driver.id)}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="bg-yellow-100 p-3 rounded-xl text-yellow-700 group-hover:bg-yellow-400 group-hover:text-black transition">
-                        <User size={20} />
-                      </div>
-                      <div>
-                        <p className="font-black text-gray-800 uppercase">{driver.name}</p>
-                        <p className="text-xs text-gray-500 font-bold">{driver.phone}</p>
-                      </div>
+              {filteredDrivers.map(driver => (
+                <div key={driver.id} onClick={() => handleFinalAssignment(driver.id)} className="bg-white p-4 rounded-2xl border border-gray-100 hover:border-yellow-400 cursor-pointer transition flex justify-between items-center group">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-yellow-100 p-3 rounded-xl text-yellow-700 group-hover:bg-yellow-400 group-hover:text-black transition"><User size={20} /></div>
+                    <div>
+                      <p className="font-black text-gray-800 uppercase">{driver.name}</p>
+                      <p className="text-xs text-gray-500 font-bold">{driver.phone}</p>
                     </div>
-                    <UserCheck className="text-gray-300 group-hover:text-green-500 transition" />
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-10">
-                  <p className="text-gray-400 font-bold">No available drivers found.</p>
+                  <UserCheck className="text-gray-300 group-hover:text-green-500 transition" />
                 </div>
-              )}
+              ))}
+              {filteredDrivers.length === 0 && <p className="text-center py-10 text-gray-400 font-bold">No active drivers found.</p>}
             </div>
           </div>
         </div>
