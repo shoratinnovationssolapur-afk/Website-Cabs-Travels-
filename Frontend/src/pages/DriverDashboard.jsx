@@ -79,34 +79,55 @@ export default function DriverDashboard() {
     syncTripStatus();
   }, [current.length, driverInfo?.onTrip, loading]);
 
-  const updateRideStatus = async (ride, status) => {
-    const rideDate = new Date(ride.dateTime);
-    const fiveMinsBefore = new Date(rideDate.getTime() - 5 * 60 * 1000);
+const updateRideStatus = async (ride, status) => {
+  const rideDate = new Date(ride.dateTime);
+  const fiveMinsBefore = new Date(rideDate.getTime() - 5 * 60 * 1000);
 
-    if (status === "on_the_way" && new Date() < fiveMinsBefore) {
-      alert(`Too early! Start at ${fiveMinsBefore.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`);
-      return;
-    }
+  if (status === "on_the_way" && new Date() < fiveMinsBefore) {
+    alert(`Too early! Start at ${fiveMinsBefore.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`);
+    return;
+  }
 
-    try {
-      if (status === "completed") {
-        await addDoc(collection(db, "confirmed_bookings"), {
-          driverId: auth.currentUser.uid,
-          rideId: ride.id,
-          pickup: ride.pickup,
-          drop: ride.drop,
-          totalFare: ride.totalFare || 0,
-          createdAt: serverTimestamp(),
-          status: "completed"
-        });
-        await updateDoc(doc(db, "bookings", ride.id), { status: "completed" });
-      } else {
-        await updateDoc(doc(db, "bookings", ride.id), { status });
-      }
-    } catch (error) {
-      console.error("Update Error:", error);
+  // Confirmation for cancellation
+  if (status === "cancelled") {
+    const confirmCancel = window.confirm("Are you sure you want to cancel this trip? This will notify the admin.");
+    if (!confirmCancel) return;
+  }
+
+  try {
+    if (status === "completed") {
+      await addDoc(collection(db, "confirmed_bookings"), {
+        driverId: auth.currentUser.uid,
+        rideId: ride.id,
+        pickup: ride.pickup,
+        drop: ride.drop,
+        totalFare: ride.totalFare || 0,
+        createdAt: serverTimestamp(),
+        status: "completed"
+      });
+      await updateDoc(doc(db, "bookings", ride.id), { status: "completed" });
+    } 
+    else if (status === "cancelled") {
+      // Update booking to pending/cancelled so admin can re-assign
+      await updateDoc(doc(db, "bookings", ride.id), { 
+        status: "pending", 
+        driverId: null, 
+        driverName: null 
+      });
+      
+      // Immediately free up the driver
+      await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
+        onTrip: false
+      });
+    } 
+    else {
+      await updateDoc(doc(db, "bookings", ride.id), { status });
     }
-  };
+  } catch (error) {
+    console.error("Update Error:", error);
+    alert("Action failed. Please try again.");
+  }
+};
 
   if (loading) return <div className="p-10 text-center">Loading Console...</div>;
 
@@ -161,6 +182,7 @@ function RideCard({ ride, onUpdate, isCurrent }) {
 
   return (
     <div className={`bg-white border rounded-[2rem] p-6 mb-4 shadow-sm transition-all ${!isCurrent && 'opacity-75 grayscale-[0.5]'}`}>
+      {/* ... (Existing Top Section: Time, Date, Fare) ... */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex gap-3 items-center">
           <div className="bg-blue-100 text-blue-700 p-3 rounded-2xl">
@@ -177,6 +199,7 @@ function RideCard({ ride, onUpdate, isCurrent }) {
         </div>
       </div>
       
+      {/* ... (Existing Middle Section: Pickup/Dropoff) ... */}
       <div className="space-y-4 mb-8">
         <div className="flex gap-3">
            <div className="w-1 bg-blue-500 rounded-full"></div>
@@ -194,22 +217,35 @@ function RideCard({ ride, onUpdate, isCurrent }) {
         </div>
       </div>
 
-      <div className="flex gap-2">
-        {(ride.status === "assigned" || ride.status === "approved") && isCurrent && (
-          <button
-            onClick={() => onUpdate(ride, "on_the_way")}
-            className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition"
-          >
-            Start Trip
-          </button>
-        )}
+      {/* BUTTONS SECTION */}
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
+          {(ride.status === "assigned" || ride.status === "approved") && isCurrent && (
+            <button
+              onClick={() => onUpdate(ride, "on_the_way")}
+              className="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition"
+            >
+              Start Trip
+            </button>
+          )}
 
-        {ride.status === "on_the_way" && (
+          {ride.status === "on_the_way" && (
+            <button
+              onClick={() => onUpdate(ride, "completed")}
+              className="flex-1 bg-green-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-green-700 transition"
+            >
+              Finish Trip
+            </button>
+          )}
+        </div>
+
+        {/* CANCEL BUTTON: Visible if not yet started */}
+        {(ride.status === "assigned" || ride.status === "approved") && (
           <button
-            onClick={() => onUpdate(ride, "completed")}
-            className="flex-1 bg-green-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-green-700 transition"
+            onClick={() => onUpdate(ride, "cancelled")}
+            className="w-full bg-red-50 text-red-500 py-3 rounded-2xl font-bold uppercase text-xs tracking-widest hover:bg-red-100 transition"
           >
-            Finish Trip
+            Cancel Trip
           </button>
         )}
       </div>

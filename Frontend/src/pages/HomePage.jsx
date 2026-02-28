@@ -251,7 +251,7 @@ const submitBooking = async () => {
     return;
   }
 
-  // 🛑 Check if fare is calculated
+  // Check if fare is calculated
   if (totalFare <= 0) {
     alert("Please wait for the fare to be calculated based on your route.");
     return;
@@ -261,28 +261,7 @@ const submitBooking = async () => {
   if (!user) return alert("Please login to book a ride.");
 
   try {
-    // 2. SEARCH FOR DRIVER
-    console.log("Searching for available drivers...");
-    const driversRef = collection(db, "drivers");
-    const q = query(
-      driversRef, 
-      where("available", "==", true), 
-      where("onTrip", "==", false),
-      where("status", "==", "active")
-    );
-
-    const driverSnap = await getDocs(q);
-
-    if (driverSnap.empty) {
-      alert("No drivers are currently online and free. Please try again in a few minutes.");
-      return; // Stops here, no booking created
-    }
-
-    const availableDriverId = driverSnap.docs[0].id;
-    const availableDriverName = driverSnap.docs[0].data().name;
-    console.log("Found Driver:", availableDriverName, "(ID:", availableDriverId, ")");
-
-    // 3. PREPARE DATA
+    // 2. PREPARE DATA (Removing driver search and auto-assignment)
     const bookingData = {
       userId: user.uid,
       userEmail: user.email,
@@ -295,30 +274,29 @@ const submitBooking = async () => {
       tripType,
       dateTime,
       totalFare: Number(totalFare),
-      status: "pending", // Utility will update this to 'assigned'
+      status: "pending", // Admin will change this to 'assigned' manually later
       createdAt: serverTimestamp(),
       bookingMethod: "quick_booking",
+      driverId: null,      // Explicitly null until admin assigns
+      driverName: null,    // Explicitly null until admin assigns
       passengers: [] 
     };
 
-    // 4. CREATE BOOKING
+    // 3. CREATE BOOKING IN FIRESTORE
     const docRef = await addDoc(collection(db, "bookings"), bookingData);
-    console.log("Booking created with ID:", docRef.id);
+    console.log("Booking created and awaiting admin assignment. ID:", docRef.id);
 
-    // 5. CALL ASSIGNMENT UTILITY
-    // We pass the NEW booking ID and the DRIVER ID we just found
-    await autoAssignDriver(docRef.id, availableDriverId);
-
-    alert(`Success! Driver ${availableDriverName} has been assigned.`);
+    alert("Booking request submitted! Our team will assign a driver shortly.");
     
-    // Clear form
+    // 4. CLEAR FORM
     setName("");
     setPhone("");
     setPickup("");
     setDrop("");
+    setDateTime("");
 
   } catch (error) {
-    console.error("Critical Booking Error:", error);
+    console.error("Booking Submission Error:", error);
     alert("Booking failed: " + error.message);
   }
 };
