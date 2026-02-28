@@ -7,20 +7,22 @@ import {
   collection,
   serverTimestamp,
   onSnapshot,
+  query,
+  where,
+  getDocs
 } from "firebase/firestore";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Loader2,
   Minus,
   Plus,
-  CheckCircle,
   ShieldCheck,
   ChevronLeft,
   MapPin,
 } from "lucide-react";
 import { getAuth } from "firebase/auth";
 import LocationInputs from "../components/pickupanddrop";
-import RouteFare from "../components/RouteFare";   // ⭐ ADD
+import RouteFare from "../components/RouteFare";
 import { autoAssignDriver } from "../utils/autoAssignDriver";
 
 const auth = getAuth();
@@ -29,58 +31,62 @@ const BookingDetails = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // ROUTE
+  // ROUTE & VEHICLE STATE
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
   const [dateTime, setDateTime] = useState("");
-
-  // VEHICLE
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // TRIP
+  // TRIP SETTINGS
   const [tripType, setTripType] = useState("city");
   const [days, setDays] = useState(1);
-
-  // PASSENGERS
   const [passengers, setPassengers] = useState([
     { name: "", age: "", phone: "", dateTime: "", type: "Adult" },
   ]);
 
-  // BOOKING STATUS
+  // BOOKING & FARE
   const [bookingId, setBookingId] = useState(null);
   const [rideStatus, setRideStatus] = useState(null);
-
-
-  // ⭐ DISTANCE DATA FROM ROUTEFARE
   const [routeFare, setRouteFare] = useState(0);
   const [distance, setDistance] = useState(0);
 
-  const [name, setName] = useState("");
-
   const vehicleId = searchParams.get("vehicle_id");
 
-  // ================= FETCH VEHICLE =================
+  // Fetch Vehicle Details
   useEffect(() => {
     const fetchVehicle = async () => {
       if (!vehicleId) return;
-
-      const snap = await getDoc(doc(db, "vehicles", vehicleId));
-      if (snap.exists()) {
-        setVehicle({ id: snap.id, ...snap.data() });
+      try {
+        const snap = await getDoc(doc(db, "vehicles", vehicleId));
+        if (snap.exists()) {
+          setVehicle({ id: snap.id, ...snap.data() });
+        }
+      } catch (error) {
+        console.error("Error fetching vehicle:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-
     fetchVehicle();
   }, [vehicleId]);
 
-  // ================= PASSENGERS =================
+  // Real-time Booking Status Listener
+  useEffect(() => {
+    if (!bookingId) return;
+    const unsub = onSnapshot(doc(db, "bookings", bookingId), (snap) => {
+      if (snap.exists()) setRideStatus(snap.data().status);
+    });
+    return () => unsub();
+  }, [bookingId]);
+
+  // Passenger Handlers
   const updatePassenger = (i, field, value) => {
     const updated = [...passengers];
     updated[i][field] = value;
     setPassengers(updated);
 
+    // Sync primary passenger's time to global state
     if (i === 0 && field === "dateTime") {
       setDateTime(value);
     }
@@ -93,140 +99,84 @@ const BookingDetails = () => {
     ]);
   };
 
-  // ================= RECEIVE DISTANCE FROM ROUTEFARE =================
   const handleFareUpdate = ({ distance, fare }) => {
     setDistance(distance);
     setRouteFare(fare);
-    // setDateTime(dateTime);
-    // setName(name);
-
   };
 
-  // ================= TOTAL COST =================
+  // Pricing Logic
   const pricePerKm = vehicle?.pricePerKm || 0;
-  const basefare = 20
-  const baseFare = vehicle?.pricePerKm ? parseInt(vehicle.pricePerKm) + 20 : 20; // minimum charge
+  const baseCharge = 20;
+  const baseFare = vehicle?.pricePerKm ? parseInt(vehicle.pricePerKm) + baseCharge : baseCharge;
 
-  const totalAmount =
-    tripType === "outstation"
-      ? (routeFare + baseFare) * days
-      : routeFare + baseFare;
+  const totalAmount = tripType === "outstation" 
+    ? (routeFare + baseFare) * days 
+    : routeFare + baseFare;
 
-  // ================= CREATE BOOKING =================
-  // const handleFinalBooking = async () => {
-  //   try {
-  //     if (!auth.currentUser) return alert("Please login first");
-
-  //     if (!pickup || !drop) {
-  //       alert("Please enter route");
-  //       return;
-  //     }
-
-  //     const bookingRef = await addDoc(collection(db, "bookings"), {
-  //       vehicleId: vehicle.id,
-  //       vehicleName: vehicle.name,
-  //       pickup,
-  //       drop,
-  //       dateTime,
-  //       tripType,
-  //       durationDays: tripType === "outstation" ? days : 1,
-  //       distance,
-  //       totalFare: totalAmount,
-  //       passengers,
-  //       status: "pending",
-  //       userId: auth.currentUser.uid,
-  //       createdAt: serverTimestamp(),
-  //     });
-
-  //     const id = bookingRef.id;
-  //     setBookingId(id);
-
-  //     await autoAssignDriver(id);
-
-  //     alert("Booking Created Successfully");
-
-  //     navigate("/booking-success", {
-  //       state: { bookingId: id },
-  //     });
-
-  //   } catch (err) {
-  //     alert(err.message);
-  //   }
-  // };
-
-
-const handleFinalBooking = async () => {
+  // Final Booking Logic
+  const handleFinalBooking = async () => {
     try {
-      // 1. Validations
-      if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
-        alert("Pickup and Drop locations cannot be the same.");
-        return;
-      }
-
       if (!auth.currentUser) return alert("Please login first");
       if (!pickup || !drop) return alert("Please enter route");
-
-      // 2. Passenger Validations
-      for (let i = 0; i < passengers.length; i++) {
-        const p = passengers[i];
-        const passengerNum = i + 1;
-        if (!p.name.trim()) return alert(`Please enter a name for Passenger ${passengerNum}`);
-        if (!/^[6-9]\d{9}$/.test(p.phone)) return alert(`Passenger ${passengerNum}: Enter a valid 10-digit phone number.`);
-        if (!p.dateTime) return alert(`Passenger ${passengerNum}: Select date and time.`);
+      if (distance === 0) return alert("Please wait for the route distance to be calculated.");
+      
+      if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
+        return alert("Pickup and Drop locations cannot be the same.");
       }
 
-      // 3. FIND AVAILABLE DRIVER FIRST (CRITICAL STEP)
-      const { collection, query, where, getDocs } = await import("firebase/firestore"); // Ensure imports are available
+      // Passenger Validations
+      for (let i = 0; i < passengers.length; i++) {
+        const p = passengers[i];
+        if (!p.name.trim()) return alert(`Enter name for Passenger ${i + 1}`);
+        if (!/^[6-9]\d{9}$/.test(p.phone)) return alert(`Enter valid phone for Passenger ${i + 1}`);
+        if (!p.dateTime) return alert(`Select date/time for Passenger ${i + 1}`);
+      }
+
+      // 1. Find Available Driver
       const driversRef = collection(db, "drivers");
       const q = query(
-        driversRef, 
-        where("available", "==", true), 
+        driversRef,
+        where("available", "==", true),
         where("onTrip", "==", false),
         where("status", "==", "active")
       );
 
       const driverSnap = await getDocs(q);
-
       if (driverSnap.empty) {
-        alert("No drivers are currently available for this vehicle. Please try again in a few minutes.");
-        return;
+        return alert("No drivers available. Please try again shortly.");
       }
-
       const availableDriverId = driverSnap.docs[0].id;
 
-      // 4. PREPARE BOOKING DATA
+      // 2. Prepare Data
       const primaryPassenger = passengers[0];
       const bookingData = {
-  vehicleId: vehicle.id,
-  vehicleName: vehicle.name,
-  pickup,
-  drop,
-  dateTime,
-  name: primaryPassenger.name || "N/A",
-  phone: primaryPassenger.phone || "N/A",
-  passengers: passengers,
-  bookingMethod: "car_specific",
-  status: "pending",
-  userId: auth.currentUser.uid,
-  createdAt: serverTimestamp(),
-  tripType,
-  durationDays: tripType === "outstation" ? days : 1,
-  // Ensure distance is captured from state and converted to a number
-  distance: Number(distance) || 0, 
-  totalFare: totalAmount,
-};
+        vehicleId: vehicle.id,
+        vehicleName: vehicle.name,
+        pickup,
+        drop,
+        dateTime,
+        name: primaryPassenger.name || "N/A",
+        phone: primaryPassenger.phone || "N/A",
+        passengers: passengers,
+        bookingMethod: "car_specific",
+        status: "pending",
+        userId: auth.currentUser.uid,
+        createdAt: serverTimestamp(),
+        tripType,
+        durationDays: tripType === "outstation" ? days : 1,
+        distance: Number(distance),
+        totalFare: Number(totalAmount),
+      };
 
-      // 5. CREATE BOOKING
+      // 3. Create Booking & Assign Driver
       const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
-      const id = bookingRef.id;
-      setBookingId(id);
+      const newId = bookingRef.id;
+      setBookingId(newId);
 
-      // 6. CALL AUTO-ASSIGN WITH BOTH IDs
-      // This matches your utility: autoAssignDriver(bookingId, driverId)
-      await autoAssignDriver(id, availableDriverId);
+      await autoAssignDriver(newId, availableDriverId);
 
       alert("Booking Created Successfully");
-      navigate("/user/booking-success", { state: { bookingId: id } });
+      navigate("/user/booking-success", { state: { bookingId: newId } });
 
     } catch (err) {
       console.error("Booking Error:", err);
@@ -234,259 +184,79 @@ const handleFinalBooking = async () => {
     }
   };
 
-  // ... rest of your code
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="animate-spin text-yellow-500" size={48} />
+    </div>
+  );
 
-  // ================= REALTIME STATUS =================
-  useEffect(() => {
-    if (!bookingId) return;
-
-    const unsub = onSnapshot(doc(db, "bookings", bookingId), (snap) => {
-      if (snap.exists()) setRideStatus(snap.data().status);
-    });
-
-    return () => unsub();
-  }, [bookingId]);
-
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-yellow-500" size={48} />
-      </div>
-    );
-
-  // ================= UI =================
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-
-      {/* HERO */}
       <div className="relative h-[420px] bg-black">
-        <img
-          src={vehicle?.imageUrl}
-          alt={vehicle?.name}
-          className="w-full h-full object-cover opacity-80"
-        />
-
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-6 left-6 bg-white/20 p-2 rounded-full text-white"
-        >
+        <img src={vehicle?.imageUrl} alt={vehicle?.name} className="w-full h-full object-cover opacity-80" />
+        <button onClick={() => navigate(-1)} className="absolute top-6 left-6 bg-white/20 p-2 rounded-full text-white">
           <ChevronLeft size={28} />
         </button>
-
         <div className="absolute bottom-10 left-8 text-white">
           <h1 className="text-5xl font-black">{vehicle?.name}</h1>
         </div>
       </div>
 
       <main className="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-8 -mt-10">
-
-        {/* LEFT */}
         <div className="lg:col-span-2 space-y-6">
-
-          {/* ROUTE */}
           <div className="bg-white p-6 mt-20 rounded-2xl shadow">
-            <h3 className="font-bold text-xl mb-4 flex gap-2">
-              <MapPin className="text-yellow-500" /> Route
-            </h3>
-
-            <LocationInputs
-              pickup={pickup}
-              setPickup={setPickup}
-              drop={drop}
-              setDrop={setDrop}
-            />
-
-            {/* ⭐ ROUTE FARE COMPONENT */}
-            <RouteFare
-              pickup={pickup}
-              drop={drop}
-              dateTime={dateTime}
-              onFareCalculated={handleFareUpdate}
-            />
+            <h3 className="font-bold text-xl mb-4 flex gap-2"><MapPin className="text-yellow-500" /> Route</h3>
+            <LocationInputs pickup={pickup} setPickup={setPickup} drop={drop} setDrop={setDrop} />
+            <RouteFare pickup={pickup} drop={drop} dateTime={dateTime} onFareCalculated={handleFareUpdate} />
           </div>
 
-          {/* TRIP TYPE */}
           <div className="bg-white p-6 rounded-2xl shadow">
             <h3 className="font-bold mb-3">Trip Type</h3>
-
             <div className="flex gap-4">
-              <button
-                onClick={() => setTripType("city")}
-                className={`px-6 py-3 rounded-xl border ${tripType === "city"
-                  ? "bg-yellow-400"
-                  : "bg-white border-gray-300"
-                  }`}
-              >
-                🏙️ City
-              </button>
-
-              <button
-                onClick={() => setTripType("outstation")}
-                className={`px-6 py-3 rounded-xl border ${tripType === "outstation"
-                  ? "bg-yellow-400"
-                  : "bg-white border-gray-300"
-                  }`}
-              >
-                🚗 Outstation
-              </button>
+              <button onClick={() => setTripType("city")} className={`px-6 py-3 rounded-xl border ${tripType === "city" ? "bg-yellow-400" : "bg-white border-gray-300"}`}>🏙️ City</button>
+              <button onClick={() => setTripType("outstation")} className={`px-6 py-3 rounded-xl border ${tripType === "outstation" ? "bg-yellow-400" : "bg-white border-gray-300"}`}>🚗 Outstation</button>
             </div>
           </div>
 
-          {/* DURATION */}
           {tripType === "outstation" && (
             <div className="bg-white p-6 rounded-2xl shadow flex justify-between">
-              <div>
-                <h3 className="font-bold">Trip Duration</h3>
-                <p>{days} Days</p>
-              </div>
-
+              <div><h3 className="font-bold">Trip Duration</h3><p>{days} Days</p></div>
               <div className="flex gap-4">
-                <button onClick={() => setDays(Math.max(1, days - 1))}>
-                  <Minus />
-                </button>
-                <button onClick={() => setDays(days + 1)}>
-                  <Plus />
-                </button>
+                <button onClick={() => setDays(Math.max(1, days - 1))}><Minus /></button>
+                <button onClick={() => setDays(days + 1)}><Plus /></button>
               </div>
             </div>
           )}
 
-          {/* PASSENGERS */}
           <div className="bg-white p-6 rounded-2xl shadow">
             <h3 className="font-bold mb-3">Passenger List</h3>
-
             {passengers.map((p, i) => (
-              <div key={i} className="grid md:grid-cols-4 gap-3 mb-2">
-                <input
-                  placeholder="Name"
-                  value={p.name}
-                  onChange={(e) =>
-                    updatePassenger(i, "name", e.target.value)
-                  }
-                  className="border p-2 rounded"
-                />
-
-                <input
-                  placeholder="Phone"
-                  value={p.phone}
-                  onChange={(e) =>
-                    updatePassenger(i, "phone", e.target.value)
-                  }
-                  className="border p-2 rounded"
-                />
-
-                <input
-                  type="number"
-                  placeholder="Age"
-                  value={p.age}
-                  onChange={(e) =>
-                    updatePassenger(i, "age", e.target.value)
-                  }
-                  className="border p-2 rounded"
-                />
-
-
-                <select
-                  value={p.type}
-                  onChange={(e) =>
-                    updatePassenger(i, "type", e.target.value)
-                  }
-                  className="border p-2 rounded"
-                >
-                  <option>Adult</option>
-                  <option>Child</option>
+              <div key={i} className="grid md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 p-4 border rounded-xl">
+                <input placeholder="Name" value={p.name} onChange={(e) => updatePassenger(i, "name", e.target.value)} className="border p-2 rounded" />
+                <input placeholder="Phone" value={p.phone} onChange={(e) => updatePassenger(i, "phone", e.target.value)} className="border p-2 rounded" />
+                <input type="number" placeholder="Age" value={p.age} onChange={(e) => updatePassenger(i, "age", e.target.value)} className="border p-2 rounded" />
+                <select value={p.type} onChange={(e) => updatePassenger(i, "type", e.target.value)} className="border p-2 rounded">
+                  <option>Adult</option><option>Child</option>
                 </select>
-
-                <input
-                  type="datetime-local"
-                  value={p.dateTime}
-                  onChange={(e) => updatePassenger(i, "dateTime", e.target.value)}
-                  className="border p-3 rounded-lg md:col-span-4"
-                />
-
+                <input type="datetime-local" value={p.dateTime} onChange={(e) => updatePassenger(i, "dateTime", e.target.value)} className="border p-2 rounded md:col-span-2 lg:col-span-4" />
               </div>
             ))}
-
-            <button
-              onClick={addPassenger}
-              className="bg-yellow-400 px-4 py-2 rounded mt-2"
-            >
-              + Add Passenger
-            </button>
+            <button onClick={addPassenger} className="bg-yellow-400 px-4 py-2 rounded mt-2">+ Add Passenger</button>
           </div>
         </div>
 
-        {/* RIGHT — FARE */}
-        <div className="bg-white p-8 mt-20 rounded-3xl shadow sticky top-20">
-
+        <div className="bg-white p-8 mt-20 rounded-3xl shadow sticky top-20 h-fit">
           <h3 className="text-2xl font-bold mb-6">Fare Details</h3>
-
-          <div className="flex justify-between mb-3">
-            <span>Distance</span>
-            <span>{distance ? distance.toFixed(1) : 0} km</span>
+          <div className="space-y-3">
+            <div className="flex justify-between"><span>Distance</span><span>{distance ? distance.toFixed(1) : 0} km</span></div>
+            <div className="flex justify-between"><span>Distance Fare</span><span>₹{routeFare}</span></div>
+            <div className="flex justify-between"><span>Price Per Km</span><span>₹{pricePerKm}</span></div>
+            <div className="flex justify-between border-t pt-3 font-bold text-xl"><span>Total</span><span>₹{totalAmount}</span></div>
           </div>
-
-          <div className="flex justify-between mb-3">
-            <span>Distance Fare</span>
-            <span>₹{routeFare}</span>
-          </div>
-
-          <div className="flex justify-between mb-3">
-            <span>PricePerKm</span>
-            <span>₹{pricePerKm}</span>
-          </div>
-
-          <div className="flex justify-between mb-3">
-            <span>Base Fare</span>
-            <span>₹{basefare}</span>
-          </div>
-
-          <div className="flex justify-between mb-3">
-            <span>Base Fare + PricePerKm</span>
-            <span>₹{baseFare}</span>
-          </div>
-
-          {tripType === "outstation" && (
-            <div className="flex justify-between mb-3">
-              <span>Days</span>
-              <span>x {days}</span>
-            </div>
-          )}
-
-          <div className="border-t pt-4 flex justify-between text-2xl font-bold">
-            <span>Total</span>
-            <span>₹{totalAmount}</span>
-          </div>
-
-          <div className="flex justify-between mb-3">
-            <span>Trip</span>
-            <span>{tripType}</span>
-          </div>
-
-          {/* <div className="border-t pt-4 flex justify-between text-2xl font-bold">
-            <span>Total</span>
-            <span>₹{totalAmount.toFixed(0)}</span>
-          </div> */}
-
-          {rideStatus && (
-            <div className="mt-4 p-3 bg-blue-50 rounded">
-              Status: {rideStatus}
-            </div>
-          )}
-
-          <button
-            onClick={handleFinalBooking}
-            className="w-full bg-yellow-400 py-4 rounded-xl font-bold mt-6"
-          >
-            CONFIRM BOOKING
-          </button>
-
-          <div className="mt-6 flex gap-2 text-sm text-gray-600">
-            <ShieldCheck className="text-green-500" />
-            Verified drivers & safe travel
-          </div>
+          <button onClick={handleFinalBooking} className="w-full bg-yellow-400 py-4 rounded-xl font-bold mt-6 hover:bg-yellow-500 transition-colors">CONFIRM BOOKING</button>
+          <div className="mt-6 flex gap-2 text-sm text-gray-600"><ShieldCheck className="text-green-500" /> Verified drivers & safe travel</div>
+          {rideStatus && <div className="mt-4 p-3 bg-blue-50 text-blue-700 rounded-lg text-center font-semibold">Status: {rideStatus}</div>}
         </div>
-
       </main>
     </div>
   );

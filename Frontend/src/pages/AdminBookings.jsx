@@ -126,7 +126,7 @@ const AdminBookings = () => {
             ? bookingDateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
             : "Time N/A";
 
-          const displayDistance = b.distance ? (Number(b.distance) / 1000).toFixed(2) : "0.00";
+          const displayDistance = b.distance ? (Number(b.distance)).toFixed(0) : "0.00";
           const isAssigned = b.status === "assigned" || b.driverId;
           const assignedDriverOffline = b.driverId && !availableDrivers.find(d => d.id === b.driverId);
 
