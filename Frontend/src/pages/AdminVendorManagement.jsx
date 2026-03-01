@@ -6,6 +6,8 @@ import {
   doc, 
   updateDoc, 
   deleteDoc, 
+  addDoc,
+  getDoc,
   query, 
   orderBy 
 } from "firebase/firestore";
@@ -31,14 +33,45 @@ const AdminVendorManagement = () => {
     return () => unsubscribe();
   }, []);
 
-  const updateStatus = async (id, newStatus) => {
-    try {
-      const docRef = doc(db, "vendor_listings", id);
-      await updateDoc(docRef, { status: newStatus });
-    } catch (error) {
-      alert("Error updating status: " + error.message);
+const updateStatus = async (id, newStatus) => {
+  try {
+    const docRef = doc(db, "vendor_listings", id);
+    
+    // 1. Update the status in the vendor_listings collection
+    await updateDoc(docRef, { status: newStatus });
+
+    // 2. If approved, copy the data to the 'vehicles' collection
+    if (newStatus === "approved") {
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        
+        // Prepare the object for the Home Page 'vehicles' collection
+        const vehicleData = {
+          name: data.carModel,
+          type: data.carType || "Others", // This ensures it goes to the correct section
+          desc: data.additionalInfo || "Comfortable rental vehicle",
+          imageUrl: data.imageUrls && data.imageUrls.length > 0 ? data.imageUrls[0] : "",
+          price: data.price,
+          location: data.location,
+          available: true, // Required by your Home Page query
+          vendorListingId: id, // Reference to original listing
+          createdAt: new Date()
+        };
+
+        // Add to 'vehicles' collection
+        await addDoc(collection(db, "vehicles"), vehicleData);
+        alert("Listing approved and added to Home Page!");
+      }
+    } else {
+      alert("Status updated to " + newStatus);
     }
-  };
+  } catch (error) {
+    console.error("Error updating status:", error);
+    alert("Error updating status: " + error.message);
+  }
+};
 
   const deleteListing = async (id) => {
     if (window.confirm("Are you sure you want to delete this listing permanently?")) {

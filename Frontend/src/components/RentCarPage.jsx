@@ -10,6 +10,7 @@ const initialFormState = {
   ownerName: "",
   mobile: "",
   carModel: "",
+  carType: "Sedan",
   year: "",
   regNumber: "",
   fuelType: "Petrol",
@@ -171,6 +172,14 @@ const RentCarPage = () => {
           <input name="carModel" type="text" placeholder="Car Brand & Model" value={formData.carModel} className="border p-3 rounded-lg" onChange={handleChange} required /> 
           <input name="year" type="number" placeholder="Year of Manufacture" value={formData.year} className="border p-3 rounded-lg" onChange={handleChange} /> 
           <input name="regNumber" type="text" placeholder="Registration Number" value={formData.regNumber} className="border p-3 rounded-lg" onChange={handleChange} required /> 
+
+{/* Add this before fuelType select */}
+<select name="carType" value={formData.carType} className="border p-3 rounded-lg font-semibold bg-gray-50" onChange={handleChange} required>
+  <option value="Sedan">Sedan</option>
+  <option value="SUV">SUV</option>
+  <option value="Luxury">Luxury</option>
+  <option value="Others">Others</option>
+</select>
 
           <select name="fuelType" value={formData.fuelType} className="border p-3 rounded-lg" onChange={handleChange}>
             <option value="Petrol">Petrol</option>
