@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import { doc, getDoc, addDoc, collection } from "firebase/firestore";
 import { useParams } from "react-router-dom";
 import { auth , db} from "../firebase";
-
+import { useNavigate } from "react-router-dom"; // For navigation after booking
 export default function TourDetails() {
 
   const { id } = useParams();
   const [tour, setTour] = useState(null);
+const navigate = useNavigate(); // Initialize the navigate hook
 
   useEffect(() => {
     const fetchTour = async () => {
@@ -17,6 +18,11 @@ export default function TourDetails() {
     };
     fetchTour();
   }, [id]);
+
+  const handleBookNowClick = () => {
+    // Instead of adding to Firestore here, we go to the form
+    navigate(`/user/tour-booking/${id}`); 
+  };
 
   const bookTour = async () => {
     await addDoc(collection(db, "tour_bookings"), {
@@ -56,7 +62,7 @@ export default function TourDetails() {
       </ul>
 
       <button
-        onClick={bookTour}
+onClick={handleBookNowClick}
         className="mt-6 bg-yellow-500 text-white px-6 py-3 rounded font-bold"
       >
         Book Now

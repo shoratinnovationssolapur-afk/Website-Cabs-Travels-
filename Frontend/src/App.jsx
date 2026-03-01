@@ -10,7 +10,7 @@ import DriverLogin from "./pages/DriverLogin";         // Create this file from 
 import DriverRoute from "./components/DriverRoute";   // Add this helper
 import UserDashboard from "./pages/UserDashboard";
 import "leaflet/dist/leaflet.css";
-
+import TourBookingPage from "./pages/TourBookingPage";
 
 
 import AdminVehicles from "./pages/AdminVehicles";
@@ -242,9 +242,13 @@ const router = createBrowserRouter([
     children: [
       // ================= PUBLIC ROUTES =================
       { path: "/", element: <HomePage /> },
-      { path: "tours", element: <Tours /> },
-      { path: "tour/:id", element: <TourDetails /> },
       { path: "driver-login", element: <DriverLogin /> },
+
+      // // ================= TOUR BOOKING (PROTECTED) =================
+      // { 
+      //   path: "tour-booking/:id", 
+      //   element: <UserRoute><TourBookingPage /></UserRoute> 
+      // },
 
       // ================= PROTECTED USER ROUTES =================
       {
@@ -256,6 +260,10 @@ const router = createBrowserRouter([
           { path: "profile", element: <UserProfile /> },
           { path: "bookings", element: <UserBookings /> },
           { path: "booking-success", element: <BookingSuccess /> },
+          { path: "tour-booking/:id", element: <TourBookingPage /> },
+          { path: "tours", element: <Tours /> },
+          { path: "tour/:id", element: <TourDetails /> },
+          
         ],
       },
 
