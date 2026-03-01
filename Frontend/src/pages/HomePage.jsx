@@ -388,7 +388,7 @@ const submitBooking = async () => {
           </div>
           <div className="flex justify-center gap-4 mt-22">
 
-            {["Sedan", "SUV", "Luxury"].map((type) => (
+            {["Sedan", "SUV", "Luxury", "Others"].map((type) => (
               <button
                 key={type}
                 onClick={() => {
@@ -527,6 +527,40 @@ const submitBooking = async () => {
         </div>
 
       </section>
+
+            {/*Others SHOWCASE*/}
+{/* ================= OTHERS SHOWCASE ================= */}
+<section id="OTHERS" className="py-16 px-6 bg-white">
+  <h2 className="text-3xl font-bold text-center mb-12 text-black">
+    Other Available Vehicles
+  </h2>
+  <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
+    {vehicles
+      .filter(v => v.type === "Others")
+      .map(vehicle => (
+        <div 
+          key={vehicle.id}
+          onClick={() => navigate(`/booking?vehicle_id=${vehicle.id}`)}
+          className="min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group cursor-pointer"
+        >
+          <img
+            src={vehicle.imageUrl}
+            alt={vehicle.name}
+            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="p-4 text-center">
+            <h3 className="font-semibold text-lg">{vehicle.name}</h3>
+            <p className="text-gray-600 text-sm">{vehicle.desc || "Comfortable ride for your journey"}</p>
+          </div>
+        </div>
+      ))}
+  </div>
+  {/* Show message if no "Other" cars are available */}
+  {vehicles.filter(v => v.type === "Others").length === 0 && (
+    <p className="text-center text-gray-400 italic">More vehicles coming soon!</p>
+  )}
+</section>
+    
 
 
         {/* ================= QUICK BOOKING ================= */}
