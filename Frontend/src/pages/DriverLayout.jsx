@@ -1,50 +1,60 @@
+import React, { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
-import { auth } from "../firebase";
-
-
-
-
-
-// Add this to a Sidebar or Navbar in all three apps
-useEffect(() => {
-  if (!auth.currentUser) return;
-
-  const q = query(
-    collection(db, "notifications"),
-    where("recipientId", "==", auth.currentUser.uid), // Or "admin" for Admin app
-    where("read", "==", false)
-  );
-
-  const unsub = onSnapshot(q, (snap) => {
-    snap.docChanges().forEach((change) => {
-      if (change.type === "added") {
-        const notif = change.doc.data();
-        // Use a library like 'react-hot-toast' or 'browser notifications'
-        alert(`${notif.title}: ${notif.message}`);
-
-        // Optional: Mark as read immediately
-        // updateDoc(doc(db, "notifications", change.doc.id), { read: true });
-      }
-    });
-  });
-
-  return () => unsub();
-}, []);
+import { auth, db } from "../firebase"; // Ensure db is exported from your firebase config
+import { 
+  collection, 
+  query, 
+  where, 
+  onSnapshot 
+} from "firebase/firestore";
 
 const DriverLayout = () => {
   const navigate = useNavigate();
 
+  // ⭐ FIXED: useEffect moved INSIDE the component
+  useEffect(() => {
+    if (!auth.currentUser) return;
+
+    // Create the query for unread notifications for the current driver
+    const q = query(
+      collection(db, "notifications"),
+      where("recipientId", "==", auth.currentUser.uid),
+      where("read", "==", false)
+    );
+
+    // Listen for real-time updates
+    const unsub = onSnapshot(q, (snap) => {
+      snap.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const notif = change.doc.data();
+          
+          // Browser Alert (You can replace this with a Toast library)
+          alert(`🔔 ${notif.title}: ${notif.message}`);
+
+          // Note: You might want to update the doc to 'read: true' here 
+          // to prevent the alert from showing again on every page refresh.
+        }
+      });
+    });
+
+    // Cleanup listener on unmount
+    return () => unsub();
+  }, []);
+
   const logout = async () => {
-    await signOut(auth);
-    navigate("/");
+    try {
+      await signOut(auth);
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-
       {/* SIDEBAR */}
-      <div className="w-64 bg-slate-900 text-white p-6 space-y-6 shadow-xl">
+      <div className="w-64 bg-slate-900 text-white p-6 space-y-6 shadow-xl shrink-0">
         <div className="mb-8">
           <h2 className="text-xl font-bold text-green-400">Driver Portal</h2>
           <p className="text-xs text-slate-400">Professional Console</p>
@@ -94,7 +104,6 @@ const DriverLayout = () => {
       <div className="flex-1 p-8 overflow-y-auto">
         <Outlet />
       </div>
-
     </div>
   );
 };
