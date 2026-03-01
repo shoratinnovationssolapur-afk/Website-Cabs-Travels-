@@ -1,4 +1,7 @@
 import { Outlet, useNavigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { auth, db } from "../firebase";
+import { onSnapshot, collection, query, where } from "firebase/firestore";
 // Remove local imports of the pages here if they are already 
 // handled by the router in App.jsx
 
@@ -8,33 +11,38 @@ import { Outlet, useNavigate } from "react-router-dom";
 
 
 // Add this to a Sidebar or Navbar in all three apps
-useEffect(() => {
-  if (!auth.currentUser) return;
 
-  const q = query(
-    collection(db, "notifications"),
-    where("recipientId", "==", auth.currentUser.uid), // Or "admin" for Admin app
-    where("read", "==", false)
-  );
-
-  const unsub = onSnapshot(q, (snap) => {
-    snap.docChanges().forEach((change) => {
-      if (change.type === "added") {
-        const notif = change.doc.data();
-        // Use a library like 'react-hot-toast' or 'browser notifications'
-        alert(`${notif.title}: ${notif.message}`);
-
-        // Optional: Mark as read immediately
-        // updateDoc(doc(db, "notifications", change.doc.id), { read: true });
-      }
-    });
-  });
-
-  return () => unsub();
-}, []);
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!auth.currentUser) return;
+
+    const q = query(
+      collection(db, "notifications"),
+      where("recipientId", "==", auth.currentUser.uid), // Or "admin" for Admin app
+      where("read", "==", false)
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      snap.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const notif = change.doc.data();
+          // Use a library like 'react-hot-toast' or 'browser notifications'
+          alert(`${notif.title}: ${notif.message}`);
+
+          // Optional: Mark as read immediately
+          // updateDoc(doc(db, "notifications", change.doc.id), { read: true });
+        }
+      });
+    });
+
+    return () => unsub();
+  }, []);
+
+
+
 
   return (
     <div className="flex min-h-screen bg-gray-100">
