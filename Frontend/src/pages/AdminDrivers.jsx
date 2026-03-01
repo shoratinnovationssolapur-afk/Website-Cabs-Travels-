@@ -27,44 +27,66 @@ const AdminDrivers = () => {
       }));
       setDrivers(list);
     });
-    return () => unsubscribe(); 
+    return () => unsubscribe();
   }, []);
 
-  const filteredDrivers = drivers.filter(d => 
+  const filteredDrivers = drivers.filter(d =>
     d.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     d.phone?.includes(searchQuery) ||
     d.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // const addDriver = async () => {
+  //   if (!name || !phone || !email) return alert("Please fill all fields");
+
+  //   try {
+  //     await addDoc(collection(db, "drivers"), {
+  //       name,
+  //       phone,
+  //       email,
+  //       available: true,
+  //       onTrip: false,
+  //       status: "active",
+  //       rating: 5,
+  //       currentRideId: "",
+  //       location: {
+  //         address: "Solapur HQ",
+  //         lat: 17.6599,
+  //         lng: 75.9064
+  //       },
+  //       createdAt: serverTimestamp(),
+  //       lastUpdated: serverTimestamp()
+  //     });
+  //     setName("");
+  //     setPhone("");
+  //     setEmail("");
+  //     alert("Driver registered successfully!");
+  //   } catch (error) {
+  //     alert("Error adding driver: " + error.message);
+  //   }
+  // };
+  // Inside AdminDrivers.js -> addDriver function
   const addDriver = async () => {
     if (!name || !phone || !email) return alert("Please fill all fields");
-    
+
     try {
       await addDoc(collection(db, "drivers"), {
-        name,
-        phone,
-        email,
-        available: true, 
-        onTrip: false, 
+        name: name, // Ensure this is saved
+        phone: phone,
+        email: email, // Ensure this is saved
+        available: false,
+        onTrip: false,
         status: "active",
-        rating: 5,
-        currentRideId: "",
-        location: { 
-          address: "Solapur HQ", 
-          lat: 17.6599, 
-          lng: 75.9064 
-        }, 
         createdAt: serverTimestamp(),
-        lastUpdated: serverTimestamp()
+        lastLocation: null // Initialize tracking field
       });
-      setName("");
-      setPhone("");
-      setEmail("");
-      alert("Driver registered successfully!");
+      // ... reset states
     } catch (error) {
       alert("Error adding driver: " + error.message);
     }
   };
+
+
 
   const toggleAccountStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === "active" ? "suspended" : "active";
@@ -107,7 +129,7 @@ const AdminDrivers = () => {
 
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input 
+          <input
             type="text"
             placeholder="Search name, phone, or email..."
             className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-yellow-400 outline-none shadow-sm transition"
@@ -155,58 +177,80 @@ const AdminDrivers = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredDrivers.map(d => (
           <div key={d.id} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 relative hover:shadow-xl transition-shadow duration-300">
-            
+
             {/* STATUS BADGES */}
             <div className="flex justify-between items-start mb-6">
-               <div className="flex flex-col gap-2">
-                 <span className={`w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                   d.status === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
-                 }`}>
-                   {d.status}
-                 </span>
-                 <span className={`w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                   d.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                 }`}>
-                   {d.available ? "Online" : "Offline / Busy"}
-                 </span>
-               </div>
-               <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full">
-                 <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                 <span className="text-sm font-bold text-yellow-700">{d.rating || 5}</span>
-               </div>
-            </div>
-
-            <h2 className="text-2xl font-black text-gray-800 uppercase leading-none">{d.name}</h2>
-            <div className="mt-2 space-y-1">
-              <p className="text-gray-500 text-sm font-bold flex items-center gap-2">
-                <Phone size={14} className="text-gray-400" /> {d.phone}
-              </p>
-              <p className="text-gray-500 text-sm font-bold flex items-center gap-2">
-                <Mail size={14} className="text-gray-400" /> {d.email || "No email"}
-              </p>
-            </div>
-
-            {/* LOCATION SECTION (UPDATED FOR MAP DATA) */}
-            <div className="mt-6 bg-slate-50 p-5 rounded-[2rem] flex items-start gap-3 border border-slate-100">
-              <MapPin className="text-red-500 shrink-0 mt-1" size={20} />
-              <div className="overflow-hidden">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Live Address</p>
-                <p className="text-sm font-bold text-gray-700 leading-tight">
-                  {d.location?.address || "No address found"}
-                </p>
-                <p className="text-[9px] text-gray-400 mt-1 italic">
-                  Lat: {d.location?.lat?.toFixed(4)}, Lng: {d.location?.lng?.toFixed(4)}
-                </p>
+              <div className="flex flex-col gap-2">
+                <span className={`w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${d.status === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                  {d.status}
+                </span>
+                <span className={`w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${d.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}>
+                  {d.available ? "Online" : "Offline / Busy"}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full">
+                <Star size={14} className="text-yellow-500 fill-yellow-500" />
+                <span className="text-sm font-bold text-yellow-700">{d.rating || 5}</span>
               </div>
             </div>
+
+            <h2 className="text-2xl font-black text-gray-800 uppercase leading-none">
+              {d.name || "Unnamed Driver"}
+            </h2>
+            <div className="mt-2 space-y-1">
+              <p className="text-gray-500 text-sm font-bold flex items-center gap-2">
+                <Mail size={14} className="text-gray-400" />
+                {d.email || "Email not registered"}
+              </p>
+            </div>
+
+
+            {/* LIVE LOCATION SECTION (SYNCED WITH DRIVER DASHBOARD) */}
+            <div className={`mt-6 p-5 rounded-[2rem] flex items-start gap-3 border transition-colors ${d.available ? 'bg-blue-50 border-blue-100' : 'bg-slate-50 border-slate-100 opacity-60'
+              }`}>
+              <MapPin className={`${d.available ? 'text-blue-600' : 'text-gray-400'} shrink-0 mt-1`} size={20} />
+              <div className="overflow-hidden">
+                <div className="flex justify-between items-center mb-1">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    {d.available ? "Live Tracking Active" : "Last Known Location"}
+                  </p>
+                  {d.available && (
+                    <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-ping"></span>
+                  )}
+                </div>
+
+                {/* ⭐ UPDATED DATA PATH: d.lastLocation.address */}
+                <p className={`text-sm font-bold leading-tight ${d.available ? 'text-blue-900' : 'text-gray-700'}`}>
+                  {d.lastLocation?.address || "Wait for driver to go online..."}
+                </p>
+
+                <div className="flex gap-4 mt-2">
+                  <p className="text-[9px] text-gray-400 font-bold">
+                    Lat: {d.lastLocation?.lat?.toFixed(5) || "0.00"}
+                  </p>
+                  <p className="text-[9px] text-gray-400 font-bold">
+                    Lng: {d.lastLocation?.lng?.toFixed(5) || "0.00"}
+                  </p>
+                  {d.lastLocation?.speed > 0 && (
+                    <p className="text-[9px] text-green-600 font-black uppercase">
+                      Moving: {Math.round(d.lastLocation.speed * 3.6)} KM/H
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+
+
 
             {/* ACTION BUTTONS */}
             <div className="grid grid-cols-2 gap-3 mt-8">
               <button
                 onClick={() => toggleAvailability(d.id, d.available)}
-                className={`flex items-center justify-center gap-2 py-3 rounded-2xl text-[11px] font-black uppercase tracking-tighter transition shadow-sm ${
-                  d.available ? "bg-red-50 text-red-600 hover:bg-red-100" : "bg-green-50 text-green-600 hover:bg-green-100"
-                }`}
+                className={`flex items-center justify-center gap-2 py-3 rounded-2xl text-[11px] font-black uppercase tracking-tighter transition shadow-sm ${d.available ? "bg-red-50 text-red-600 hover:bg-red-100" : "bg-green-50 text-green-600 hover:bg-green-100"
+                  }`}
               >
                 {d.available ? <UserX size={14} /> : <UserCheck size={14} />}
                 {d.available ? "Go Offline" : "Go Online"}

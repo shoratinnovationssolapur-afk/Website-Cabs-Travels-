@@ -56,10 +56,12 @@ const HomePage = () => {
   const [distance, setDistance] = useState(0);
 
   // 3. ADD THIS HANDLER to receive data from RouteFare component
-  const handleFareUpdate = ({ fare, distance }) => {
-    setCalculatedFare(fare);
-    setDistance(distance);
-  };
+const handleFareUpdate = ({ fare, distance }) => {
+  setCalculatedFare(fare); // Updates the fare state
+  
+  
+  setDistance(distance);   // Updates the distance state
+};
 
   const navigate = useNavigate();
 
@@ -251,10 +253,10 @@ const submitBooking = async () => {
   }
 
   // Check if fare is calculated
-  if (totalFare <= 0) {
-    alert("Please wait for the fare to be calculated based on your route.");
-    return;
-  }
+  // if (totalFare <= 0) {
+  //   alert("Please wait for the fare to be calculated based on your route.");
+  //   return;
+  // }
 
   const user = auth.currentUser;
   if (!user) return alert("Please login to book a ride.");
@@ -272,8 +274,8 @@ const submitBooking = async () => {
       carType,
       tripType,
       dateTime,
-      distance,
-      totalFare: Number(totalFare),
+      distance:Number(distance),
+      totalFare: Number(calculatedFare),
       status: "pending", // Admin will change this to 'assigned' manually later
       createdAt: serverTimestamp(),
       bookingMethod: "quick_booking",
@@ -560,7 +562,7 @@ const submitBooking = async () => {
   pickup={pickup} 
   drop={drop} 
   dateTime={dateTime} 
-  onFareCalculated={({ fare }) => setTotalFare(fare)}
+  onFareCalculated={handleFareUpdate} // This function handles all updates
 />
 
 

@@ -248,7 +248,7 @@ const BookingDetails = () => {
         <div className="bg-white p-8 mt-20 rounded-3xl shadow sticky top-20 h-fit">
           <h3 className="text-2xl font-bold mb-6">Fare Details</h3>
           <div className="space-y-3">
-            <div className="flex justify-between"><span>Distance</span><span>{distance ? distance.toFixed(1) : 0} km</span></div>
+            <div className="flex justify-between"><span>Distance</span><span>{distance ? distance.toFixed(0) : 0} km</span></div>
             <div className="flex justify-between"><span>Distance Fare</span><span>₹{routeFare}</span></div>
             <div className="flex justify-between"><span>Price Per Km</span><span>₹{pricePerKm}</span></div>
             <div className="flex justify-between border-t pt-3 font-bold text-xl"><span>Total</span><span>₹{totalAmount}</span></div>
