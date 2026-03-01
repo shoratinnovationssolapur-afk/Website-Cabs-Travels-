@@ -6,27 +6,77 @@ export default function DriverDashboard() {
   const [driverInfo, setDriverInfo] = useState(null);
   const [allRides, setAllRides] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentTime, setCurrentTime] = useState(new Date());
 
-  // 1. Update clock every 10 seconds
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 10000);
-    return () => clearInterval(timer);
-  }, []);
+  // ================= 1. REVERSE GEOCODING LOGIC =================
+  const fetchAddressFromCoords = async (lat, lng) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+      );
+      const data = await res.json();
 
-  // 2. Monitor Driver Info
+      if (!data) return { short: "Unknown Location", full: "Unknown" };
+
+      // Formatting for "Solapur, Solapur District" style
+      const city = data.address.city || data.address.town || data.address.village || data.address.suburb || "";
+      const district = data.address.state_district || data.address.county || "";
+      
+      return {
+        short: city && district ? `${city}, ${district}` : data.display_name.split(',').slice(0, 2).join(','),
+        full: data.display_name
+      };
+    } catch (err) {
+      console.error("Geocoding error:", err);
+      return { short: "Location Error", full: "Error fetching address" };
+    }
+  };
+
+  // ================= 2. DUTY TOGGLE (FIRESTORE SYNC) =================
+  const handleDutyToggle = async () => {
+    if (!auth.currentUser) return;
+    const isGoingOnline = !driverInfo?.available;
+
+    if (isGoingOnline) {
+      if (!navigator.geolocation) {
+        alert("Geolocation not supported");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const addrData = await fetchAddressFromCoords(latitude, longitude);
+
+        // MATCHES YOUR EXACT FORMAT
+        await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
+          available: true,
+          address: addrData.short, // "Solapur, Solapur District"
+          lastUpdated: serverTimestamp(),
+          location: {
+            address: addrData.full, // "Sakhar Peth, Solapur, ..., India"
+            lat: latitude,
+            lng: longitude
+          }
+        });
+      }, () => alert("Please enable location to go online."));
+    } else {
+      await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
+        available: false,
+        lastUpdated: serverTimestamp()
+      });
+    }
+  };
+
+  // ================= 3. FIREBASE MONITORING =================
   useEffect(() => {
     if (!auth.currentUser) return;
+    
+    // Monitor Driver Data
     const unsubDriver = onSnapshot(doc(db, "drivers", auth.currentUser.uid), (snap) => {
       if (snap.exists()) setDriverInfo(snap.data());
       setLoading(false);
     });
-    return () => unsubDriver();
-  }, []);
 
-  // 3. Monitor All Rides for this Driver
-  useEffect(() => {
-    if (!auth.currentUser) return;
+    // Monitor Active Rides
     const q = query(
       collection(db, "bookings"),
       where("driverId", "==", auth.currentUser.uid),
@@ -36,219 +86,135 @@ export default function DriverDashboard() {
       const ridesArray = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setAllRides(ridesArray);
     });
-    return () => unsubRides();
+
+    return () => { unsubDriver(); unsubRides(); };
   }, []);
 
-  // 4. CATEGORIZATION LOGIC (Calculated during render)
-  const now = new Date();
-  const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-
-  const current = allRides
-    .filter(ride => {
-      const rideDate = new Date(ride.dateTime);
-      return ride.status === "on_the_way" || (rideDate <= oneHourFromNow && ride.status !== "completed");
-    })
-    .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-
-  const upcoming = allRides
-    .filter(ride => {
-      const rideDate = new Date(ride.dateTime);
-      return ride.status !== "on_the_way" && rideDate > oneHourFromNow;
-    })
-    .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-
-  // 5. SYNC TRIP STATUS WITH ADMIN
+  // Sync Trip Status with Current Rides
   useEffect(() => {
-    const syncTripStatus = async () => {
-      if (!auth.currentUser || loading) return;
-
-      // If no current rides, set onTrip to false so Admin can assign more
-      if (current.length === 0 && driverInfo?.onTrip === true) {
-        await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
-          onTrip: false,
-          currentRideId: ""
-        });
-      } 
-      // If there is an active ride, ensure onTrip is true
-      else if (current.length > 0 && driverInfo?.onTrip === false) {
-        await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
-          onTrip: true
-        });
+    const syncStatus = async () => {
+      if (!auth.currentUser || loading || !driverInfo) return;
+      const hasActive = allRides.some(r => r.status === "on_the_way");
+      
+      if (!hasActive && driverInfo.onTrip) {
+        await updateDoc(doc(db, "drivers", auth.currentUser.uid), { onTrip: false, currentRideId: "" });
+      } else if (hasActive && !driverInfo.onTrip) {
+        await updateDoc(doc(db, "drivers", auth.currentUser.uid), { onTrip: true });
       }
     };
-    syncTripStatus();
-  }, [current.length, driverInfo?.onTrip, loading]);
+    syncStatus();
+  }, [allRides, driverInfo, loading]);
 
-const updateRideStatus = async (ride, status) => {
-  const rideDate = new Date(ride.dateTime);
-  const fiveMinsBefore = new Date(rideDate.getTime() - 5 * 60 * 1000);
-
-  if (status === "on_the_way" && new Date() < fiveMinsBefore) {
-    alert(`Too early! Start at ${fiveMinsBefore.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`);
-    return;
-  }
-
-  // Confirmation for cancellation
-  if (status === "cancelled") {
-    const confirmCancel = window.confirm("Are you sure you want to cancel this trip? This will notify the admin.");
-    if (!confirmCancel) return;
-  }
-
-  try {
-    if (status === "completed") {
-      await addDoc(collection(db, "confirmed_bookings"), {
-        driverId: auth.currentUser.uid,
-        rideId: ride.id,
-        pickup: ride.pickup,
-        drop: ride.drop,
-        totalFare: ride.totalFare || 0,
-        createdAt: serverTimestamp(),
-        status: "completed"
-      });
-      await updateDoc(doc(db, "bookings", ride.id), { status: "completed" });
-    } 
-    else if (status === "cancelled") {
-      // Update booking to pending/cancelled so admin can re-assign
-      await updateDoc(doc(db, "bookings", ride.id), { 
-        status: "pending", 
-        driverId: null, 
-        driverName: null 
-      });
-      
-      // Immediately free up the driver
-      await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
-        onTrip: false
-      });
-    } 
-    else {
-      await updateDoc(doc(db, "bookings", ride.id), { status });
-    }
-  } catch (error) {
-    console.error("Update Error:", error);
-    alert("Action failed. Please try again.");
-  }
-};
-
-  if (loading) return <div className="p-10 text-center">Loading Console...</div>;
+  if (loading) return <div className="p-10 text-center">Loading...</div>;
 
   return (
     <div className="max-w-2xl mx-auto p-4 bg-gray-50 min-h-screen">
-      {/* Duty Toggle */}
-      <div className={`p-6 rounded-2xl mb-8 flex justify-between items-center shadow-sm ${driverInfo?.available ? 'bg-green-600 text-white' : 'bg-white text-gray-800 border'}`}>
-         <div>
+      {/* Duty Toggle Card */}
+      <div className={`p-6 rounded-2xl mb-8 flex justify-between items-center shadow-sm transition-colors ${driverInfo?.available ? 'bg-green-600 text-white' : 'bg-white text-gray-800 border'}`}>
+         <div className="flex-1 overflow-hidden mr-4">
             <h2 className="font-black uppercase tracking-tight text-xl">
                {driverInfo?.available ? "Online" : "Offline"}
             </h2>
-            <p className="text-xs opacity-80 font-bold">Visibility to Customers</p>
+            <p className="text-xs opacity-90 font-bold truncate">
+               {driverInfo?.available ? (driverInfo?.address || "Updating Location...") : "Visibility to Customers"}
+            </p>
          </div>
          <button 
-            onClick={async () => await updateDoc(doc(db, "drivers", auth.currentUser.uid), { available: !driverInfo.available })} 
-            className={`px-6 py-2 rounded-full font-bold transition-all ${driverInfo?.available ? 'bg-white text-green-600' : 'bg-black text-white'}`}
+            onClick={handleDutyToggle} 
+            className={`px-6 py-2 rounded-full font-bold transition-all shadow-md ${driverInfo?.available ? 'bg-white text-green-600' : 'bg-black text-white'}`}
          >
             {driverInfo?.available ? "Go Offline" : "Go Online"}
          </button>
       </div>
 
-      {/* --- CURRENT RIDES --- */}
-      <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Current & Active Rides</h3>
-      {current.length === 0 ? (
-        <div className="bg-white p-10 text-center rounded-2xl border border-dashed mb-8">
-           <p className="text-gray-400">No active rides. You are available for new assignments.</p>
-        </div>
+      {/* RIDE SECTIONS (Current/Upcoming) */}
+      <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Active Jobs</h3>
+      {allRides.length === 0 ? (
+        <div className="bg-white p-10 text-center rounded-2xl border border-dashed text-gray-400">No current rides.</div>
       ) : (
-        current.map(ride => (
-          <RideCard key={ride.id} ride={ride} onUpdate={updateRideStatus} isCurrent={true} />
-        ))
-      )}
-
-      {/* --- UPCOMING RIDES --- */}
-      <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mt-12 mb-4">Upcoming Schedule</h3>
-      {upcoming.length === 0 ? (
-        <p className="text-gray-400 italic">No future bookings found.</p>
-      ) : (
-        upcoming.map(ride => (
-          <RideCard key={ride.id} ride={ride} onUpdate={updateRideStatus} isCurrent={false} />
+        allRides.map(ride => (
+          <RideCard key={ride.id} ride={ride} onUpdate={updateRideStatus} />
         ))
       )}
     </div>
   );
 }
 
-// Sub-component remains the same as your previous working version
-function RideCard({ ride, onUpdate, isCurrent }) {
+// ================= RIDE CARD COMPONENT =================
+function RideCard({ ride, onUpdate }) {
   const rideDate = new Date(ride.dateTime);
-  const timeStr = rideDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const dateStr = rideDate.toLocaleDateString([], { day: '2-digit', month: 'short' });
-
   return (
-    <div className={`bg-white border rounded-[2rem] p-6 mb-4 shadow-sm transition-all ${!isCurrent && 'opacity-75 grayscale-[0.5]'}`}>
-      {/* ... (Existing Top Section: Time, Date, Fare) ... */}
+    <div className="bg-white border rounded-[2rem] p-6 mb-4 shadow-sm">
       <div className="flex justify-between items-start mb-6">
         <div className="flex gap-3 items-center">
-          <div className="bg-blue-100 text-blue-700 p-3 rounded-2xl">
-            <span className="font-black text-lg">{timeStr}</span>
-          </div>
+          <div className="bg-blue-100 text-blue-700 p-3 rounded-2xl font-black">{rideDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
           <div>
-            <p className="text-xs font-black text-gray-400 uppercase">{dateStr}</p>
-            <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">{ride.status}</p>
+            <p className="text-xs font-black text-gray-400 uppercase">{rideDate.toLocaleDateString([], { day: '2-digit', month: 'short' })}</p>
+            <p className="text-[10px] font-bold text-blue-500 uppercase">{ride.status}</p>
           </div>
         </div>
         <div className="text-right">
            <p className="text-[10px] font-black text-gray-400 uppercase">Fare</p>
-           <p className="font-black text-green-600">₹{ride.totalFare?.toFixed(2)}</p>
+           <p className="font-black text-green-600">₹{ride.totalFare}</p>
         </div>
       </div>
       
-      {/* ... (Existing Middle Section: Pickup/Dropoff) ... */}
-      <div className="space-y-4 mb-8">
-        <div className="flex gap-3">
-           <div className="w-1 bg-blue-500 rounded-full"></div>
-           <div>
-              <p className="text-[9px] font-black text-gray-400 uppercase">Pickup</p>
-              <p className="text-sm font-bold text-gray-700 leading-tight">{ride.pickup}</p>
-           </div>
-        </div>
-        <div className="flex gap-3">
-           <div className="w-1 bg-green-500 rounded-full"></div>
-           <div>
-              <p className="text-[9px] font-black text-gray-400 uppercase">Dropoff</p>
-              <p className="text-sm font-bold text-gray-700 leading-tight">{ride.drop}</p>
-           </div>
-        </div>
+      <div className="space-y-3 mb-6">
+        <div className="flex gap-3"><div className="w-1 bg-blue-500 rounded-full"></div><div><p className="text-[9px] font-black text-gray-400">PICKUP</p><p className="text-sm font-bold text-gray-700">{ride.pickup}</p></div></div>
+        <div className="flex gap-3"><div className="w-1 bg-green-500 rounded-full"></div><div><p className="text-[9px] font-black text-gray-400">DROPOFF</p><p className="text-sm font-bold text-gray-700">{ride.drop}</p></div></div>
       </div>
 
-      {/* BUTTONS SECTION */}
+      {/* Logic for Buttons */}
       <div className="flex flex-col gap-2">
-        <div className="flex gap-2">
-          {(ride.status === "assigned" || ride.status === "approved") && isCurrent && (
-            <button
-              onClick={() => onUpdate(ride, "on_the_way")}
-              className="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition"
-            >
-              Start Trip
-            </button>
-          )}
-
-          {ride.status === "on_the_way" && (
-            <button
-              onClick={() => onUpdate(ride, "completed")}
-              className="flex-1 bg-green-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-green-700 transition"
-            >
-              Finish Trip
-            </button>
-          )}
-        </div>
-
-        {/* CANCEL BUTTON: Visible if not yet started */}
-        {(ride.status === "assigned" || ride.status === "approved") && (
-          <button
-            onClick={() => onUpdate(ride, "cancelled")}
-            className="w-full bg-red-50 text-red-500 py-3 rounded-2xl font-bold uppercase text-xs tracking-widest hover:bg-red-100 transition"
-          >
-            Cancel Trip
-          </button>
-        )}
+         {ride.status !== "on_the_way" ? (
+            <button onClick={() => onUpdate(ride, "on_the_way")} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest">Start Trip</button>
+         ) : (
+            <button onClick={() => onUpdate(ride, "completed")} className="w-full bg-green-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest">Finish Trip</button>
+         )}
       </div>
     </div>
   );
 }
+
+// Placeholder for update function logic
+const updateRideStatus = async (ride, status) => {
+    const rideDate = new Date(ride.dateTime);
+    const fiveMinsBefore = new Date(rideDate.getTime() - 5 * 60 * 1000);
+
+    if (status === "on_the_way" && new Date() < fiveMinsBefore) {
+      alert(`Too early! Start at ${fiveMinsBefore.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+      return;
+    }
+
+    if (status === "cancelled") {
+      const confirmCancel = window.confirm("Are you sure you want to cancel this trip?");
+      if (!confirmCancel) return;
+    }
+
+    try {
+      if (status === "completed") {
+        await addDoc(collection(db, "confirmed_bookings"), {
+          driverId: auth.currentUser.uid,
+          rideId: ride.id,
+          pickup: ride.pickup,
+          drop: ride.drop,
+          totalFare: ride.totalFare || 0,
+          createdAt: serverTimestamp(),
+          status: "completed"
+        });
+        await updateDoc(doc(db, "bookings", ride.id), { status: "completed" });
+      } else if (status === "cancelled") {
+        await updateDoc(doc(db, "bookings", ride.id), { 
+          status: "pending", 
+          driverId: null, 
+          driverName: null 
+        });
+        await updateDoc(doc(db, "drivers", auth.currentUser.uid), { onTrip: false });
+      } else {
+        await updateDoc(doc(db, "bookings", ride.id), { status });
+      }
+    } catch (error) {
+      console.error("Update Error:", error);
+      alert("Action failed.");
+    }
+  };

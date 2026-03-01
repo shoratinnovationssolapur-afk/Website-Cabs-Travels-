@@ -22,7 +22,6 @@ import RangeRover from "../assets/Luxurycar2.webp";
 import BMW from "../assets/Luxurycar3.webp";
 import Audi from "../assets/Luxurycar4.webp";
 import VolvoXC90 from "../assets/Luxurycar5.webp";
-import { autoAssignDriver } from "../utils/autoAssignDriver"; // Adjust the path if needed
 import outstationcar from "../assets/OutstationCab.webp";
 
 import LocationInputs from "../components/pickupanddrop";
@@ -273,6 +272,7 @@ const submitBooking = async () => {
       carType,
       tripType,
       dateTime,
+      distance,
       totalFare: Number(totalFare),
       status: "pending", // Admin will change this to 'assigned' manually later
       createdAt: serverTimestamp(),
