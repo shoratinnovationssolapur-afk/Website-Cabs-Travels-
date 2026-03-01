@@ -26,7 +26,7 @@ const UserLayout = () => {
         </button>
 
         <button 
-          onClick={() => navigate("/tours")} 
+          onClick={() => navigate("/user/tours")} 
           className="block w-full text-left hover:text-yellow-400"
         >
           Tours

@@ -30,7 +30,7 @@ const Tours = () => {
 
   const handleBookNow = (tour) => {
     // Navigate using the tour ID to match your TourDetails route
-    navigate(`/tour/${tour.id}`);
+    navigate(`/user/tour/${tour.id}`);
   };
 
   if (loading) return <div className="loader text-center py-20 font-bold">Loading Adventures...</div>;
