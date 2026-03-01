@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { getAuth } from "firebase/auth";
 import LocationInputs from "../components/pickupanddrop";
-import RouteFare from "../components/RouteFare"; 
+import RouteFare from "../components/RouteFare";
 import { autoAssignDriver } from "../utils/autoAssignDriver";
 
 const auth = getAuth();
@@ -75,7 +75,7 @@ const BookRide = () => {
   const baseFare = 50; // Standard base fare for city rides
   const totalAmount = routeFare + baseFare;
 
-const handleFinalBooking = async () => {
+  const handleFinalBooking = async () => {
     try {
       if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
         alert("Pickup and Drop locations cannot be the same.");
@@ -106,11 +106,36 @@ const handleFinalBooking = async () => {
           alert(`Passenger ${passengerNum}: Valid age required.`);
           return;
         }
-        
+
         if (!p.dateTime) {
           alert(`Passenger ${passengerNum}: Select date/time.`);
           return;
         }
+      }
+
+
+
+      // Notify Admin
+      await addDoc(collection(db, "notifications"), {
+        recipientId: "admin",
+        role: "admin",
+        title: "New Booking Received",
+        message: `New ride from ${pickup} to ${drop}`,
+        createdAt: serverTimestamp(),
+        read: false
+      });
+
+      // Notify Driver (If auto-assigned)
+      if (availableDriverId) {
+        await addDoc(collection(db, "notifications"), {
+          recipientId: availableDriverId,
+          role: "driver",
+          title: "New Ride Assigned",
+          message: "Check your dashboard for a new active ride.",
+          bookingId: id,
+          createdAt: serverTimestamp(),
+          read: false
+        });
       }
 
       const primaryPassenger = passengers[0];
@@ -121,7 +146,7 @@ const handleFinalBooking = async () => {
         name: primaryPassenger.name || "N/A",
         phone: primaryPassenger.phone || "N/A",
         passengers: passengers,
-        bookingMethod: "quick_booking", 
+        bookingMethod: "quick_booking",
         status: "pending",
         userId: auth.currentUser.uid,
         userEmail: auth.currentUser.email || "N/A", // Added for admin reference
@@ -130,8 +155,8 @@ const handleFinalBooking = async () => {
         distance,
         totalFare: totalAmount,
         // EXPLICIT NULLS so your driver logic doesn't crash
-        driverId: null,      
-        driverName: null,    
+        driverId: null,
+        driverName: null,
         vehicleId: "city_ride" // Generic ID for city rides
       };
 

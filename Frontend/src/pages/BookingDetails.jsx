@@ -131,6 +131,32 @@ const BookingDetails = () => {
         if (!/^[6-9]\d{9}$/.test(p.phone)) return alert(`Enter valid phone for Passenger ${i + 1}`);
         if (!p.dateTime) return alert(`Select date/time for Passenger ${i + 1}`);
       }
+      
+      // Notify Admin
+await addDoc(collection(db, "notifications"), {
+  recipientId: "admin",
+  role: "admin",
+  title: "New Booking Received",
+  message: `New ride from ${pickup} to ${drop}`,
+  createdAt: serverTimestamp(),
+  read: false
+});
+
+// Notify Driver (If auto-assigned)
+if (availableDriverId) {
+  await addDoc(collection(db, "notifications"), {
+    recipientId: availableDriverId,
+    role: "driver",
+    title: "New Ride Assigned",
+    message: "Check your dashboard for a new active ride.",
+    bookingId: id,
+    createdAt: serverTimestamp(),
+    read: false
+  });
+}
+
+
+
 
       // 1. Find Available Driver
       const driversRef = collection(db, "drivers");
