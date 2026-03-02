@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
-import { doc, updateDoc, onSnapshot, addDoc, collection, query, where, serverTimestamp,setDoc } from "firebase/firestore";
+import { doc, updateDoc, onSnapshot, addDoc, collection, query, where, serverTimestamp, setDoc } from "firebase/firestore";
 
 export default function DriverDashboard() {
   const [driverInfo, setDriverInfo] = useState(null);
@@ -24,32 +24,32 @@ export default function DriverDashboard() {
   //   return () => unsubDriver();
   // }, []);
 
-// Inside DriverDashboard useEffect
-useEffect(() => {
-  if (!auth.currentUser) return;
+  // Inside DriverDashboard useEffect
+  useEffect(() => {
+    if (!auth.currentUser) return;
 
-  const driverRef = doc(db, "drivers", auth.currentUser.uid);
-  
-  const unsubDriver = onSnapshot(driverRef, (snap) => {
-    if (snap.exists()) {
-      setDriverInfo(snap.data());
-    } else {
-      // ⭐ THE FIX: If the document doesn't exist, create it using Auth data
-      const initialData = {
-        name: auth.currentUser.displayName || "New Driver",
-        email: auth.currentUser.email || "",
-        phone: auth.currentUser.phoneNumber || "",
-        available: false,
-        status: "active",
-        createdAt: serverTimestamp()
-      };
-      setDoc(driverRef, initialData); // This uses the UID as the ID
-    }
-    setLoading(false);
-  });
+    const driverRef = doc(db, "drivers", auth.currentUser.uid);
 
-  return () => unsubDriver();
-}, []);
+    const unsubDriver = onSnapshot(driverRef, (snap) => {
+      if (snap.exists()) {
+        setDriverInfo(snap.data());
+      } else {
+        // ⭐ THE FIX: If the document doesn't exist, create it using Auth data
+        const initialData = {
+          name: auth.currentUser.displayName || "New Driver",
+          email: auth.currentUser.email || "",
+          phone: auth.currentUser.phoneNumber || "",
+          available: false,
+          status: "active",
+          createdAt: serverTimestamp()
+        };
+        setDoc(driverRef, initialData); // This uses the UID as the ID
+      }
+      setLoading(false);
+    });
+
+    return () => unsubDriver();
+  }, []);
 
 
 
@@ -125,90 +125,90 @@ useEffect(() => {
 
 
   useEffect(() => {
-  let watchId = null;
+    let watchId = null;
 
-  const startTracking = () => {
-    // Only start if a user is logged in AND they are marked as 'available'
-    if ("geolocation" in navigator && auth.currentUser && driverInfo?.available) {
-      watchId = navigator.geolocation.watchPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-            );
-            const data = await response.json();
-            const liveAddress = data.display_name || "Address not found";
+    const startTracking = () => {
+      // Only start if a user is logged in AND they are marked as 'available'
+      if ("geolocation" in navigator && auth.currentUser && driverInfo?.available) {
+        watchId = navigator.geolocation.watchPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+              const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+              );
+              const data = await response.json();
+              const liveAddress = data.display_name || "Address not found";
 
-            await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
-              lastLocation: {
-                lat: latitude,
-                lng: longitude,
-                address: liveAddress,
-                timestamp: serverTimestamp()
-              },
-              address: liveAddress
-            });
-          } catch (err) {
-            console.error("Tracking error:", err);
-          }
-        },
-        (error) => console.error("GPS Error:", error),
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-      );
-    }
-  };
-
-  const stopTracking = () => {
-    if (watchId !== null) {
-      navigator.geolocation.clearWatch(watchId);
-      watchId = null;
-      console.log("GPS tracking stopped.");
-    }
-  };
-
-  // Logic Controller
-  if (auth.currentUser && driverInfo?.available && !loading) {
-    startTracking();
-  } else {
-    stopTracking();
-  }
-
-  // CRITICAL: Cleanup function runs on unmount OR when auth/availability changes
-  return () => stopTracking();
-}, [auth.currentUser, driverInfo?.available, loading]);
-
-  // 5. Duty Toggle Handler
-      
-  
-  const handleDutyToggle = async () => {
-  if (!auth.currentUser) return;
-
-  // 1. Determine new status (Default to true if driverInfo is null)
-  const isGoingOnline = !driverInfo?.available;
-  const driverDocRef = doc(db, "drivers", auth.currentUser.uid);
-
-  try {
-    const updateData = { 
-      available: isGoingOnline,
-      updatedAt: serverTimestamp() 
+              await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
+                lastLocation: {
+                  lat: latitude,
+                  lng: longitude,
+                  address: liveAddress,
+                  timestamp: serverTimestamp()
+                },
+                address: liveAddress
+              });
+            } catch (err) {
+              console.error("Tracking error:", err);
+            }
+          },
+          (error) => console.error("GPS Error:", error),
+          { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+        );
+      }
     };
 
-    if (!isGoingOnline) {
-      updateData.lastLocation = null;
-      updateData.address = "";
+    const stopTracking = () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        console.log("GPS tracking stopped.");
+      }
+    };
+
+    // Logic Controller
+    if (auth.currentUser && driverInfo?.available && !loading) {
+      startTracking();
+    } else {
+      stopTracking();
     }
 
-    // 2. Use setDoc with { merge: true } instead of updateDoc
-    // This creates the document if it's missing, or updates it if it exists.
-    await setDoc(driverDocRef, updateData, { merge: true });
-    
-    console.log("Firestore sync successful for status:", isGoingOnline);
-  } catch (error) {
-    console.error("Critical Toggle Error:", error.message);
-    alert("Database connection failed. Check your Firebase Rules.");
-  }
-};
+    // CRITICAL: Cleanup function runs on unmount OR when auth/availability changes
+    return () => stopTracking();
+  }, [auth.currentUser, driverInfo?.available, loading]);
+
+  // 5. Duty Toggle Handler
+
+
+  const handleDutyToggle = async () => {
+    if (!auth.currentUser) return;
+
+    // 1. Determine new status (Default to true if driverInfo is null)
+    const isGoingOnline = !driverInfo?.available;
+    const driverDocRef = doc(db, "drivers", auth.currentUser.uid);
+
+    try {
+      const updateData = {
+        available: isGoingOnline,
+        updatedAt: serverTimestamp()
+      };
+
+      if (!isGoingOnline) {
+        updateData.lastLocation = null;
+        updateData.address = "";
+      }
+
+      // 2. Use setDoc with { merge: true } instead of updateDoc
+      // This creates the document if it's missing, or updates it if it exists.
+      await setDoc(driverDocRef, updateData, { merge: true });
+
+      console.log("Firestore sync successful for status:", isGoingOnline);
+    } catch (error) {
+      console.error("Critical Toggle Error:", error.message);
+      alert("Database connection failed. Check your Firebase Rules.");
+    }
+  };
 
   // 6. Ride Logic & Categorization
   const nowTime = new Date();
@@ -228,7 +228,64 @@ useEffect(() => {
     })
     .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
+  // const updateRideStatus = async (ride, status) => {
+
+  //   // Inside updateRideStatus
+  //   const notifyUser = async (title, message) => {
+  //     await addDoc(collection(db, "notifications"), {
+  //       recipientId: ride.userId,
+  //       role: "user",
+  //       title: title,
+  //       message: message,
+  //       bookingId: ride.id,
+  //       createdAt: serverTimestamp(),
+  //       read: false
+  //     });
+  //   };
+
+  //   if (status === "on_the_way") {
+  //     await notifyUser("Driver is Coming!", "Your driver has started the trip and is moving toward you.");
+  //   } else if (status === "completed") {
+  //     await notifyUser("Trip Completed", "Hope you had a safe journey! Please rate your experience.");
+  //   }
+
+  //   const rideDate = new Date(ride.dateTime);
+  //   const fiveMinsBefore = new Date(rideDate.getTime() - 5 * 60 * 1000);
+
+  //   if (status === "on_the_way" && new Date() < fiveMinsBefore) {
+  //     alert(`Too early! Start at ${fiveMinsBefore.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+  //     return;
+  //   }
+
+  //   if (status === "cancelled") {
+  //     if (!window.confirm("Are you sure you want to cancel this trip?")) return;
+  //   }
+
+  //   try {
+  //     if (status === "completed") {
+  //       await addDoc(collection(db, "confirmed_bookings"), {
+  //         driverId: auth.currentUser.uid,
+  //         rideId: ride.id,
+  //         pickup: ride.pickup,
+  //         drop: ride.drop,
+  //         totalFare: ride.totalFare || 0,
+  //         createdAt: serverTimestamp(),
+  //         status: "completed"
+  //       });
+  //       await updateDoc(doc(db, "bookings", ride.id), { status: "completed" });
+  //     } else if (status === "cancelled") {
+  //       await updateDoc(doc(db, "bookings", ride.id), { status: "pending", driverId: null, driverName: null });
+  //       await updateDoc(doc(db, "drivers", auth.currentUser.uid), { onTrip: false });
+  //     } else {
+  //       await updateDoc(doc(db, "bookings", ride.id), { status });
+  //     }
+  //   } catch (error) {
+  //     console.error("Update Error:", error);
+  //   }
+  // };
+
   const updateRideStatus = async (ride, status) => {
+    // 1. Pre-update Validations
     const rideDate = new Date(ride.dateTime);
     const fiveMinsBefore = new Date(rideDate.getTime() - 5 * 60 * 1000);
 
@@ -243,6 +300,7 @@ useEffect(() => {
 
     try {
       if (status === "completed") {
+        // 1. Log the trip to history
         await addDoc(collection(db, "confirmed_bookings"), {
           driverId: auth.currentUser.uid,
           rideId: ride.id,
@@ -252,17 +310,82 @@ useEffect(() => {
           createdAt: serverTimestamp(),
           status: "completed"
         });
+
+        // 2. Update booking status
         await updateDoc(doc(db, "bookings", ride.id), { status: "completed" });
-      } else if (status === "cancelled") {
-        await updateDoc(doc(db, "bookings", ride.id), { status: "pending", driverId: null, driverName: null });
+
+        // ⭐ THE FIX: Reset driver status to available for new rides
         await updateDoc(doc(db, "drivers", auth.currentUser.uid), { onTrip: false });
-      } else {
+      }
+      else if (status === "cancelled") {
+        // 3. Reset booking to pending and clear driver
+        await updateDoc(doc(db, "bookings", ride.id), {
+          status: "pending",
+          driverId: null,
+          driverName: null
+        });
+
+        // ⭐ THE FIX: Also reset onTrip if the driver cancels
+        await updateDoc(doc(db, "drivers", auth.currentUser.uid), { onTrip: false });
+      }
+      else if (status === "on_the_way") {
+        // 4. Set onTrip to true when the driver starts a ride
+        await updateDoc(doc(db, "bookings", ride.id), { status });
+        await updateDoc(doc(db, "drivers", auth.currentUser.uid), { onTrip: true });
+      }
+      else {
         await updateDoc(doc(db, "bookings", ride.id), { status });
       }
+
+      // 3. TRIGGER NOTIFICATIONS ONLY AFTER SUCCESSFUL DB UPDATE
+      if (status === "on_the_way") {
+        await addDoc(collection(db, "notifications"), {
+          recipientId: ride.userId,
+          role: "user",
+          title: "Driver is Coming!",
+          message: "Your driver has started the trip and is moving toward you.",
+          bookingId: ride.id,
+          createdAt: serverTimestamp(),
+          read: false
+        });
+      }
+      else if (status === "completed") {
+        await addDoc(collection(db, "notifications"), {
+          recipientId: ride.userId,
+          role: "user",
+          title: "Trip Completed",
+          message: "Hope you had a safe journey! Please rate your experience.",
+          bookingId: ride.id,
+          createdAt: serverTimestamp(),
+          read: false
+        });
+      }
+
+      console.log(`Ride ${ride.id} successfully updated to ${status}`);
+
     } catch (error) {
       console.error("Update Error:", error);
     }
+
   };
+
+  useEffect(() => {
+    // If the database says the driver is on a trip, but the 'allRides' 
+    // array (which filters for active rides) is empty, reset the status.
+    const resetStuckStatus = async () => {
+      if (driverInfo?.onTrip && allRides.length === 0 && !loading) {
+        console.log("Detected stuck 'onTrip' status. Resetting to false...");
+        await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
+          onTrip: false,
+          currentRideId: null
+        });
+      }
+    };
+
+    resetStuckStatus();
+  }, [allRides, driverInfo, loading]);
+
+
 
   if (loading) return <div className="p-10 text-center">Loading Console...</div>;
 
@@ -278,8 +401,8 @@ useEffect(() => {
             {driverInfo?.available ? (driverInfo?.address || "Updating Location...") : "Visibility to Customers"}
           </p>
         </div>
-        <button 
-          onClick={handleDutyToggle} 
+        <button
+          onClick={handleDutyToggle}
           className={`px-6 py-2 rounded-full font-bold transition-all shadow-md ${driverInfo?.available ? 'bg-white text-green-600' : 'bg-black text-white'} cursor-pointer`}
         >
           {driverInfo?.available ? "Go Offline" : "Go Online"}
@@ -325,7 +448,7 @@ function RideCard({ ride, onUpdate, isCurrent }) {
           <p className="font-black text-green-600">₹{ride.totalFare?.toFixed(2)}</p>
         </div>
       </div>
-      
+
       <div className="space-y-4 mb-8">
         <div className="flex gap-3">
           <div className="w-1 bg-blue-500 rounded-full"></div>

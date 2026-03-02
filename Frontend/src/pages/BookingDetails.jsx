@@ -57,6 +57,8 @@ const BookingDetails = () => {
   const [routeFare, setRouteFare] = useState(0);
   const [distance, setDistance] = useState(0);
 
+  const [name, setName] = useState("");
+
   const vehicleId = searchParams.get("vehicle_id");
 
   // ================= FETCH VEHICLE =================
@@ -116,6 +118,9 @@ const BookingDetails = () => {
   const handleFareUpdate = ({ distance, fare }) => {
     setDistance(distance);
     setRouteFare(fare);
+    // setDateTime(dateTime);
+    // setName(name);
+
   };
 
   // ================= CREATE BOOKING =================
@@ -153,6 +158,7 @@ const BookingDetails = () => {
         pickup,
         drop,
         dateTime,
+        // CRITICAL: Save primary details at top level for easy Admin access
         name: primaryPassenger.name || "N/A",
         phone: primaryPassenger.phone || "N/A",
         passengers: passengers,
@@ -161,7 +167,7 @@ const BookingDetails = () => {
         userId: auth.currentUser.uid,
         createdAt: serverTimestamp(),
         tripType,
-        durationDays: days,
+        durationDays: tripType === "outstation" ? days : 1,
         distance,
         totalFare: totalAmount,
       };
@@ -195,6 +201,25 @@ const BookingDetails = () => {
       </div>
     );
 
+  // ================= REALTIME STATUS =================
+  useEffect(() => {
+    if (!bookingId) return;
+
+    const unsub = onSnapshot(doc(db, "bookings", bookingId), (snap) => {
+      if (snap.exists()) setRideStatus(snap.data().status);
+    });
+
+    return () => unsub();
+  }, [bookingId]);
+
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-yellow-500" size={48} />
+      </div>
+    );
+
+  // ================= UI =================
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* HERO */}
@@ -207,6 +232,7 @@ const BookingDetails = () => {
         <button onClick={() => navigate(-1)} className="absolute top-6 left-6 bg-white/20 p-2 rounded-full text-white">
           <ChevronLeft size={28} />
         </button>
+
         <div className="absolute bottom-10 left-8 text-white">
           <h1 className="text-5xl font-black">{vehicle?.name}</h1>
           <p className="text-yellow-400 font-bold text-2xl">
@@ -216,6 +242,8 @@ const BookingDetails = () => {
       </div>
 
       <main className="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-8 -mt-10">
+
+        {/* LEFT */}
         <div className="lg:col-span-2 space-y-6">
           {/* ROUTE */}
           <div className="bg-white p-6 mt-20 rounded-2xl shadow">
@@ -254,6 +282,7 @@ const BookingDetails = () => {
           {/* PASSENGERS */}
           <div className="bg-white p-6 rounded-2xl shadow">
             <h3 className="font-bold mb-3">Passenger List</h3>
+
             {passengers.map((p, i) => (
               <div key={i} className="grid md:grid-cols-4 gap-3 mb-4 border-b pb-4 last:border-0">
                 <input placeholder="Name" value={p.name} onChange={(e) => updatePassenger(i, "name", e.target.value)} className="border p-2 rounded" />
@@ -335,6 +364,7 @@ const BookingDetails = () => {
             <ShieldCheck className="text-green-500" /> Verified professional service
           </div>
         </div>
+
       </main>
     </div>
   );
