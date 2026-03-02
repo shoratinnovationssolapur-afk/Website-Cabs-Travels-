@@ -73,10 +73,116 @@ const BookRide = () => {
 
   // TOTAL COST LOGIC (Using a fixed base rate for City rides)
   const baseFare = 50; // Standard base fare for city rides
-  const totalAmount = routeFare + baseFare;
+  const travelfare= Math.round(routeFare )
+  const totalAmount = Math.round(routeFare + baseFare);
 
-  const handleFinalBooking = async () => {
+  // const handleFinalBooking = async () => {
+  //   try {
+  //     if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
+  //       alert("Pickup and Drop locations cannot be the same.");
+  //       return;
+  //     }
+
+  //     if (!auth.currentUser) return alert("Please login first");
+  //     if (!pickup || !drop) return alert("Please enter route");
+
+  //     // VALIDATION LOGIC
+  //     for (let i = 0; i < passengers.length; i++) {
+  //       const p = passengers[i];
+  //       const passengerNum = i + 1;
+
+  //       if (!p.name.trim()) {
+  //         alert(`Please enter a name for Passenger ${passengerNum}`);
+  //         return;
+  //       }
+
+  //       const phoneRegex = /^[6-9]\d{9}$/;
+  //       if (!phoneRegex.test(p.phone)) {
+  //         alert(`Passenger ${passengerNum}: Valid 10-digit phone required.`);
+  //         return;
+  //       }
+
+  //       const ageNum = parseInt(p.age);
+  //       if (isNaN(ageNum) || ageNum <= 0 || ageNum > 110) {
+  //         alert(`Passenger ${passengerNum}: Valid age required.`);
+  //         return;
+  //       }
+
+  //       if (!p.dateTime) {
+  //         alert(`Passenger ${passengerNum}: Select date/time.`);
+  //         return;
+  //       }
+  //     }
+
+
+
+  //     // Notify Admin
+  //     await addDoc(collection(db, "notifications"), {
+  //       recipientId: "admin",
+  //       role: "admin",
+  //       title: "New Booking Received",
+  //       message: `New ride from ${pickup} to ${drop}`,
+  //       createdAt: serverTimestamp(),
+  //       read: false
+  //     });
+
+  //     // Notify Driver (If auto-assigned)
+  //     if (availableDriverId) {
+  //       await addDoc(collection(db, "notifications"), {
+  //         recipientId: availableDriverId,
+  //         role: "driver",
+  //         title: "New Ride Assigned",
+  //         message: "Check your dashboard for a new active ride.",
+  //         bookingId: id,
+  //         createdAt: serverTimestamp(),
+  //         read: false
+  //       });
+  //     }
+
+  //     const primaryPassenger = passengers[0];
+  //     const bookingData = {
+  //       pickup,
+  //       drop,
+  //       dateTime,
+  //       name: primaryPassenger.name || "N/A",
+  //       phone: primaryPassenger.phone || "N/A",
+  //       passengers: passengers,
+  //       bookingMethod: "quick_booking",
+  //       status: "pending",
+  //       userId: auth.currentUser.uid,
+  //       userEmail: auth.currentUser.email || "N/A", // Added for admin reference
+  //       createdAt: serverTimestamp(),
+  //       tripType,
+  //       distance,
+  //       totalFare: totalAmount,
+  //       // EXPLICIT NULLS so your driver logic doesn't crash
+  //       driverId: null,
+  //       driverName: null,
+  //       vehicleId: "city_ride" // Generic ID for city rides
+  //     };
+
+  //     // 1. Create the booking
+  //     const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
+  //     const id = bookingRef.id;
+  //     setBookingId(id);
+
+  //     // 2. REMOVED autoAssignDriver(id);
+  //     // Now it stays 'pending' until the admin assigns it.
+
+  //     alert("Booking Request Sent! An admin will assign a driver soon.");
+  //     navigate("/user/booking-success", { state: { bookingId: id } });
+
+  //   } catch (err) {
+  //     console.error("Booking Error:", err);
+  //     alert(err.message);
+  //   }
+  // };
+
+
+
+const handleFinalBooking = async () => {
     try {
+      // 1. Basic Route Validation
       if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
         alert("Pickup and Drop locations cannot be the same.");
         return;
@@ -85,7 +191,7 @@ const BookRide = () => {
       if (!auth.currentUser) return alert("Please login first");
       if (!pickup || !drop) return alert("Please enter route");
 
-      // VALIDATION LOGIC
+      // 2. Passenger Validation Logic
       for (let i = 0; i < passengers.length; i++) {
         const p = passengers[i];
         const passengerNum = i + 1;
@@ -113,31 +219,7 @@ const BookRide = () => {
         }
       }
 
-
-
-      // Notify Admin
-      await addDoc(collection(db, "notifications"), {
-        recipientId: "admin",
-        role: "admin",
-        title: "New Booking Received",
-        message: `New ride from ${pickup} to ${drop}`,
-        createdAt: serverTimestamp(),
-        read: false
-      });
-
-      // Notify Driver (If auto-assigned)
-      if (availableDriverId) {
-        await addDoc(collection(db, "notifications"), {
-          recipientId: availableDriverId,
-          role: "driver",
-          title: "New Ride Assigned",
-          message: "Check your dashboard for a new active ride.",
-          bookingId: id,
-          createdAt: serverTimestamp(),
-          read: false
-        });
-      }
-
+      // 3. Prepare Booking Data
       const primaryPassenger = passengers[0];
       const bookingData = {
         pickup,
@@ -147,26 +229,33 @@ const BookRide = () => {
         phone: primaryPassenger.phone || "N/A",
         passengers: passengers,
         bookingMethod: "quick_booking",
-        status: "pending",
+        status: "pending", // Admin will change this later
         userId: auth.currentUser.uid,
-        userEmail: auth.currentUser.email || "N/A", // Added for admin reference
+        userEmail: auth.currentUser.email || "N/A",
         createdAt: serverTimestamp(),
         tripType,
         distance,
         totalFare: totalAmount,
-        // EXPLICIT NULLS so your driver logic doesn't crash
-        driverId: null,
-        driverName: null,
-        vehicleId: "city_ride" // Generic ID for city rides
+        driverId: null,      // Stays null until admin manually assigns
+        driverName: null,    // Stays null until admin manually assigns
+        vehicleId: "city_ride" 
       };
 
-      // 1. Create the booking
+      // 4. Create the booking in Firestore
       const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
       const id = bookingRef.id;
       setBookingId(id);
 
-      // 2. REMOVED autoAssignDriver(id);
-      // Now it stays 'pending' until the admin assigns it.
+      // 5. Notify Admin Only (Since no driver is assigned yet)
+      await addDoc(collection(db, "notifications"), {
+        recipientId: "admin",
+        role: "admin",
+        title: "New Booking Received",
+        message: `New city ride request from ${pickup} to ${drop}`,
+        bookingId: id, // Link the notification to the booking
+        createdAt: serverTimestamp(),
+        read: false
+      });
 
       alert("Booking Request Sent! An admin will assign a driver soon.");
       navigate("/user/booking-success", { state: { bookingId: id } });
@@ -176,6 +265,7 @@ const BookRide = () => {
       alert(err.message);
     }
   };
+
 
   useEffect(() => {
     if (!bookingId) return;
@@ -278,7 +368,7 @@ const BookRide = () => {
             </div>
             <div className="flex justify-between">
               <span>Travel Fare</span>
-              <span className="font-semibold">₹{routeFare}</span>
+              <span className="font-semibold">₹{travelfare}</span>
             </div>
             <div className="flex justify-between">
               <span>Booking Fee</span>

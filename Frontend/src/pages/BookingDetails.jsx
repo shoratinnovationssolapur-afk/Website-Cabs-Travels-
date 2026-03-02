@@ -232,7 +232,7 @@ const BookingDetails = () => {
       await autoAssignDriver(id);
 
       alert("Booking Created Successfully");
-      navigate("/booking-success", { state: { bookingId: id } });
+      navigate("/user/booking-success", { state: { bookingId: id } });
 
     } catch (err) {
       alert(err.message);
@@ -488,7 +488,7 @@ const BookingDetails = () => {
 
           <div className="mt-6 flex gap-2 text-sm text-gray-600">
             <ShieldCheck className="text-green-500" />
-            Verified drivers & safe travel
+            Verified drivers and safe travels
           </div>
         </div>
 

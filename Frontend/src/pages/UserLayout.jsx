@@ -1,88 +1,102 @@
+import React, { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
-import { auth,db } from "../firebase";
-import {  query, where,collection,onSnapshot } from "firebase/firestore";
-import React, { useEffect } from "react";
-
-
-// Add this to a Sidebar or Navbar in all three apps
+import { auth, db } from "../firebase";
+import { 
+  query, 
+  where, 
+  collection, 
+  onSnapshot, 
+  doc, 
+  updateDoc 
+} from "firebase/firestore";
 
 const UserLayout = () => {
   const navigate = useNavigate();
 
-  const logout = async () => {
-    await signOut(auth);
-    navigate("/");
-  };
-
+  // 1. Notification Listener Logic
   useEffect(() => {
-    if (!auth.currentUser) return;
+    // Only proceed if a user is authenticated
+    if (!auth.currentUser?.uid) return;
 
     const q = query(
       collection(db, "notifications"),
-      where("recipientId", "==", auth.currentUser.uid), // Or "admin" for Admin app
+      where("recipientId", "==", auth.currentUser.uid),
       where("read", "==", false)
     );
 
     const unsub = onSnapshot(q, (snap) => {
       snap.docChanges().forEach((change) => {
+        // Only trigger for newly added unread notifications
         if (change.type === "added") {
           const notif = change.doc.data();
-          // Use a library like 'react-hot-toast' or 'browser notifications'
-          alert(`${notif.title}: ${notif.message}`);
+          
+          // Browser Alert
+          alert(`🔔 ${notif.title}: ${notif.message}`);
 
-          // Optional: Mark as read immediately
-          // updateDoc(doc(db, "notifications", change.doc.id), { read: true });
+          // Recommended: Mark as read to prevent repeat alerts
+          // const notifRef = doc(db, "notifications", change.doc.id);
+          // updateDoc(notifRef, { read: true });
         }
       });
+    }, (error) => {
+      console.error("User notification error:", error);
     });
 
     return () => unsub();
-  }, []);
+    // Re-run if the user ID changes or becomes available
+  }, [auth.currentUser?.uid]);
 
-
-
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* SIDEBAR */}
-      <div className="w-64 bg-black text-white p-6 space-y-6">
-        <h2 className="text-xl font-bold text-yellow-400">User Panel</h2>
+      <aside className="w-64 bg-black text-white p-6 space-y-6 shrink-0">
+        <h2 className="text-xl font-bold text-yellow-400 mb-8">User Panel</h2>
 
-        {/* ADD THE LEADING SLASH (/) BELOW */}
-        <button
-          onClick={() => navigate("/user/bookings")}
-          className="block w-full text-left hover:text-yellow-400"
-        >
-          My Bookings
-        </button>
+        <nav className="flex flex-col gap-4">
+          <button
+            onClick={() => navigate("/user/bookings")}
+            className="block w-full text-left hover:text-yellow-400 font-medium p-2 transition rounded hover:bg-white/10"
+          >
+            📋 My Bookings
+          </button>
 
-        <button
-          onClick={() => navigate("/user/tours")}
-          className="block w-full text-left hover:text-yellow-400"
-        >
-          Tours
-        </button>
+          <button
+            onClick={() => navigate("/user/tours")}
+            className="block w-full text-left hover:text-yellow-400 font-medium p-2 transition rounded hover:bg-white/10"
+          >
+            🗺️ Tours
+          </button>
 
-        <button
-          onClick={() => navigate("/user/profile")}
-          className="block w-full text-left hover:text-yellow-400"
-        >
-          Profile
-        </button>
+          <button
+            onClick={() => navigate("/user/profile")}
+            className="block w-full text-left hover:text-yellow-400 font-medium p-2 transition rounded hover:bg-white/10"
+          >
+            👤 Profile
+          </button>
 
-        <button
-          onClick={logout}
-          className="block w-full text-left text-red-400"
-        >
-          Logout
-        </button>
-      </div>
+          <button
+            onClick={logout}
+            className="block w-full text-left text-red-400 font-bold p-2 transition rounded hover:bg-red-900/20 mt-10"
+          >
+            🚪 Logout
+          </button>
+        </nav>
+      </aside>
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 p-8">
+      <main className="flex-1 p-8 overflow-y-auto">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 };

@@ -228,27 +228,64 @@ export default function DriverDashboard() {
     })
     .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
+  // const updateRideStatus = async (ride, status) => {
+
+  //   // Inside updateRideStatus
+  //   const notifyUser = async (title, message) => {
+  //     await addDoc(collection(db, "notifications"), {
+  //       recipientId: ride.userId,
+  //       role: "user",
+  //       title: title,
+  //       message: message,
+  //       bookingId: ride.id,
+  //       createdAt: serverTimestamp(),
+  //       read: false
+  //     });
+  //   };
+
+  //   if (status === "on_the_way") {
+  //     await notifyUser("Driver is Coming!", "Your driver has started the trip and is moving toward you.");
+  //   } else if (status === "completed") {
+  //     await notifyUser("Trip Completed", "Hope you had a safe journey! Please rate your experience.");
+  //   }
+
+  //   const rideDate = new Date(ride.dateTime);
+  //   const fiveMinsBefore = new Date(rideDate.getTime() - 5 * 60 * 1000);
+
+  //   if (status === "on_the_way" && new Date() < fiveMinsBefore) {
+  //     alert(`Too early! Start at ${fiveMinsBefore.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+  //     return;
+  //   }
+
+  //   if (status === "cancelled") {
+  //     if (!window.confirm("Are you sure you want to cancel this trip?")) return;
+  //   }
+
+  //   try {
+  //     if (status === "completed") {
+  //       await addDoc(collection(db, "confirmed_bookings"), {
+  //         driverId: auth.currentUser.uid,
+  //         rideId: ride.id,
+  //         pickup: ride.pickup,
+  //         drop: ride.drop,
+  //         totalFare: ride.totalFare || 0,
+  //         createdAt: serverTimestamp(),
+  //         status: "completed"
+  //       });
+  //       await updateDoc(doc(db, "bookings", ride.id), { status: "completed" });
+  //     } else if (status === "cancelled") {
+  //       await updateDoc(doc(db, "bookings", ride.id), { status: "pending", driverId: null, driverName: null });
+  //       await updateDoc(doc(db, "drivers", auth.currentUser.uid), { onTrip: false });
+  //     } else {
+  //       await updateDoc(doc(db, "bookings", ride.id), { status });
+  //     }
+  //   } catch (error) {
+  //     console.error("Update Error:", error);
+  //   }
+  // };
+
   const updateRideStatus = async (ride, status) => {
-
-    // Inside updateRideStatus
-    const notifyUser = async (title, message) => {
-      await addDoc(collection(db, "notifications"), {
-        recipientId: ride.userId,
-        role: "user",
-        title: title,
-        message: message,
-        bookingId: ride.id,
-        createdAt: serverTimestamp(),
-        read: false
-      });
-    };
-
-    if (status === "on_the_way") {
-      await notifyUser("Driver is Coming!", "Your driver has started the trip and is moving toward you.");
-    } else if (status === "completed") {
-      await notifyUser("Trip Completed", "Hope you had a safe journey! Please rate your experience.");
-    }
-
+    // 1. Pre-update Validations
     const rideDate = new Date(ride.dateTime);
     const fiveMinsBefore = new Date(rideDate.getTime() - 5 * 60 * 1000);
 
@@ -263,6 +300,7 @@ export default function DriverDashboard() {
 
     try {
       if (status === "completed") {
+        // 1. Log the trip to history
         await addDoc(collection(db, "confirmed_bookings"), {
           driverId: auth.currentUser.uid,
           rideId: ride.id,
@@ -272,17 +310,82 @@ export default function DriverDashboard() {
           createdAt: serverTimestamp(),
           status: "completed"
         });
+
+        // 2. Update booking status
         await updateDoc(doc(db, "bookings", ride.id), { status: "completed" });
-      } else if (status === "cancelled") {
-        await updateDoc(doc(db, "bookings", ride.id), { status: "pending", driverId: null, driverName: null });
+
+        // ⭐ THE FIX: Reset driver status to available for new rides
         await updateDoc(doc(db, "drivers", auth.currentUser.uid), { onTrip: false });
-      } else {
+      }
+      else if (status === "cancelled") {
+        // 3. Reset booking to pending and clear driver
+        await updateDoc(doc(db, "bookings", ride.id), {
+          status: "pending",
+          driverId: null,
+          driverName: null
+        });
+
+        // ⭐ THE FIX: Also reset onTrip if the driver cancels
+        await updateDoc(doc(db, "drivers", auth.currentUser.uid), { onTrip: false });
+      }
+      else if (status === "on_the_way") {
+        // 4. Set onTrip to true when the driver starts a ride
+        await updateDoc(doc(db, "bookings", ride.id), { status });
+        await updateDoc(doc(db, "drivers", auth.currentUser.uid), { onTrip: true });
+      }
+      else {
         await updateDoc(doc(db, "bookings", ride.id), { status });
       }
+
+      // 3. TRIGGER NOTIFICATIONS ONLY AFTER SUCCESSFUL DB UPDATE
+      if (status === "on_the_way") {
+        await addDoc(collection(db, "notifications"), {
+          recipientId: ride.userId,
+          role: "user",
+          title: "Driver is Coming!",
+          message: "Your driver has started the trip and is moving toward you.",
+          bookingId: ride.id,
+          createdAt: serverTimestamp(),
+          read: false
+        });
+      }
+      else if (status === "completed") {
+        await addDoc(collection(db, "notifications"), {
+          recipientId: ride.userId,
+          role: "user",
+          title: "Trip Completed",
+          message: "Hope you had a safe journey! Please rate your experience.",
+          bookingId: ride.id,
+          createdAt: serverTimestamp(),
+          read: false
+        });
+      }
+
+      console.log(`Ride ${ride.id} successfully updated to ${status}`);
+
     } catch (error) {
       console.error("Update Error:", error);
     }
+
   };
+
+  useEffect(() => {
+    // If the database says the driver is on a trip, but the 'allRides' 
+    // array (which filters for active rides) is empty, reset the status.
+    const resetStuckStatus = async () => {
+      if (driverInfo?.onTrip && allRides.length === 0 && !loading) {
+        console.log("Detected stuck 'onTrip' status. Resetting to false...");
+        await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
+          onTrip: false,
+          currentRideId: null
+        });
+      }
+    };
+
+    resetStuckStatus();
+  }, [allRides, driverInfo, loading]);
+
+
 
   if (loading) return <div className="p-10 text-center">Loading Console...</div>;
 

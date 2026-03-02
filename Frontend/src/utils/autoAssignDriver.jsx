@@ -7,20 +7,27 @@ export const autoAssignDriver = async (bookingId, driverId) => {
   try {
     const driverRef = doc(db, "drivers", driverId);
     const driverSnap = await getDoc(driverRef);
+    
+    if (!driverSnap.exists()) {
+      alert("Error: Driver not found in database.");
+      return;
+    }
+
     const driverData = driverSnap.data();
 
-    // 1. Safety Checks
-    if (driverData.status !== "active") {
-      alert("Driver account is not active.");
-      return;
-    }
-    // 2. NEW CHECK: Check if already on a trip instead of just 'available'
-    if (driverData.onTrip === true) {
-      alert("This driver is already busy with another ride!");
+    // 1. Safety Check: Accept both "active" and "approved"
+    if (driverData.status !== "active" && driverData.status !== "approved") {
+      alert("Driver account is not verified or active.");
       return;
     }
 
-    // 3. Update the Booking
+    // 2. Availability Check: Ensure they aren't already busy
+    if (driverData.onTrip === true) {
+      alert("This driver is currently on another trip!");
+      return;
+    }
+
+    // 3. Update the Booking Document
     await updateDoc(doc(db, "bookings", bookingId), {
       driverId: driverId,
       driverName: driverData.name,
@@ -28,8 +35,9 @@ export const autoAssignDriver = async (bookingId, driverId) => {
       assignedAt: serverTimestamp(),
     });
 
-    // 4. Update Driver: Keep 'available' as true so they stay "Online"
-    // but set 'onTrip' to true so Admin cannot pick them again.
+    // 4. Update Driver Document: 
+    // Set onTrip to true immediately upon assignment
+    // This removes them from the Admin assignment modal
     await updateDoc(driverRef, {
       onTrip: true, 
       currentRideId: bookingId,
@@ -40,5 +48,6 @@ export const autoAssignDriver = async (bookingId, driverId) => {
     
   } catch (error) {
     console.error("Assignment Error:", error);
+    alert("System error during assignment.");
   }
 };

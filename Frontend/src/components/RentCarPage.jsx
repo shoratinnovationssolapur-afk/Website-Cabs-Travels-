@@ -25,8 +25,8 @@ const RentCarPage = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [files, setFiles] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false); 
-  const [lastListingId, setLastListingId] = useState(""); 
+  const [submitted, setSubmitted] = useState(false);
+  const [lastListingId, setLastListingId] = useState("");
   const [fetchedData, setFetchedData] = useState(null); // Data from Firebase
 
   // Handle Input Changes
@@ -68,12 +68,12 @@ const RentCarPage = () => {
       if (files && files.length > 0) {
         const data = new FormData();
         for (let i = 0; i < files.length; i++) {
-          data.append("images", files[i]); 
+          data.append("images", files[i]);
         }
         data.append("userId", auth.currentUser.uid);
 
         const response = await axios.post("http://localhost:3000/api/images/upload", data);
-        imageUrls = response.data.urls; 
+        imageUrls = response.data.urls;
       }
 
       // B. Save to Firestore
@@ -86,13 +86,13 @@ const RentCarPage = () => {
       };
 
       const docRef = await addDoc(collection(db, "vendor_listings"), listingData);
-      
+
       // C. Reset and toggle view
       setLastListingId(docRef.id);
       setSubmitted(true);
       setFormData(initialFormState); // FIXED: Clears form
       setFiles(null);
-      
+
     } catch (error) {
       console.error("Submission failed", error);
       alert("Error: " + (error.response?.data?.error || "Check your backend terminal"));
@@ -122,31 +122,31 @@ const RentCarPage = () => {
 
             <div className="grid grid-cols-2 gap-4 border-t pt-4">
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase text-gray-400 font-bold flex items-center gap-1"><Car size={12}/> Model</span>
+                <span className="text-[10px] uppercase text-gray-400 font-bold flex items-center gap-1"><Car size={12} /> Model</span>
                 <span className="font-semibold text-gray-800">{fetchedData.carModel}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase text-gray-400 font-bold flex items-center gap-1"><MapPin size={12}/> Location</span>
+                <span className="text-[10px] uppercase text-gray-400 font-bold flex items-center gap-1"><MapPin size={12} /> Location</span>
                 <span className="font-semibold text-gray-800">{fetchedData.location}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase text-gray-400 font-bold flex items-center gap-1"><IndianRupee size={12}/> Price</span>
+                <span className="text-[10px] uppercase text-gray-400 font-bold flex items-center gap-1"><IndianRupee size={12} /> Price</span>
                 <span className="font-semibold text-gray-800">₹{fetchedData.price}/day</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase text-gray-400 font-bold flex items-center gap-1"><Info size={12}/> Status</span>
+                <span className="text-[10px] uppercase text-gray-400 font-bold flex items-center gap-1"><Info size={12} /> Status</span>
                 <span className="font-bold text-orange-500 uppercase">{fetchedData.status}</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-3 pt-4 border-t">
-              <button 
+              <button
                 onClick={() => window.location.href = `/booking-details?vehicle_id=${lastListingId}`}
                 className="flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition"
               >
                 <Eye size={20} /> View Full Public Page
               </button>
-              <button 
+              <button
                 onClick={() => { setSubmitted(false); setFetchedData(null); }}
                 className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition"
               >
@@ -167,19 +167,19 @@ const RentCarPage = () => {
 
       <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
         <form className="grid md:grid-cols-2 gap-6" onSubmit={handleSubmit}>
-          <input name="ownerName" type="text" placeholder="Owner Name" value={formData.ownerName} className="border p-3 rounded-lg" onChange={handleChange} required />  
-          <input name="mobile" type="tel" placeholder="Mobile Number" value={formData.mobile} className="border p-3 rounded-lg" onChange={handleChange} required /> 
-          <input name="carModel" type="text" placeholder="Car Brand & Model" value={formData.carModel} className="border p-3 rounded-lg" onChange={handleChange} required /> 
-          <input name="year" type="number" placeholder="Year of Manufacture" value={formData.year} className="border p-3 rounded-lg" onChange={handleChange} /> 
-          <input name="regNumber" type="text" placeholder="Registration Number" value={formData.regNumber} className="border p-3 rounded-lg" onChange={handleChange} required /> 
+          <input name="ownerName" type="text" placeholder="Owner Name" value={formData.ownerName} className="border p-3 rounded-lg" onChange={handleChange} required />
+          <input name="mobile" type="tel" placeholder="Mobile Number" value={formData.mobile} className="border p-3 rounded-lg" onChange={handleChange} required />
+          <input name="carModel" type="text" placeholder="Car Brand & Model" value={formData.carModel} className="border p-3 rounded-lg" onChange={handleChange} required />
+          <input name="year" type="number" placeholder="Year of Manufacture" value={formData.year} className="border p-3 rounded-lg" onChange={handleChange} />
+          <input name="regNumber" type="text" placeholder="Registration Number" value={formData.regNumber} className="border p-3 rounded-lg" onChange={handleChange} required />
 
-{/* Add this before fuelType select */}
-<select name="carType" value={formData.carType} className="border p-3 rounded-lg font-semibold bg-gray-50" onChange={handleChange} required>
-  <option value="Sedan">Sedan</option>
-  <option value="SUV">SUV</option>
-  <option value="Luxury">Luxury</option>
-  <option value="Others">Others</option>
-</select>
+          {/* Add this before fuelType select */}
+          <select name="carType" value={formData.carType} className="border p-3 rounded-lg font-semibold bg-gray-50" onChange={handleChange} required>
+            <option value="Sedan">Sedan</option>
+            <option value="SUV">SUV</option>
+            <option value="Luxury">Luxury</option>
+            <option value="Others">Others</option>
+          </select>
 
           <select name="fuelType" value={formData.fuelType} className="border p-3 rounded-lg" onChange={handleChange}>
             <option value="Petrol">Petrol</option>
@@ -204,8 +204,8 @@ const RentCarPage = () => {
 
           <textarea name="additionalInfo" placeholder="Additional Details" value={formData.additionalInfo} className="border p-3 rounded-lg md:col-span-2" rows={4} onChange={handleChange}></textarea>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
             className={`bg-yellow-400 text-black py-3 rounded-lg font-semibold md:col-span-2 hover:bg-yellow-500 transition shadow-md ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
@@ -214,7 +214,7 @@ const RentCarPage = () => {
         </form>
       </div>
       {/* ADD THIS LINE AT THE BOTTOM */}
-    {!submitted && <ListingHistory />}
+      {!submitted && <ListingHistory />}
     </div>
   );
 };
