@@ -1,0 +1,179 @@
+[33ma4a3dfb[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mTravels[m[33m, [m[1;31morigin/cabs[m[33m)[m HEAD@{0}: pull origin cabs: Fast-forward
+[33mcef1ad5[m[33m ([m[1;31morigin/Travels[m[33m)[m HEAD@{1}: commit: feat: implement tour booking system and enhanced vendor approval
+[33maa0c61c[m HEAD@{2}: commit: added TourBookingDetails page for detailed from for tour booking and updated admintourbookings page to view that details in detail
+[33m6f4b1d6[m HEAD@{3}: commit (merge): solved commit errors in home and driverdashboard
+[33m4ac5aa4[m HEAD@{4}: commit: Enhance Driver Dashboard with real-time ride tracking and status synchronization; improve UI for active and upcoming rides
+[33ma3bc0b8[m HEAD@{5}: pull origin cabs: Fast-forward
+[33mc731443[m HEAD@{6}: commit: Enhance Driver Dashboard with real-time ride tracking and status synchronization; improve UI for active and upcoming rides
+[33mf5ec762[m HEAD@{7}: pull origin dev: Merge made by the 'ort' strategy.
+[33mbafb238[m HEAD@{8}: pull origin cabs: Merge made by the 'ort' strategy.
+[33mab475b4[m HEAD@{9}: commit: Refactor Driver Dashboard and Login for improved functionality and UI enhancements
+[33mf217c84[m HEAD@{10}: commit: updated home
+[33mc077077[m HEAD@{11}: commit (merge): fixed the error
+[33ma5ae88c[m HEAD@{12}: commit: Enhance Booking and Driver Management:
+[33ma94f617[m HEAD@{13}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m0a16d47[m HEAD@{14}: commit: Refactor UserDashboard: update navigation path for bookings and remove unused completeRide function
+[33m31dc84e[m HEAD@{15}: commit: Implement completeRide function: add logic to update booking status and driver readiness upon ride completion.
+[33mf7dda89[m HEAD@{16}: commit: Refactor AdminLayout and UserLayout: remove unused imports, streamline navigation with useNavigate, and enhance code readability.
+[33m589683d[m HEAD@{17}: commit: Enhance AdminDashboard and AdminDrivers: update color themes for KPI cards, improve layout for better responsiveness, add email field for driver registration, and refine search functionality to include email.
+[33m0230d18[m HEAD@{18}: pull origin cabs: Fast-forward
+[33m3317b95[m HEAD@{19}: commit: Enhance AdminBookings and AdminDashboard: Add revenue tracking, improve UI elements, and optimize data fetching for bookings and drivers.
+[33m9c3877b[m HEAD@{20}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m7f8eca8[m HEAD@{21}: commit: Implement real-time updates for UserBookings and UserProfile; enhance UI with improved loading states, user data handling, and profile editing features.
+[33mca7f020[m HEAD@{22}: checkout: moving from dev to Travels
+[33m9d6d740[m[33m ([m[1;31morigin/dev[m[33m, [m[1;32mdev[m[33m)[m HEAD@{23}: pull origin cabs: Merge made by the 'ort' strategy.
+[33mca7f020[m HEAD@{24}: merge Travels: Fast-forward
+[33m12ee5ec[m HEAD@{25}: checkout: moving from Travels to dev
+[33mca7f020[m HEAD@{26}: commit: Enhance AdminBookings and AdminDrivers for real-time updates; implement driver assignment modal and improve UI; add completeRide utility for ride completion handling.
+[33mfdabf5d[m HEAD@{27}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m057140a[m HEAD@{28}: commit: Add Admin Vendor Management page and integrate with Firestore; enhance DriverDashboard and DriverHistory for improved ride status handling and user experience.
+[33mafaf32e[m HEAD@{29}: commit: Refactor DriverDashboard to improve driver info monitoring and error handling; ensure loading state is managed correctly and enhance ride info updates.
+[33mce1f2ea[m HEAD@{30}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m327839c[m HEAD@{31}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m36419e9[m HEAD@{32}: commit (merge): Refactor LoginModal and Navbar components for improved readability and error handling; adjust layout and styling for better user experience
+[33mad1f1eb[m HEAD@{33}: commit (merge): resolved
+[33me47020c[m HEAD@{34}: commit: Add DriverHistory and DriverEarnings components; update routing in App.jsx and enhance HomePage headings
+[33m90fc48a[m HEAD@{35}: commit: Enhance AdminDrivers component with improved UI, driver location tracking, and availability toggle functionality
+[33mbceef6d[m[33m ([m[1;31morigin/Samarth[m[33m)[m HEAD@{36}: Branch: renamed refs/heads/Samarth to refs/heads/Travels
+[33mbceef6d[m[33m ([m[1;31morigin/Samarth[m[33m)[m HEAD@{38}: commit: Add form validation for user registration and login in LoginModal component
+[33m568f04f[m[33m ([m[1;31morigin/feature/firebase-cloudinary-setup[m[33m)[m HEAD@{39}: Branch: renamed refs/heads/feature/firebase-cloudinary-setup to refs/heads/Samarth
+[33m568f04f[m[33m ([m[1;31morigin/feature/firebase-cloudinary-setup[m[33m)[m HEAD@{41}: commit: Enhance user experience by implementing User Dashboard, updating Navbar toggle logic, and integrating Cloudinary for image uploads in Admin Vehicles
+[33md71cdd0[m HEAD@{42}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m7090443[m HEAD@{43}: pull origin dev: Merge made by the 'ort' strategy.
+[33m9281a8a[m HEAD@{44}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m12ee5ec[m HEAD@{45}: commit: Implement Driver section with login, dashboard, profile, and layout components
+[33mafd3840[m HEAD@{46}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m4d08633[m HEAD@{47}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33m9281a8a[m HEAD@{48}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m4d08633[m HEAD@{49}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m4d08633[m HEAD@{50}: merge feature/firebase-cloudinary-setup: Fast-forward
+[33mb6c8359[m HEAD@{51}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33m4d08633[m HEAD@{52}: commit: updated login for drivers
+[33mb6c8359[m HEAD@{53}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33mb6c8359[m HEAD@{54}: merge feature/firebase-cloudinary-setup: Fast-forward
+[33m248fbef[m HEAD@{55}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33mb6c8359[m HEAD@{56}: commit: Updated Logout Logic
+[33m98370c3[m HEAD@{57}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m96e2085[m HEAD@{58}: commit (merge): updated
+[33mf60df30[m HEAD@{59}: commit (merge): conflict resolved
+[33m248fbef[m HEAD@{60}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m248fbef[m HEAD@{61}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33m248fbef[m HEAD@{62}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m248fbef[m HEAD@{63}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33m248fbef[m HEAD@{64}: pull origin dev: Fast-forward
+[33m480392e[m HEAD@{65}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m248fbef[m HEAD@{66}: merge feature/firebase-cloudinary-setup: Merge made by the 'ort' strategy.
+[33m83f96da[m HEAD@{67}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33m480392e[m HEAD@{68}: commit: modifeid Frontend/package-lock.json
+[33m8fdbfa0[m HEAD@{69}: commit (merge): fixed conflict for merge
+[33m3ef3921[m HEAD@{70}: commit: Added Tours Page
+[33m99b39c3[m HEAD@{71}: commit: added BookingDetais with update
+[33m1778d2b[m HEAD@{72}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m83f96da[m HEAD@{73}: merge feature/firebase-cloudinary-setup: Merge made by the 'ort' strategy.
+[33m24876df[m HEAD@{74}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33m1778d2b[m HEAD@{75}: commit: updated for cabs booking for daily basis for specific vehicles
+[33md8b7654[m HEAD@{76}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m24876df[m HEAD@{77}: commit (merge): Solved the issues
+[33mad43e0a[m HEAD@{78}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33md8b7654[m HEAD@{79}: commit: added the ProgressBar when clicked on Show Route Details , BookingDeails for Cabs
+[33mc815de8[m HEAD@{80}: checkout: moving from 8284f3897065318376362f3f4b8009bdf5f347b7 to feature/firebase-cloudinary-setup
+[33m8284f38[m HEAD@{81}: checkout: moving from dev to origin/feature/firebase-cloudinary-setup
+[33mad43e0a[m HEAD@{82}: commit (merge): fixed conflict
+[33mb8a3a7f[m HEAD@{83}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33mc815de8[m HEAD@{84}: commit (merge): fixed conflict
+[33m8284f38[m HEAD@{85}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33mb8a3a7f[m HEAD@{86}: merge feature/firebase-cloudinary-setup: Merge made by the 'ort' strategy.
+[33m612929f[m HEAD@{87}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33m8284f38[m HEAD@{88}: commit: updated booingpage
+[33me779812[m HEAD@{89}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m612929f[m HEAD@{90}: merge feature/firebase-cloudinary-setup: Merge made by the 'ort' strategy.
+[33m2f79c66[m HEAD@{91}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33me779812[m HEAD@{92}: commit: added logout feature
+[33md6e57b0[m HEAD@{93}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m2f79c66[m HEAD@{94}: commit (merge): COnflict in app.jsx fixed
+[33mef8e05c[m HEAD@{95}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33md6e57b0[m HEAD@{96}: commit: All vendor listing History Available
+[33m26e2837[m HEAD@{97}: commit (merge): Resolved conflicts in booking details and app.jsx
+[33m869857e[m HEAD@{98}: commit: updated rentcar page for successful data submission to firestore and cludinary
+[33ma68d523[m HEAD@{99}: commit (merge): Fixed Conflic
+[33m6523b05[m HEAD@{100}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33mef8e05c[m HEAD@{101}: commit (merge): Resolved the merge issue
+[33m15ab746[m HEAD@{102}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33m6523b05[m HEAD@{103}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m15ab746[m HEAD@{104}: merge cabs: Merge made by the 'ort' strategy.
+[33mc75944f[m HEAD@{105}: checkout: moving from cabs to dev
+[33m66388cb[m[33m ([m[1;32mcabs[m[33m)[m HEAD@{106}: pull origin cabs: Merge made by the 'ort' strategy.
+[33mb7aa637[m HEAD@{107}: checkout: moving from dev to cabs
+[33mc75944f[m HEAD@{108}: checkout: moving from dev to dev
+[33mc75944f[m HEAD@{109}: commit (merge): merge: resolve conflicts between firebase and cabs features
+[33mce05191[m HEAD@{110}: checkout: moving from cabs to dev
+[33mb7aa637[m HEAD@{111}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m476f6c6[m HEAD@{112}: checkout: moving from dev to cabs
+[33mce05191[m HEAD@{113}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33m6523b05[m HEAD@{114}: commit: added Booking Page
+[33m9ad616a[m HEAD@{115}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33mce05191[m HEAD@{116}: reset: moving to ce05191
+[33mce05191[m HEAD@{117}: reset: moving to ce05191
+[33mce05191[m HEAD@{118}: commit: Added Booking details Page
+[33m9ad616a[m HEAD@{119}: merge feature/firebase-cloudinary-setup: Fast-forward
+[33m6e62b15[m HEAD@{120}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33m9ad616a[m HEAD@{121}: commit: steup clodinary and firebase admin integration
+[33mddba978[m HEAD@{122}: commit: Firebase Admin + Cloudinary backend setup
+[33m6e62b15[m HEAD@{123}: reset: moving to dev
+[33md922265[m HEAD@{124}: reset: moving to HEAD
+[33md922265[m HEAD@{125}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m6e62b15[m HEAD@{126}: commit: Updated root gitignore
+[33m476f6c6[m HEAD@{127}: merge cabs: Fast-forward
+[33m9adfd83[m HEAD@{128}: checkout: moving from cabs to dev
+[33m476f6c6[m HEAD@{129}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m9adfd83[m HEAD@{130}: checkout: moving from dev to cabs
+[33m9adfd83[m HEAD@{131}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33md922265[m HEAD@{132}: commit: added modified json files
+[33maab51e1[m HEAD@{133}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m9adfd83[m HEAD@{134}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33maab51e1[m HEAD@{135}: commit: Installed backend dependencies for Firebase and Cloudinary
+[33m9adfd83[m HEAD@{136}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m9adfd83[m HEAD@{137}: checkout: moving from cabs to dev
+[33m9adfd83[m HEAD@{138}: checkout: moving from feature/firebase-cloudinary-setup to cabs
+[33m9adfd83[m HEAD@{139}: reset: moving to dev
+[33me3f5abb[m HEAD@{140}: reset: moving to HEAD
+[33me3f5abb[m HEAD@{141}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m9adfd83[m HEAD@{142}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33me3f5abb[m HEAD@{143}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33m9adfd83[m HEAD@{144}: merge cabs: Fast-forward
+[33m90960fd[m HEAD@{145}: checkout: moving from cabs to dev
+[33m9adfd83[m HEAD@{146}: pull origin cabs: Merge made by the 'ort' strategy.
+[33m90960fd[m HEAD@{147}: checkout: moving from dev to cabs
+[33m90960fd[m HEAD@{148}: checkout: moving from dev to dev
+[33m90960fd[m HEAD@{149}: commit: Added root gitignore
+[33m134598e[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{150}: reset: moving to main
+[33m8b8f626[m HEAD@{151}: checkout: moving from develop to dev
+[33m14cb617[m[33m ([m[1;31morigin/develop-backup[m[33m, [m[1;31morigin/develop[m[33m, [m[1;32mdevelop-backup[m[33m, [m[1;32mdevelop[m[33m)[m HEAD@{152}: checkout: moving from develop-backup to develop
+[33m14cb617[m[33m ([m[1;31morigin/develop-backup[m[33m, [m[1;31morigin/develop[m[33m, [m[1;32mdevelop-backup[m[33m, [m[1;32mdevelop[m[33m)[m HEAD@{153}: merge develop: Fast-forward
+[33m4d1b210[m HEAD@{154}: checkout: moving from develop to develop-backup
+[33m14cb617[m[33m ([m[1;31morigin/develop-backup[m[33m, [m[1;31morigin/develop[m[33m, [m[1;32mdevelop-backup[m[33m, [m[1;32mdevelop[m[33m)[m HEAD@{155}: commit: Added new pages and backend package setup
+[33m4d1b210[m HEAD@{156}: checkout: moving from develop-backup to develop
+[33m4d1b210[m HEAD@{157}: checkout: moving from develop to develop-backup
+[33m4d1b210[m HEAD@{158}: checkout: moving from main to develop
+[33m134598e[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{159}: checkout: moving from dev to main
+[33m8b8f626[m HEAD@{160}: commit: removed
+[33m6f5fd4c[m HEAD@{161}: checkout: moving from main to dev
+[33m134598e[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{162}: commit: removed
+[33m6f5fd4c[m HEAD@{163}: checkout: moving from develop to main
+[33m4d1b210[m HEAD@{164}: commit: added firebase,app.jsx,css
+[33me3f5abb[m HEAD@{165}: checkout: moving from develop to develop
+[33me3f5abb[m HEAD@{166}: checkout: moving from dev to develop
+[33me3f5abb[m HEAD@{167}: checkout: moving from feature/firebase-cloudinary-setup to dev
+[33me3f5abb[m HEAD@{168}: checkout: moving from dev to feature/firebase-cloudinary-setup
+[33me3f5abb[m HEAD@{169}: checkout: moving from develop to dev
+[33me3f5abb[m HEAD@{170}: commit: added ignore without .env.example
+[33mcd46d8d[m[33m ([m[1;32mrentpage[m[33m)[m HEAD@{171}: checkout: moving from main to develop
+[33m6f5fd4c[m HEAD@{172}: commit: Added signin.jsx
+[33m7957567[m[33m ([m[1;32mdevelop1[m[33m)[m HEAD@{173}: checkout: moving from main to main
+[33m7957567[m[33m ([m[1;32mdevelop1[m[33m)[m HEAD@{174}: checkout: moving from develop to main
+[33mcd46d8d[m[33m ([m[1;32mrentpage[m[33m)[m HEAD@{175}: commit: added all
+[33mfbc1cd6[m HEAD@{176}: pull: Fast-forward
+[33m4f55585[m HEAD@{177}: reset: moving to HEAD~1
+[33m3e55c1d[m HEAD@{178}: commit: added About Us with Updated DashBoard
+[33m4f55585[m HEAD@{179}: commit: Updated App.jsx dashboard UI
+[33m3855cc0[m HEAD@{180}: pull: Fast-forward

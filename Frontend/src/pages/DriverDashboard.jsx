@@ -468,6 +468,7 @@ function RideCard({ ride, onUpdate, isCurrent }) {
           {ride.status === "on_the_way" && (
             <button onClick={() => onUpdate(ride, "completed")} className="flex-1 bg-green-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest">Finish Trip</button>
           )}
+          
         </div>
         {(ride.status === "assigned" || ride.status === "approved") && (
           <button onClick={() => onUpdate(ride, "cancelled")} className="w-full bg-red-50 text-red-500 py-3 rounded-2xl font-bold uppercase text-xs tracking-widest">Cancel Trip</button>
