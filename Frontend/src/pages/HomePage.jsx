@@ -41,6 +41,7 @@ const HomePage = () => {
   const [carType, setCarType] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [totalFare, setTotalFare] = useState(0);
+  const RouteFareRef = React.useRef(); // Add this near your other useState hooks
 
   // For LocationInputs integration (important)
   const [pickup, setPickup] = useState("");
@@ -246,23 +247,39 @@ useEffect(() => {
 //   };
 
 const submitBooking = async () => {
-  // 1. Validation
+  // 1. Basic Field Validation
   if (!name.trim() || !phone.trim() || !pickup.trim() || !drop.trim() || !dateTime) {
-    alert("Please fill all booking details.");
+    alert("Please fill all booking details (Name, Phone, Locations, and Date/Time).");
     return;
   }
 
-  // Check if fare is calculated
-  // if (totalFare <= 0) {
-  //   alert("Please wait for the fare to be calculated based on your route.");
-  //   return;
-  // }
+  // 2. Route Calculation Warning/Check
+  // If calculatedFare is 0 or null, it means they haven't clicked calculate yet.
+  if (!calculatedFare || calculatedFare === 0) {
+    console.log("Fare not calculated. Triggering calculation...");
+    
+    // Call the function we exposed via forwardRef
+    const result = await RouteFareRef.current.triggerCalculation();
 
+    if (result) {
+      // Show the warning so user sees the route/price before confirming
+      alert("⚠️ Route and Fare calculated! Please review the price on the map and click 'Submit Booking Request' again to confirm.");
+      
+      // We return here to give the user a chance to see the Map/Fare 
+      // before actually sending data to Firebase.
+      return; 
+    } else {
+      // If geocoding failed or something went wrong in RouteFare
+      alert("Could not calculate route. Please check your pickup and drop locations.");
+      return;
+    }
+  }
+
+  // 3. Firebase Submission (only runs if fare is > 0)
   const user = auth.currentUser;
   if (!user) return alert("Please login to book a ride.");
 
   try {
-    // 2. PREPARE DATA (Removing driver search and auto-assignment)
     const bookingData = {
       userId: user.uid,
       userEmail: user.email,
@@ -274,31 +291,29 @@ const submitBooking = async () => {
       carType,
       tripType,
       dateTime,
-      distance:Number(distance),
+      distance: Number(distance),
       totalFare: Number(calculatedFare),
-      status: "pending", // Admin will change this to 'assigned' manually later
+      status: "pending",
       createdAt: serverTimestamp(),
       bookingMethod: "quick_booking",
-      driverId: null,      // Explicitly null until admin assigns
-      driverName: null,    // Explicitly null until admin assigns
+      driverId: null,
+      driverName: null,
       passengers: [] 
     };
 
-    // 3. CREATE BOOKING IN FIRESTORE
-    const docRef = await addDoc(collection(db, "bookings"), bookingData);
-    console.log("Booking created and awaiting admin assignment. ID:", docRef.id);
-
-    alert("Booking request submitted! Our team will assign a driver shortly.");
+    await addDoc(collection(db, "bookings"), bookingData);
+    alert("✅ Booking request submitted! Our team will assign a driver shortly.");
     
-    // 4. CLEAR FORM
+    // Clear form
     setName("");
     setPhone("");
     setPickup("");
     setDrop("");
     setDateTime("");
+    setCalculatedFare(0); // Reset for next booking
 
   } catch (error) {
-    console.error("Booking Submission Error:", error);
+    console.error("Booking Error:", error);
     alert("Booking failed: " + error.message);
   }
 };
@@ -593,10 +608,11 @@ const submitBooking = async () => {
               setDrop={setDrop}
             />
 <RouteFare 
+  ref={RouteFareRef} // Add this line
   pickup={pickup} 
   drop={drop} 
   dateTime={dateTime} 
-  onFareCalculated={handleFareUpdate} // This function handles all updates
+  onFareCalculated={handleFareUpdate}
 />
 
 

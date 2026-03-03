@@ -5,8 +5,8 @@ import {
   Polyline,
   useMap
 } from "react-leaflet";
-import { useState, useEffect } from "react";
 import L from "leaflet";
+import { forwardRef, useImperativeHandle,useState, useEffect} from "react"; // Add these imports
 
 
 // ================= FIX MARKER ICON =================
@@ -52,12 +52,18 @@ function FixMapSize() {
 
 
 // ================= MAIN COMPONENT =================
-export default function RouteFare({ pickup, drop, dateTime,onFareCalculated }) {
+const RouteFare = forwardRef(({ pickup, drop, dateTime, onFareCalculated }, ref) => {
   const [route, setRoute] = useState([]);
   const [distance, setDistance] = useState(null);
   const [fare, setFare] = useState(null);
   const [loading, setLoading] = useState(false);
 
+useImperativeHandle(ref, () => ({
+    // Add async here 
+    triggerCalculation: async () => { 
+      return await calculateRoute(); 
+    }
+  }));
 
   // ================= GEOCODE =================
   const geocode = async (place) => {
@@ -137,6 +143,17 @@ if (onFareCalculated) {
     fare: calculatedFare
   });
 }
+const result = {
+      distance: distKm,
+      fare: calculatedFare
+    };
+
+    // Update internal state for UI
+    setRoute(coords);
+    setDistance(distKm.toFixed(1));
+    setFare(calculatedFare.toFixed(0));
+
+    return result; // Return this for the parent
 
     } catch (err) {
       alert("Error fetching route");
@@ -210,4 +227,6 @@ if (onFareCalculated) {
 
     </div>
   );
-}
+});
+RouteFare.displayName = "RouteFare";
+export default RouteFare;
