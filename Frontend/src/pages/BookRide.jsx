@@ -16,12 +16,7 @@ import {
 } from "lucide-react";
 import { getAuth } from "firebase/auth";
 import LocationInputs from "../components/pickupanddrop";
-<<<<<<< HEAD
 import RouteFare from "../components/RouteFare"; 
-=======
-import RouteFare from "../components/RouteFare";
-import { autoAssignDriver } from "../utils/autoAssignDriver";
->>>>>>> 218fedb6142d602802f65e8e2c19ebb163f1e669
 
 const auth = getAuth();
 
@@ -76,118 +71,10 @@ const BookRide = () => {
   };
 
   // TOTAL COST LOGIC (Using a fixed base rate for City rides)
-<<<<<<< HEAD
   const baseFare = 50; 
-  const totalAmount = routeFare + baseFare;
-=======
-  const baseFare = 50; // Standard base fare for city rides
-  const travelfare= Math.round(routeFare )
-  const totalAmount = Math.round(routeFare + baseFare);
-
-  // const handleFinalBooking = async () => {
-  //   try {
-  //     if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
-  //       alert("Pickup and Drop locations cannot be the same.");
-  //       return;
-  //     }
-
-  //     if (!auth.currentUser) return alert("Please login first");
-  //     if (!pickup || !drop) return alert("Please enter route");
-
-  //     // VALIDATION LOGIC
-  //     for (let i = 0; i < passengers.length; i++) {
-  //       const p = passengers[i];
-  //       const passengerNum = i + 1;
-
-  //       if (!p.name.trim()) {
-  //         alert(`Please enter a name for Passenger ${passengerNum}`);
-  //         return;
-  //       }
-
-  //       const phoneRegex = /^[6-9]\d{9}$/;
-  //       if (!phoneRegex.test(p.phone)) {
-  //         alert(`Passenger ${passengerNum}: Valid 10-digit phone required.`);
-  //         return;
-  //       }
-
-  //       const ageNum = parseInt(p.age);
-  //       if (isNaN(ageNum) || ageNum <= 0 || ageNum > 110) {
-  //         alert(`Passenger ${passengerNum}: Valid age required.`);
-  //         return;
-  //       }
-
-  //       if (!p.dateTime) {
-  //         alert(`Passenger ${passengerNum}: Select date/time.`);
-  //         return;
-  //       }
-  //     }
-
-
-
-  //     // Notify Admin
-  //     await addDoc(collection(db, "notifications"), {
-  //       recipientId: "admin",
-  //       role: "admin",
-  //       title: "New Booking Received",
-  //       message: `New ride from ${pickup} to ${drop}`,
-  //       createdAt: serverTimestamp(),
-  //       read: false
-  //     });
-
-  //     // Notify Driver (If auto-assigned)
-  //     if (availableDriverId) {
-  //       await addDoc(collection(db, "notifications"), {
-  //         recipientId: availableDriverId,
-  //         role: "driver",
-  //         title: "New Ride Assigned",
-  //         message: "Check your dashboard for a new active ride.",
-  //         bookingId: id,
-  //         createdAt: serverTimestamp(),
-  //         read: false
-  //       });
-  //     }
-
-  //     const primaryPassenger = passengers[0];
-  //     const bookingData = {
-  //       pickup,
-  //       drop,
-  //       dateTime,
-  //       name: primaryPassenger.name || "N/A",
-  //       phone: primaryPassenger.phone || "N/A",
-  //       passengers: passengers,
-  //       bookingMethod: "quick_booking",
-  //       status: "pending",
-  //       userId: auth.currentUser.uid,
-  //       userEmail: auth.currentUser.email || "N/A", // Added for admin reference
-  //       createdAt: serverTimestamp(),
-  //       tripType,
-  //       distance,
-  //       totalFare: totalAmount,
-  //       // EXPLICIT NULLS so your driver logic doesn't crash
-  //       driverId: null,
-  //       driverName: null,
-  //       vehicleId: "city_ride" // Generic ID for city rides
-  //     };
-
-  //     // 1. Create the booking
-  //     const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
-  //     const id = bookingRef.id;
-  //     setBookingId(id);
-
-  //     // 2. REMOVED autoAssignDriver(id);
-  //     // Now it stays 'pending' until the admin assigns it.
-
-  //     alert("Booking Request Sent! An admin will assign a driver soon.");
-  //     navigate("/user/booking-success", { state: { bookingId: id } });
-
-  //   } catch (err) {
-  //     console.error("Booking Error:", err);
-  //     alert(err.message);
-  //   }
-  // };
-
-
->>>>>>> 218fedb6142d602802f65e8e2c19ebb163f1e669
+  const distancefare = math.round(routeFare)
+  const basefare = math.round(baseFare)
+  const totalAmount = math.round(routeFare + baseFare);
 
   const handleFinalBooking = async () => {
     try {
@@ -228,12 +115,8 @@ const BookRide = () => {
         }
       }
 
-<<<<<<< HEAD
       setLoading(true);
 
-=======
-      // 3. Prepare Booking Data
->>>>>>> 218fedb6142d602802f65e8e2c19ebb163f1e669
       const primaryPassenger = passengers[0];
       const bookingData = {
         pickup,
@@ -242,30 +125,18 @@ const BookRide = () => {
         name: primaryPassenger.name,
         phone: primaryPassenger.phone,
         passengers: passengers,
-<<<<<<< HEAD
         bookingMethod: "quick_booking", 
         status: "pending", // Stays pending for Admin
-=======
-        bookingMethod: "quick_booking",
-        status: "pending", // Admin will change this later
->>>>>>> 218fedb6142d602802f65e8e2c19ebb163f1e669
         userId: auth.currentUser.uid,
         userEmail: auth.currentUser.email || "N/A",
         createdAt: serverTimestamp(),
         tripType,
-<<<<<<< HEAD
         distance: Number(distance.toFixed(2)),
         totalFare: Math.round(totalAmount),
         
         // MANUAL ASSIGNMENT FIELDS
         driverId: null,      // Explicitly null
         driverName: null,    // Explicitly null
-=======
-        distance,
-        totalFare: totalAmount,
-        driverId: null,      // Stays null until admin manually assigns
-        driverName: null,    // Stays null until admin manually assigns
->>>>>>> 218fedb6142d602802f65e8e2c19ebb163f1e669
         vehicleId: "city_ride" 
       };
 
@@ -274,22 +145,7 @@ const BookRide = () => {
       const id = bookingRef.id;
       setBookingId(id);
 
-<<<<<<< HEAD
       alert("Booking Request Sent! An admin will review and assign a driver shortly.");
-=======
-      // 5. Notify Admin Only (Since no driver is assigned yet)
-      await addDoc(collection(db, "notifications"), {
-        recipientId: "admin",
-        role: "admin",
-        title: "New Booking Received",
-        message: `New city ride request from ${pickup} to ${drop}`,
-        bookingId: id, // Link the notification to the booking
-        createdAt: serverTimestamp(),
-        read: false
-      });
-
-      alert("Booking Request Sent! An admin will assign a driver soon.");
->>>>>>> 218fedb6142d602802f65e8e2c19ebb163f1e669
       navigate("/user/booking-success", { state: { bookingId: id } });
 
     } catch (err) {
@@ -406,33 +262,17 @@ const BookRide = () => {
               </div>
               <div className="flex justify-between">
                 <span>Distance Fare</span>
-                <span className="text-black font-semibold">₹{routeFare}</span>
+                <span className="text-black font-semibold">₹{distancefare}</span>
               </div>
               <div className="flex justify-between border-b pb-4">
                 <span>Booking Fee</span>
-                <span className="text-black font-semibold">₹{baseFare}</span>
+                <span className="text-black font-semibold">₹{basefare}</span>
               </div>
               <div className="flex justify-between text-2xl font-black text-blue-900 pt-2">
                 <span>Total</span>
                 <span>₹{Math.round(totalAmount)}</span>
               </div>
             </div>
-<<<<<<< HEAD
-=======
-            <div className="flex justify-between">
-              <span>Travel Fare</span>
-              <span className="font-semibold">₹{travelfare}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Booking Fee</span>
-              <span className="font-semibold">₹{baseFare}</span>
-            </div>
-            <div className="border-t pt-4 flex justify-between text-2xl font-bold text-blue-900">
-              <span>Total</span>
-              <span>₹{totalAmount}</span>
-            </div>
-          </div>
->>>>>>> 218fedb6142d602802f65e8e2c19ebb163f1e669
 
             <button
               onClick={handleFinalBooking}

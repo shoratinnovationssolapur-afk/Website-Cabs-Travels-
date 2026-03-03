@@ -547,7 +547,7 @@ const submitBooking = async () => {
 {/* ================= OTHERS SHOWCASE ================= */}
 <section id="OTHERS" className="py-16 px-6 bg-white">
   <h2 className="text-3xl font-bold text-center mb-12 text-black">
-    Other Available Vehicles
+   Cabs on Per day basis
   </h2>
   <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
     {vehicles
