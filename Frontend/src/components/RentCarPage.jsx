@@ -140,7 +140,8 @@ const RentCarPage = () => {
             </div>
 
             <div className="flex flex-col gap-3 pt-4 border-t">
-              <button 
+             
+              <button
                 onClick={() => { setSubmitted(false); setFetchedData(null); }}
                 className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition"
               >

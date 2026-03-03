@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react"; // Added useRef here
 import { db } from "../firebase";
 import {
   doc,
@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { getAuth } from "firebase/auth";
 import LocationInputs from "../components/pickupanddrop";
-import RouteFare from "../components/RouteFare"; 
+import RouteFare from "../components/RouteFare";
 
 const auth = getAuth();
 
@@ -29,10 +29,17 @@ const BookingDetails = () => {
   const navigate = useNavigate();
   const vehicleId = searchParams.get("vehicle_id");
 
-  // --- ALL STATES AT THE TOP ---
+  // REFS
+  const RouteFareRef = useRef(null); // Corrected Ref initialization
+
+  // ROUTE DATA
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
   const [dateTime, setDateTime] = useState("");
+  const [distance, setDistance] = useState(0);
+  const [routeFare, setRouteFare] = useState(0); // This drives the dynamic pricing
+
+  // VEHICLE
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tripType, setTripType] = useState("city");
@@ -41,8 +48,7 @@ const BookingDetails = () => {
     { name: "", age: "", phone: "", dateTime: "", type: "Adult" },
   ]);
   const [bookingId, setBookingId] = useState(null);
-  const [routeFare, setRouteFare] = useState(0);
-  const [distance, setDistance] = useState(0);
+  
 
   // --- ALL HOOKS MUST RUN EVERY RENDER (DO NOT PUT RETURNS ABOVE THESE) ---
 
@@ -56,7 +62,7 @@ const BookingDetails = () => {
           setVehicle({ id: snap.id, ...snap.data() });
         }
       } catch (err) {
-        console.error("Fetch error:", err);
+        console.error("Error fetching vehicle:", err);
       } finally {
         setLoading(false);
       }
@@ -76,6 +82,7 @@ const BookingDetails = () => {
   }, [bookingId]);
 
   // --- LOGIC CALCULATIONS ---
+  // ================= PRICING LOGIC =================
   const isVendorRental = vehicle?.vendorListingId !== undefined || (vehicle?.price !== undefined && vehicle?.pricePerKm === undefined);
   const dailyRate = isVendorRental ? parseInt(vehicle?.price || 0) : 0;
   const ratePerKm = !isVendorRental ? parseInt(vehicle?.pricePerKm || 0) : 0;
@@ -95,6 +102,7 @@ const BookingDetails = () => {
   
 
   // --- HANDLERS ---
+  // ================= HANDLERS =================
   const updatePassenger = (i, field, value) => {
     const updated = [...passengers];
     updated[i][field] = value;
@@ -111,15 +119,49 @@ const BookingDetails = () => {
     setRouteFare(fare);
   };
 
+  // ================= FINAL BOOKING =================
   const handleFinalBooking = async () => {
     
     try {
-      if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
-        return alert("Pickup and Drop locations cannot be the same.");
+      // 1. Validate Locations
+      if (!pickup.trim() || !drop.trim()) {
+        alert("Please enter both pickup and drop locations.");
+        return;
       }
-      if (!auth.currentUser) return alert("Please login first");
-      if (!pickup || !drop) return alert("Please enter route");
 
+      if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
+        alert("Pickup and Drop locations cannot be the same.");
+        return;
+      }
+
+      // 2. Auto-Calculate Check (Crucial for pricing)
+      // If it's a standard car (not rental) and fare hasn't been calculated yet
+      if (!isVendorRental && routeFare === 0) {
+        if (RouteFareRef.current) {
+          const result = await RouteFareRef.current.triggerCalculation();
+          if (result) {
+            alert("⚠️ Route calculated! Please verify the fare details and click 'CONFIRM BOOKING' again.");
+            return;
+          } else {
+            alert("Location not found. Please check your addresses.");
+            return;
+          }
+        }
+      }
+
+      // 3. User & Passenger Validation
+      if (!auth.currentUser) return alert("Please login first");
+
+      for (let i = 0; i < passengers.length; i++) {
+        const p = passengers[i];
+        if (!p.name.trim() || !p.phone.trim() || !p.dateTime) {
+          alert(`Please complete details for Passenger ${i + 1}`);
+          return;
+        }
+      }
+
+      // 4. Submit to Firestore
+      const primaryPassenger = passengers[0];
       const bookingData = {
         vehicleId: vehicle.id,
         vehicleName: vehicle.name,
@@ -134,30 +176,31 @@ const BookingDetails = () => {
         userId: auth.currentUser.uid,
         createdAt: serverTimestamp(),
         tripType,
-        durationDays: days,
-        distance:Number(distance),
+        durationDays: tripType === "outstation" ? days : 1,
+        distance,
         totalFare: totalAmount,
       };
 
       const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
       setBookingId(bookingRef.id);
+      alert("Booking Created Successfully");
       navigate("/user/booking-success", { state: { bookingId: bookingRef.id } });
+
     } catch (err) {
-      alert(err.message);
+      console.error("Booking Error:", err);
+      alert("Error: " + err.message);
     }
   };
 
-  // --- RENDER LOGIC (LOADING LAST) ---
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-yellow-500" size={48} />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="animate-spin text-yellow-500" size={48} />
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      {/* HERO */}
       <div className="relative h-[420px] bg-black">
         <img src={vehicle?.imageUrl} alt={vehicle?.name} className="w-full h-full object-cover opacity-80" />
         <button onClick={() => navigate(-1)} className="absolute top-6 left-6 bg-white/20 p-2 rounded-full text-white">
@@ -173,12 +216,21 @@ const BookingDetails = () => {
 
       <main className="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-8 -mt-10">
         <div className="lg:col-span-2 space-y-6">
+          {/* ROUTE SECTION */}
           <div className="bg-white p-6 mt-20 rounded-2xl shadow">
             <h3 className="font-bold text-xl mb-4 flex gap-2"><MapPin className="text-yellow-500" /> Route</h3>
             <LocationInputs pickup={pickup} setPickup={setPickup} drop={drop} setDrop={setDrop} />
-            <RouteFare pickup={pickup} drop={drop} dateTime={dateTime} onFareCalculated={handleFareUpdate} />
+            {/* Attached Ref Here */}
+            <RouteFare 
+              ref={RouteFareRef} 
+              pickup={pickup} 
+              drop={drop} 
+              dateTime={dateTime} 
+              onFareCalculated={handleFareUpdate} 
+            />
           </div>
 
+          {/* TRIP SETTINGS */}
           {!isVendorRental && (
             <div className="bg-white p-6 rounded-2xl shadow">
               <h3 className="font-bold mb-3">Trip Type</h3>
@@ -189,6 +241,7 @@ const BookingDetails = () => {
             </div>
           )}
 
+          {/* DURATION SETTINGS */}
           {(tripType === "outstation" || isVendorRental) && (
             <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
               <div>
@@ -202,6 +255,7 @@ const BookingDetails = () => {
             </div>
           )}
 
+          {/* PASSENGERS */}
           <div className="bg-white p-6 rounded-2xl shadow">
             <h3 className="font-bold mb-3">Passenger List</h3>
             {passengers.map((p, i) => (
@@ -220,34 +274,34 @@ const BookingDetails = () => {
           </div>
         </div>
 
+        {/* SIDEBAR - FARE SUMMARY */}
         <div className="bg-white p-8 mt-20 rounded-3xl shadow sticky top-20 h-fit">
           <h3 className="text-2xl font-bold mb-6">Fare Details</h3>
           <div className="space-y-3">
             {isVendorRental ? (
               <>
-                <div className="flex justify-between"><span>Rate</span><span className="font-bold">₹{dailyRate}</span></div>
-                <div className="flex justify-between"><span>Days</span><span className="font-bold">x {days}</span></div>
-                <div className="p-3 bg-blue-50 rounded-lg text-xs text-blue-700 flex gap-2">
-                  <Info size={14} className="flex-shrink-0" />
-                  Rental: Distance ({distance.toFixed(1)} km) is info only.
-                </div>
+                <div className="flex justify-between"><span>Daily Rate</span><span className="font-bold">₹{dailyRate}</span></div>
+                <div className="flex justify-between border-b pb-2"><span>Days</span><span className="font-bold">x {days}</span></div>
               </>
             ) : (
               <>
-                <div className="flex justify-between"><span>Distance</span><span>{distance.toFixed(0)} km</span></div>
-                <div className="flex justify-between"><span>Rate/km</span><span>₹{ratePerKm}</span></div>
-                <div className="flex justify-between border-b pb-2"><span>Service Fee</span><span>₹{baseServiceFee}</span></div>
-                <div className="flex justify-between border-b pb-2"><span>Rate/km + Service Fee</span><span>₹{Math.round(ratePerKm + baseServiceFee)}</span></div>
-                
-                {tripType === "outstation" && <div className="flex justify-between text-blue-600 font-bold"><span>Multiplier</span><span>x {days} Days</span></div>}
+                <div className="flex justify-between text-gray-600"><span>Distance</span><span>{distance ? distance.toFixed(1) : 0} km</span></div>
+                <div className="flex justify-between text-gray-600"><span>Rate</span><span>₹{ratePerKm}/km</span></div>
+                <div className="flex justify-between text-gray-600 border-b pb-2"><span>Base Fee</span><span>₹{baseServiceFee}</span></div>
+                {tripType === "outstation" && <div className="flex justify-between text-blue-600 font-bold"><span>Duration</span><span>x {days} Days</span></div>}
               </>
             )}
-            <div className="border-t pt-4 flex justify-between text-3xl font-black text-slate-800">
-              <span>Total</span><span>₹{totalAmount}</span>
+            <div className="pt-4 flex justify-between text-3xl font-black text-slate-800">
+              <span>Total</span>
+              <span>₹{totalAmount}</span>
             </div>
           </div>
-          <button onClick={handleFinalBooking} className="w-full bg-yellow-400 py-4 rounded-xl font-bold mt-6 hover:bg-yellow-500 transition">CONFIRM</button>
-          <div className="mt-6 flex gap-2 text-sm text-gray-600"><ShieldCheck className="text-green-500" /> Professional service</div>
+          <button onClick={handleFinalBooking} className="w-full bg-yellow-400 py-4 rounded-xl font-bold mt-6 hover:bg-yellow-500 transition">
+            CONFIRM BOOKING
+          </button>
+          <div className="mt-6 flex gap-2 text-sm text-gray-600">
+            <ShieldCheck className="text-green-500" /> Verified professional service
+          </div>
         </div>
       </main>
     </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react"; // Added useRef
 import { db } from "../firebase";
 import {
   addDoc,
@@ -22,6 +22,7 @@ const auth = getAuth();
 
 const BookRide = () => {
   const navigate = useNavigate();
+  const RouteFareRef = useRef(null); // Initialize Ref
 
   // ROUTE
   const [pickup, setPickup] = useState("");
@@ -70,24 +71,44 @@ const BookRide = () => {
     setRouteFare(fare);
   };
 
-  // TOTAL COST LOGIC (Using a fixed base rate for City rides)
+  // TOTAL COST LOGIC
   const baseFare = 50; 
-  const distancefare = math.round(routeFare)
-  const basefare = math.round(baseFare)
-  const totalAmount = math.round(routeFare + baseFare);
+  const distancefare = Math.round(routeFare);
+  const basefare = Math.round(baseFare);
+  const totalAmount = Math.round(routeFare + baseFare);
 
   const handleFinalBooking = async () => {
     try {
       // 1. Basic Route Validation
+      if (!pickup.trim() || !drop.trim()) {
+        alert("Please enter pickup and drop locations.");
+        return;
+      }
+
       if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
         alert("Pickup and Drop locations cannot be the same.");
         return;
       }
 
       if (!auth.currentUser) return alert("Please login first");
-      if (!pickup || !drop) return alert("Please enter route");
 
-      // 2. Passenger Validation Logic
+      // 2. AUTOMATIC CALCULATION & WARNING
+      // If routeFare is 0, they haven't clicked 'Show Route'
+      if (routeFare === 0) {
+        setLoading(true); // Show loader on the button
+        const result = await RouteFareRef.current.triggerCalculation();
+        setLoading(false);
+
+        if (result) {
+          alert("⚠️ Route calculated! Please review the fare summary and click 'CONFIRM BOOKING' again to finalize.");
+          return; // Stop here so they see the total price
+        } else {
+          alert("Could not calculate route. Please check your addresses.");
+          return;
+        }
+      }
+
+      // 3. Passenger Validation Logic
       for (let i = 0; i < passengers.length; i++) {
         const p = passengers[i];
         const passengerNum = i + 1;
@@ -126,21 +147,18 @@ const BookRide = () => {
         phone: primaryPassenger.phone,
         passengers: passengers,
         bookingMethod: "quick_booking", 
-        status: "pending", // Stays pending for Admin
+        status: "pending",
         userId: auth.currentUser.uid,
         userEmail: auth.currentUser.email || "N/A",
         createdAt: serverTimestamp(),
         tripType,
         distance: Number(distance.toFixed(2)),
         totalFare: Math.round(totalAmount),
-        
-        // MANUAL ASSIGNMENT FIELDS
-        driverId: null,      // Explicitly null
-        driverName: null,    // Explicitly null
+        driverId: null,
+        driverName: null,
         vehicleId: "city_ride" 
       };
 
-      // 4. Create the booking in Firestore
       const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
       const id = bookingRef.id;
       setBookingId(id);
@@ -179,7 +197,6 @@ const BookRide = () => {
 
       <main className="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-8 -mt-10">
         <div className="lg:col-span-2 space-y-6">
-          {/* ROUTE */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mt-20">
             <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
               <MapPin className="text-yellow-500" /> Route Details
@@ -190,7 +207,9 @@ const BookRide = () => {
               drop={drop}
               setDrop={setDrop}
             />
+            {/* Added Ref here */}
             <RouteFare
+              ref={RouteFareRef}
               pickup={pickup}
               drop={drop}
               dateTime={dateTime}
@@ -198,7 +217,6 @@ const BookRide = () => {
             />
           </div>
 
-          {/* PASSENGERS */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h3 className="font-bold mb-4">Passenger Details</h3>
             {passengers.map((p, i) => (
@@ -251,7 +269,6 @@ const BookRide = () => {
           </div>
         </div>
 
-        {/* FARE DETAILS */}
         <div className="lg:col-span-1">
           <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 mt-20 sticky top-24">
             <h3 className="text-2xl font-bold mb-6">Fare Summary</h3>
