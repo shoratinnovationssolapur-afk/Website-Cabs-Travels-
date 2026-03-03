@@ -212,6 +212,7 @@ useEffect(() => {
           <option value="Petrol">Petrol</option>
           <option value="CNG">CNG</option>
           <option value="Diesel">Diesel</option>
+          <option value="Hybrid">Hybrid</option>
         </select>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-2 border-dashed border-gray-200 p-4 rounded-lg">

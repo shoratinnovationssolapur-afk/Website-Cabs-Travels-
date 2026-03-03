@@ -4,6 +4,7 @@ import { auth, db } from "../firebase";
 import { collection, addDoc, serverTimestamp,getDocs,getDoc,doc,onSnapshot,
   query, 
   where} from "firebase/firestore";
+  import { FaWhatsapp } from "react-icons/fa6";
 
 
 
@@ -389,9 +390,9 @@ const submitBooking = async () => {
           <div className="flex justify-center gap-6 flex-wrap">
             <a
               href="https://wa.me/9130067841" target="_blank" rel="noreferrer" 
-              className="bg-yellow-400 text-black px-8 py-3 rounded-full font-semibold hover:scale-105 transition"
+              className=" text-green-500 font-bold px-8 py-3 rounded-full font-semibold hover:scale-105 transition flex gap-2 border"
             >
-              Call Now
+              Whatsapp us <FaWhatsapp className="text-2xl"  />
             </a>
 
             <a
@@ -576,87 +577,66 @@ const submitBooking = async () => {
 
 
         {/* ================= QUICK BOOKING ================= */}
-        <section id="booking" className="py-16 px-6 max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-10">
-            Quick Booking
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-6 ">
-
-            <input
-              className="border p-3 rounded-lg placeholder-black "
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-
-            <input
-              className="border p-3 rounded-lg placeholder-black"
-              placeholder="Mobile Number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-
-            {/* <div className="md:col-span-2"> */}
-            <LocationInputs
-              pickup={pickup}
-              setPickup={setPickup}
-              drop={drop}
-              setDrop={setDrop}
-            />
-<RouteFare 
-  ref={RouteFareRef} // Add this line
-  pickup={pickup} 
-  drop={drop} 
-  dateTime={dateTime} 
-  onFareCalculated={handleFareUpdate}
-/>
-
-
-            {/* </div> */}
-
-
-            <select
-              className="border p-3 rounded-lg"
-              value={tripType}
-              onChange={(e) => setTripType(e.target.value)}
-            >
-              <option value="">Trip Type</option>
-              <option>One Day</option>
-              <option>3 Day</option>
-              <option>5 Day</option>
-              <option>Outstation</option>
-            </select>
-
-            <select
-              className="border p-3 rounded-lg"
-              value={carType}
-              onChange={(e) => setCarType(e.target.value)}
-            >
-              <option value="">Car Type</option>
-              <option>Sedan</option>
-              <option>SUV</option>
-              <option>Luxury</option>
-            </select>
-
-
-
-            <input
-              type="datetime-local"
-              className="border p-3 rounded-lg md:col-span-3"
-              value={dateTime}
-              onChange={(e) => setDateTime(e.target.value)}
-            />
-
-            <button
-              className="bg-yellow-500 text-white py-3 rounded-lg md:col-span-3 font-bold hover:bg-blue-800 transition cursor-pointer "
-              onClick={submitBooking}
-            >
-              Submit Booking Request
-            </button>
-
+       {/* QUICK BOOKING SECTION (Compact Styles) */}
+      <section id="booking" className="py-16 px-6 max-w-6xl mx-auto">
+        <h2 className="text-3xl font-bold text-center mb-10">Quick Booking</h2>
+        <div className="bg-white p-8 rounded-3xl shadow-xl">
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <input className="border border-gray-300 p-2 rounded-lg w-full h-11 bg-white outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+            <input className="border border-gray-300 p-2 rounded-lg w-full h-11 bg-white outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Mobile" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <LocationInputs pickup={pickup} setPickup={setPickup} drop={drop} setDrop={setDrop} />
+            <select className="border border-gray-300 p-2 rounded-lg w-full h-11 bg-white" value={tripType} onChange={(e) => setTripType(e.target.value)}><option value="">Trip Type</option><option>One Day</option><option>Outstation</option></select>
+            <select className="border border-gray-300 p-2 rounded-lg w-full h-11 bg-white" value={carType} onChange={(e) => setCarType(e.target.value)}><option value="">Car Type</option><option>Sedan</option><option>SUV</option><option>Luxury</option></select>
+            <input type="datetime-local" className="border border-gray-300 p-2 rounded-lg w-full h-11" value={dateTime} onChange={(e) => setDateTime(e.target.value)} />
           </div>
-        </section>
+          <div className="w-full mb-8 rounded-2xl overflow-hidden border bg-gray-50 min-h-[350px]">
+            <RouteFare ref={RouteFareRef} pickup={pickup} drop={drop} dateTime={dateTime} onFareCalculated={handleFareUpdate} />
+          </div>
+          <button className="w-full bg-yellow-500 text-black py-4 rounded-xl font-bold hover:bg-black hover:text-yellow-400 transition" onClick={submitBooking}>Submit Booking Request</button>
+        </div>
+      </section>
+
+
+      {/* ⭐ NEW CITY ROUTES SECTION (Hyperlinks added here) */}
+      <section className="py-16 px-6 bg-white border-t">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12">Popular Outstation Routes</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div>
+              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Solapur Routes</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                {["Solapur to Pune", "Solapur to Mumbai", "Solapur to Goa", "Solapur to Tuljapur"].map(r => (
+                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} taxi</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Pune Routes</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                {["Pune to Mahabaleshwar", "Pune to Shirdi", "Pune to Mumbai Airport", "Pune to Lonavala"].map(r => (
+                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} cab</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Mumbai Routes</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                {["Mumbai to Solapur", "Mumbai to Pune", "Mumbai to Goa", "Mumbai to Nashik"].map(r => (
+                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} car rental</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Goa Routes</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                {["Goa to Solapur", "Goa to Pune", "Goa to Mumbai", "Goa Airport to Calangute"].map(r => (
+                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} trip</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
 
 
       {/* ================= SERVICES ================= */}
@@ -852,12 +832,12 @@ const submitBooking = async () => {
           Rathod Cabs & Travels
         </p>
         <p>Solapur | Pune | Mumbai | Goa</p>
-        <p>Phone: +91 99999 99999</p>
-        <p>Email: info@rathodcabs.com</p>
+        <p>Phone: +91 9130067841</p>
+        <p>Email: rathodexpressofficial@gmail.com</p>
       </footer>
 
     </div>
   );
 };
 
-export default HomePage;   
+export default HomePage;

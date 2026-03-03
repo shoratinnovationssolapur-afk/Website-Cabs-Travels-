@@ -86,7 +86,7 @@ const UserLayout = () => {
 
           <button
             onClick={logout}
-            className="block w-full text-left text-red-400 font-bold p-2 transition rounded hover:bg-red-900/20 mt-10"
+            className="block w-full text-left text-red-400 font-bold p-2 transition rounded hover:bg-red-900/20 "
           >
             🚪 Logout
           </button>
