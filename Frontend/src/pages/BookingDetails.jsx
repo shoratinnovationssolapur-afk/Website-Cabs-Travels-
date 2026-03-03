@@ -293,7 +293,7 @@ const BookingDetails = () => {
             )}
             <div className="pt-4 flex justify-between text-3xl font-black text-slate-800">
               <span>Total</span>
-              <span>₹{totalAmount}</span>
+              <span>₹{Math.round(totalAmount)}</span>
             </div>
           </div>
           <button onClick={handleFinalBooking} className="w-full bg-yellow-400 py-4 rounded-xl font-bold mt-6 hover:bg-yellow-500 transition">
