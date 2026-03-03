@@ -6,34 +6,34 @@ import { onSnapshot, collection, query, where } from "firebase/firestore";
 export default function AdminLayout() {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // We listen for notifications where recipientId is "admin"
-    // This ensures all admins see new booking alerts
-    const q = query(
-      collection(db, "notifications"),
-      where("recipientId", "==", "admin"), // ⭐ FIXED: Changed from auth.currentUser.uid
-      where("read", "==", false)
-    );
+  // useEffect(() => {
+  //   // We listen for notifications where recipientId is "admin"
+  //   // This ensures all admins see new booking alerts
+  //   // const q = query(
+  //   //   collection(db, "notifications"),
+  //   //   where("recipientId", "==", "admin"), // ⭐ FIXED: Changed from auth.currentUser.uid
+  //   //   where("read", "==", false)
+  //   // );
 
-    const unsub = onSnapshot(q, (snap) => {
-      snap.docChanges().forEach((change) => {
-        // Only alert on NEWLY added documents to avoid spamming old alerts
-        if (change.type === "added") {
-          const notif = change.doc.data();
+  //   const unsub = onSnapshot(q, (snap) => {
+  //     snap.docChanges().forEach((change) => {
+  //       // Only alert on NEWLY added documents to avoid spamming old alerts
+  //       if (change.type === "added") {
+  //         const notif = change.doc.data();
           
-          // Basic Browser Alert
-          alert(`🔔 ${notif.title}: ${notif.message}`);
+  //         // Basic Browser Alert
+  //         alert(`🔔 ${notif.title}: ${notif.message}`);
 
-          // Recommended: Mark as read or use a more sophisticated toast 
-          // system to prevent the same alert from firing repeatedly.
-        }
-      });
-    }, (error) => {
-      console.error("Notification listener error:", error);
-    });
+  //         // Recommended: Mark as read or use a more sophisticated toast 
+  //         // system to prevent the same alert from firing repeatedly.
+  //       }
+  //     });
+  //   }, (error) => {
+  //     console.error("Notification listener error:", error);
+  //   });
 
-    return () => unsub();
-  }, []);
+  //   return () => unsub();
+  // }, []);
 
   return (
     <div className="flex min-h-screen bg-gray-100">

@@ -15,37 +15,37 @@ const UserLayout = () => {
   const navigate = useNavigate();
 
   // 1. Notification Listener Logic
-  useEffect(() => {
-    // Only proceed if a user is authenticated
-    if (!auth.currentUser?.uid) return;
+  // useEffect(() => {
+  //   // Only proceed if a user is authenticated
+  //   if (!auth.currentUser?.uid) return;
 
-    const q = query(
-      collection(db, "notifications"),
-      where("recipientId", "==", auth.currentUser.uid),
-      where("read", "==", false)
-    );
+  //   // const q = query(
+  //   //   collection(db, "notifications"),
+  //   //   where("recipientId", "==", auth.currentUser.uid),
+  //   //   where("read", "==", false)
+  //   // );
 
-    const unsub = onSnapshot(q, (snap) => {
-      snap.docChanges().forEach((change) => {
-        // Only trigger for newly added unread notifications
-        if (change.type === "added") {
-          const notif = change.doc.data();
+  //   const unsub = onSnapshot(q, (snap) => {
+  //     snap.docChanges().forEach((change) => {
+  //       // Only trigger for newly added unread notifications
+  //       if (change.type === "added") {
+  //         const notif = change.doc.data();
           
-          // Browser Alert
-          alert(`🔔 ${notif.title}: ${notif.message}`);
+  //         // Browser Alert
+  //         alert(`🔔 ${notif.title}: ${notif.message}`);
 
-          // Recommended: Mark as read to prevent repeat alerts
-          // const notifRef = doc(db, "notifications", change.doc.id);
-          // updateDoc(notifRef, { read: true });
-        }
-      });
-    }, (error) => {
-      console.error("User notification error:", error);
-    });
+  //         // Recommended: Mark as read to prevent repeat alerts
+  //         // const notifRef = doc(db, "notifications", change.doc.id);
+  //         // updateDoc(notifRef, { read: true });
+  //       }
+  //     });
+  //   }, (error) => {
+  //     console.error("User notification error:", error);
+  //   });
 
-    return () => unsub();
-    // Re-run if the user ID changes or becomes available
-  }, [auth.currentUser?.uid]);
+  //   return () => unsub();
+  //   // Re-run if the user ID changes or becomes available
+  // }, [auth.currentUser?.uid]);
 
   const logout = async () => {
     try {

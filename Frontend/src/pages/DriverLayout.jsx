@@ -14,36 +14,36 @@ import {
 const DriverLayout = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // 1. Only set up the listener if we have a valid user
-    if (!auth.currentUser?.uid) return;
+  // useEffect(() => {
+  //   // 1. Only set up the listener if we have a valid user
+  //   if (!auth.currentUser?.uid) return;
 
-    const q = query(
-      collection(db, "notifications"),
-      where("recipientId", "==", auth.currentUser.uid),
-      where("read", "==", false)
-    );
+  //   // const q = query(
+  //   //   collection(db, "notifications"),
+  //   //   where("recipientId", "==", auth.currentUser.uid),
+  //   //   where("read", "==", false)
+  //   // );
 
-    const unsub = onSnapshot(q, (snap) => {
-      snap.docChanges().forEach((change) => {
-        // 2. Only trigger for NEW unread notifications added
-        if (change.type === "added") {
-          const notif = change.doc.data();
+  //   const unsub = onSnapshot(q, (snap) => {
+  //     snap.docChanges().forEach((change) => {
+  //       // 2. Only trigger for NEW unread notifications added
+  //       if (change.type === "added") {
+  //         const notif = change.doc.data();
           
-          alert(`🔔 ${notif.title}: ${notif.message}`);
+  //         alert(`🔔 ${notif.title}: ${notif.message}`);
 
-          // 3. OPTIONAL: Automatically mark as read so it doesn't pop up again
-          // const notifRef = doc(db, "notifications", change.doc.id);
-          // updateDoc(notifRef, { read: true });
-        }
-      });
-    }, (error) => {
-      console.error("Notification listener failed:", error);
-    });
+  //         // 3. OPTIONAL: Automatically mark as read so it doesn't pop up again
+  //         // const notifRef = doc(db, "notifications", change.doc.id);
+  //         // updateDoc(notifRef, { read: true });
+  //       }
+  //     });
+  //   }, (error) => {
+  //     console.error("Notification listener failed:", error);
+  //   });
 
-    return () => unsub();
-    // 4. Added auth.currentUser?.uid to dependencies for stability
-  }, [auth.currentUser?.uid]);
+  //   return () => unsub();
+  //   // 4. Added auth.currentUser?.uid to dependencies for stability
+  // }, [auth.currentUser?.uid]);
 
   const logout = async () => {
     try {

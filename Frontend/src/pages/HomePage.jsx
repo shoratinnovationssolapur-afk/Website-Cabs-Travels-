@@ -436,49 +436,6 @@ const submitBooking = async () => {
       </section>
 
 
-
-
-      {/* ================= SUV SHOWCASE ================= */}
-      <section id="SUV" className="py-16 px-6 bg-white ">
-        <h2 className="text-3xl font-bold text-center mb-12 text-black">
-          Our Premium SUV Fleet
-        </h2>
-
-        {/* Scroll Container */}
-        <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
-          {vehicles
-            .filter(v => v.type === "SUV")
-            .map(vehicle => (
-              <div
-                key={vehicle.id}
-                onClick={() =>
-                   navigate(`/booking?vehicle_id=${vehicle.id}`)
-
-                }
-
-                className="min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group"
-
-              >
-                <img
-                  src={vehicle.imageUrl}
-                  alt={vehicle.name}
-                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-
-                <div className="p-4 text-center">
-                  <h3 className="font-semibold text-lg">{vehicle.name}</h3>
-                  <p className="text-gray-600 text-sm">{vehicle.desc}</p>
-                </div>
-              </div>
-            ))}
-
-
-        </div>
-      </section>
-
-     
-
-
       {/*SEDAN SHOWCASE*/}
       <section id="SEDAN" className=" py-16 px-6  bg-white">
         <h2 className="text-3xl font-bold text-center mb-12 text-black">
@@ -542,6 +499,46 @@ const submitBooking = async () => {
         </div>
 
       </section>
+
+
+      {/* ================= SUV SHOWCASE ================= */}
+      <section id="SUV" className="py-16 px-6 bg-white ">
+        <h2 className="text-3xl font-bold text-center mb-12 text-black">
+          Our Premium SUV Fleet
+        </h2>
+
+        {/* Scroll Container */}
+        <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
+          {vehicles
+            .filter(v => v.type === "SUV")
+            .map(vehicle => (
+              <div
+                key={vehicle.id}
+                onClick={() =>
+                   navigate(`/booking?vehicle_id=${vehicle.id}`)
+
+                }
+
+                className="min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group"
+
+              >
+                <img
+                  src={vehicle.imageUrl}
+                  alt={vehicle.name}
+                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+
+                <div className="p-4 text-center">
+                  <h3 className="font-semibold text-lg">{vehicle.name}</h3>
+                  <p className="text-gray-600 text-sm">{vehicle.desc}</p>
+                </div>
+              </div>
+            ))}
+
+
+        </div>
+      </section>
+
 
             {/*Others SHOWCASE*/}
 {/* ================= OTHERS SHOWCASE ================= */}
