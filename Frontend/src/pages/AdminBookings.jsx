@@ -197,25 +197,35 @@ const AdminBookings = () => {
                    {isCancelled ? "CANCELLED" : isExpired ? "EXPIRED" : b.status}
                 </span>
                 
-                <div className="flex gap-2">
-                  {!isCancelled && (
-                    <>
-                      {isExpired ? (
-                        <button onClick={() => updateStatus(b, "cancelled")} className="bg-red-600 text-white font-bold px-6 py-2 rounded-xl hover:bg-red-700 transition">
-                          Cancel Old
-                        </button>
-                      ) : (
-                        <button 
-                          onClick={() => openAssignModal(b.id)} 
-                          disabled={isAssigned && !assignedDriverOffline}
-                          className={`px-6 py-2 rounded-xl font-bold transition shadow-md ${ (isAssigned && !assignedDriverOffline) ? "bg-gray-200 text-gray-400 cursor-not-allowed" : assignedDriverOffline ? "bg-red-600 text-white" : "bg-black text-yellow-400 hover:bg-gray-800"}`}
-                        >
-                          {assignedDriverOffline ? "Reassign Now" : isAssigned ? "Driver Assigned" : "Assign Driver"}
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
+               <div className="flex gap-2">
+  {/* ⭐ CHANGE: Only show buttons if the trip is NOT cancelled AND NOT completed */}
+  {!isCancelled && b.status !== "completed" && (
+    <>
+      {isExpired ? (
+        <button 
+          onClick={() => updateStatus(b, "cancelled")} 
+          className="bg-red-600 text-white font-bold px-6 py-2 rounded-xl hover:bg-red-700 transition"
+        >
+          Cancel Old
+        </button>
+      ) : (
+        <button 
+          onClick={() => openAssignModal(b.id)} 
+          disabled={isAssigned && !assignedDriverOffline}
+          className={`px-6 py-2 rounded-xl font-bold transition shadow-md ${ 
+            (isAssigned && !assignedDriverOffline) 
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+              : assignedDriverOffline 
+                ? "bg-red-600 text-white" 
+                : "bg-black text-yellow-400 hover:bg-gray-800"
+          }`}
+        >
+          {assignedDriverOffline ? "Reassign Now" : isAssigned ? "Driver Assigned" : "Assign Driver"}
+        </button>
+      )}
+    </>
+  )}
+</div>
               </div>
             </div>
           );
