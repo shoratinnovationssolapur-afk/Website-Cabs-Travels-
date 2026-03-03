@@ -13,154 +13,121 @@ import {
   Loader2,
   Minus,
   Plus,
-  CheckCircle,
-  ShieldCheck,
   ChevronLeft,
   MapPin,
-  IndianRupee,
+  ShieldCheck,
   Info
 } from "lucide-react";
 import { getAuth } from "firebase/auth";
 import LocationInputs from "../components/pickupanddrop";
 import RouteFare from "../components/RouteFare"; 
-import { autoAssignDriver } from "../utils/autoAssignDriver";
 
 const auth = getAuth();
 
 const BookingDetails = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const vehicleId = searchParams.get("vehicle_id");
 
-  // ROUTE
+  // --- ALL STATES AT THE TOP ---
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");
   const [dateTime, setDateTime] = useState("");
-
-  // VEHICLE
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // TRIP
   const [tripType, setTripType] = useState("city");
   const [days, setDays] = useState(1);
-
-  // PASSENGERS
   const [passengers, setPassengers] = useState([
     { name: "", age: "", phone: "", dateTime: "", type: "Adult" },
   ]);
-
-  // BOOKING STATUS
   const [bookingId, setBookingId] = useState(null);
-  const [rideStatus, setRideStatus] = useState(null);
-
-  // DISTANCE DATA FROM ROUTEFARE
   const [routeFare, setRouteFare] = useState(0);
   const [distance, setDistance] = useState(0);
 
-  const [name, setName] = useState("");
+  // --- ALL HOOKS MUST RUN EVERY RENDER (DO NOT PUT RETURNS ABOVE THESE) ---
 
-  const vehicleId = searchParams.get("vehicle_id");
-
-  // ================= FETCH VEHICLE =================
+  // 1. Fetch Vehicle
   useEffect(() => {
     const fetchVehicle = async () => {
       if (!vehicleId) return;
-
-      const snap = await getDoc(doc(db, "vehicles", vehicleId));
-      if (snap.exists()) {
-        setVehicle({ id: snap.id, ...snap.data() });
+      try {
+        const snap = await getDoc(doc(db, "vehicles", vehicleId));
+        if (snap.exists()) {
+          setVehicle({ id: snap.id, ...snap.data() });
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-
     fetchVehicle();
   }, [vehicleId]);
 
-  // ================= DYNAMIC PRICING LOGIC =================
+  // 2. Realtime Status Listener (Consolidated)
+  useEffect(() => {
+    if (!bookingId) return;
+    const unsub = onSnapshot(doc(db, "bookings", bookingId), (snap) => {
+      if (snap.exists()) {
+        // You can use snap.data().status here if needed
+      }
+    });
+    return () => unsub();
+  }, [bookingId]);
+
+  // --- LOGIC CALCULATIONS ---
   const isVendorRental = vehicle?.vendorListingId !== undefined || (vehicle?.price !== undefined && vehicle?.pricePerKm === undefined);
   const dailyRate = isVendorRental ? parseInt(vehicle?.price || 0) : 0;
   const ratePerKm = !isVendorRental ? parseInt(vehicle?.pricePerKm || 0) : 0;
   const baseServiceFee = 20;
 
-  // Total Calculation Logic
   const calculateTotal = () => {
     if (isVendorRental) {
-      // RENTAL LOGIC: Flat Daily Rate * Days
       return dailyRate * days;
     } else {
-      // TAXI LOGIC: (Distance * Rate) + Base
       const perDayTripFare = routeFare + baseServiceFee;
       return tripType === "outstation" ? perDayTripFare * days : perDayTripFare;
     }
   };
 
   const totalAmount = calculateTotal();
+ 
+  
 
-  // ================= PASSENGERS =================
+  // --- HANDLERS ---
   const updatePassenger = (i, field, value) => {
     const updated = [...passengers];
     updated[i][field] = value;
     setPassengers(updated);
-
-    if (i === 0 && field === "dateTime") {
-      setDateTime(value);
-    }
+    if (i === 0 && field === "dateTime") setDateTime(value);
   };
 
   const addPassenger = () => {
-    setPassengers([
-      ...passengers,
-      { name: "", age: "", phone: "", dateTime: "", type: "Adult" },
-    ]);
+    setPassengers([...passengers, { name: "", age: "", phone: "", dateTime: "", type: "Adult" }]);
   };
 
-  // ================= RECEIVE DISTANCE FROM ROUTEFARE =================
   const handleFareUpdate = ({ distance, fare }) => {
     setDistance(distance);
     setRouteFare(fare);
-    // setDateTime(dateTime);
-    // setName(name);
-
   };
 
-  // ================= CREATE BOOKING =================
   const handleFinalBooking = async () => {
+    
     try {
       if (pickup.trim().toLowerCase() === drop.trim().toLowerCase()) {
-        alert("Pickup and Drop locations cannot be the same.");
-        return;
+        return alert("Pickup and Drop locations cannot be the same.");
       }
-
       if (!auth.currentUser) return alert("Please login first");
       if (!pickup || !drop) return alert("Please enter route");
 
-      for (let i = 0; i < passengers.length; i++) {
-        const p = passengers[i];
-        if (!p.name.trim()) {
-          alert(`Please enter a name for Passenger ${i + 1}`);
-          return;
-        }
-        const phoneRegex = /^[6-9]\d{9}$/;
-        if (!phoneRegex.test(p.phone)) {
-          alert(`Passenger ${i + 1}: Please enter a valid 10-digit phone number.`);
-          return;
-        }
-        if (!p.dateTime) {
-          alert(`Passenger ${i + 1}: Please select a date and time.`);
-          return;
-        }
-      }
-
-      const primaryPassenger = passengers[0];
       const bookingData = {
         vehicleId: vehicle.id,
         vehicleName: vehicle.name,
         pickup,
         drop,
         dateTime,
-        // CRITICAL: Save primary details at top level for easy Admin access
-        name: primaryPassenger.name || "N/A",
-        phone: primaryPassenger.phone || "N/A",
+        name: passengers[0].name || "N/A",
+        phone: passengers[0].phone || "N/A",
         passengers: passengers,
         bookingMethod: isVendorRental ? "vendor_rental" : "car_specific",
         status: "pending",
@@ -168,71 +135,34 @@ const BookingDetails = () => {
         createdAt: serverTimestamp(),
         tripType,
         durationDays: days,
-        distance,
+        distance:Number(distance),
         totalFare: totalAmount,
       };
 
       const bookingRef = await addDoc(collection(db, "bookings"), bookingData);
       setBookingId(bookingRef.id);
-
-      alert("Booking Created Successfully");
       navigate("/user/booking-success", { state: { bookingId: bookingRef.id } });
-
     } catch (err) {
       alert(err.message);
     }
   };
 
-  // ================= REALTIME STATUS =================
-  useEffect(() => {
-    if (!bookingId) return;
-
-    const unsub = onSnapshot(doc(db, "bookings", bookingId), (snap) => {
-      if (snap.exists()) setRideStatus(snap.data().status);
-    });
-
-    return () => unsub();
-  }, [bookingId]);
-
-  if (loading)
+  // --- RENDER LOGIC (LOADING LAST) ---
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="animate-spin text-yellow-500" size={48} />
       </div>
     );
+  }
 
-  // ================= REALTIME STATUS =================
-  useEffect(() => {
-    if (!bookingId) return;
-
-    const unsub = onSnapshot(doc(db, "bookings", bookingId), (snap) => {
-      if (snap.exists()) setRideStatus(snap.data().status);
-    });
-
-    return () => unsub();
-  }, [bookingId]);
-
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-yellow-500" size={48} />
-      </div>
-    );
-
-  // ================= UI =================
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* HERO */}
       <div className="relative h-[420px] bg-black">
-        <img
-          src={vehicle?.imageUrl}
-          alt={vehicle?.name}
-          className="w-full h-full object-cover opacity-80"
-        />
+        <img src={vehicle?.imageUrl} alt={vehicle?.name} className="w-full h-full object-cover opacity-80" />
         <button onClick={() => navigate(-1)} className="absolute top-6 left-6 bg-white/20 p-2 rounded-full text-white">
           <ChevronLeft size={28} />
         </button>
-
         <div className="absolute bottom-10 left-8 text-white">
           <h1 className="text-5xl font-black">{vehicle?.name}</h1>
           <p className="text-yellow-400 font-bold text-2xl">
@@ -242,19 +172,13 @@ const BookingDetails = () => {
       </div>
 
       <main className="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-8 -mt-10">
-
-        {/* LEFT */}
         <div className="lg:col-span-2 space-y-6">
-          {/* ROUTE */}
           <div className="bg-white p-6 mt-20 rounded-2xl shadow">
-            <h3 className="font-bold text-xl mb-4 flex gap-2">
-              <MapPin className="text-yellow-500" /> Route
-            </h3>
+            <h3 className="font-bold text-xl mb-4 flex gap-2"><MapPin className="text-yellow-500" /> Route</h3>
             <LocationInputs pickup={pickup} setPickup={setPickup} drop={drop} setDrop={setDrop} />
             <RouteFare pickup={pickup} drop={drop} dateTime={dateTime} onFareCalculated={handleFareUpdate} />
           </div>
 
-          {/* TRIP TYPE (Only relevant for system cars) */}
           {!isVendorRental && (
             <div className="bg-white p-6 rounded-2xl shadow">
               <h3 className="font-bold mb-3">Trip Type</h3>
@@ -265,7 +189,6 @@ const BookingDetails = () => {
             </div>
           )}
 
-          {/* DURATION */}
           {(tripType === "outstation" || isVendorRental) && (
             <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
               <div>
@@ -279,10 +202,8 @@ const BookingDetails = () => {
             </div>
           )}
 
-          {/* PASSENGERS */}
           <div className="bg-white p-6 rounded-2xl shadow">
             <h3 className="font-bold mb-3">Passenger List</h3>
-
             {passengers.map((p, i) => (
               <div key={i} className="grid md:grid-cols-4 gap-3 mb-4 border-b pb-4 last:border-0">
                 <input placeholder="Name" value={p.name} onChange={(e) => updatePassenger(i, "name", e.target.value)} className="border p-2 rounded" />
@@ -299,72 +220,35 @@ const BookingDetails = () => {
           </div>
         </div>
 
-        {/* RIGHT — DYNAMIC FARE SIDEBAR */}
         <div className="bg-white p-8 mt-20 rounded-3xl shadow sticky top-20 h-fit">
           <h3 className="text-2xl font-bold mb-6">Fare Details</h3>
-          
           <div className="space-y-3">
             {isVendorRental ? (
               <>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Daily Rental Rate</span>
-                  <span className="font-bold">₹{dailyRate}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Days</span>
-                  <span className="font-bold">x {days}</span>
-                </div>
+                <div className="flex justify-between"><span>Rate</span><span className="font-bold">₹{dailyRate}</span></div>
+                <div className="flex justify-between"><span>Days</span><span className="font-bold">x {days}</span></div>
                 <div className="p-3 bg-blue-50 rounded-lg text-xs text-blue-700 flex gap-2">
                   <Info size={14} className="flex-shrink-0" />
-                  Flat rate rental. Distance ({distance.toFixed(1)} km) is for route info only.
+                  Rental: Distance ({distance.toFixed(1)} km) is info only.
                 </div>
               </>
             ) : (
               <>
-                <div className="flex justify-between text-gray-600">
-                  <span>Distance</span>
-                  <span>{distance ? distance.toFixed(1) : 0} km</span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Rate per km</span>
-                  <span>₹{ratePerKm}</span>
-                </div>
-<div className="flex justify-between items-center text-gray-600">
-          <span>Rate per km + Base Service Fee</span>
-          <span className="font-bold">₹{ratePerKm+baseServiceFee}</span>
-        </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Distance Fare</span>
-                  <span>₹{routeFare}</span>
-                </div>
-                <div className="flex justify-between text-gray-600 border-b pb-2">
-                  <span>Base Service Fee</span>
-                  <span>₹{baseServiceFee}</span>
-                </div>
-                {tripType === "outstation" && (
-                  <div className="flex justify-between text-blue-600 font-bold">
-                    <span>Outstation Multiplier</span>
-                    <span>x {days} Days</span>
-                  </div>
-                )}
+                <div className="flex justify-between"><span>Distance</span><span>{distance.toFixed(0)} km</span></div>
+                <div className="flex justify-between"><span>Rate/km</span><span>₹{ratePerKm}</span></div>
+                <div className="flex justify-between border-b pb-2"><span>Service Fee</span><span>₹{baseServiceFee}</span></div>
+                <div className="flex justify-between border-b pb-2"><span>Rate/km + Service Fee</span><span>₹{Math.round(ratePerKm + baseServiceFee)}</span></div>
+                
+                {tripType === "outstation" && <div className="flex justify-between text-blue-600 font-bold"><span>Multiplier</span><span>x {days} Days</span></div>}
               </>
             )}
-
             <div className="border-t pt-4 flex justify-between text-3xl font-black text-slate-800">
-              <span>Total</span>
-              <span>₹{totalAmount}</span>
+              <span>Total</span><span>₹{totalAmount}</span>
             </div>
           </div>
-
-          <button onClick={handleFinalBooking} className="w-full bg-yellow-400 py-4 rounded-xl font-bold mt-6 hover:bg-yellow-500 transition">
-            CONFIRM BOOKING
-          </button>
-
-          <div className="mt-6 flex gap-2 text-sm text-gray-600">
-            <ShieldCheck className="text-green-500" /> Verified professional service
-          </div>
+          <button onClick={handleFinalBooking} className="w-full bg-yellow-400 py-4 rounded-xl font-bold mt-6 hover:bg-yellow-500 transition">CONFIRM</button>
+          <div className="mt-6 flex gap-2 text-sm text-gray-600"><ShieldCheck className="text-green-500" /> Professional service</div>
         </div>
-
       </main>
     </div>
   );

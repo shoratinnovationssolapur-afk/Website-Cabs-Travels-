@@ -35,22 +35,22 @@ const AdminBookings = () => {
   useEffect(() => {
     // Only query for drivers who have toggled "Online" (available: true)
     const q = query(
-      collection(db, "drivers"), 
+      collection(db, "drivers"),
       where("available", "==", true)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const driversList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      
+
       // Accept both "active" and "approved" statuses found in your DB
       // We removed the strict 'onTrip' filter so you can see all online drivers
-      const readyDrivers = driversList.filter(d => 
+      const readyDrivers = driversList.filter(d =>
         d.status === "active" || d.status === "approved"
       );
-      
+
       setAvailableDrivers(readyDrivers);
     });
-    
+
     return () => unsubscribe();
   }, []);
 
@@ -79,8 +79,8 @@ const AdminBookings = () => {
     }
   };
 
-  const filteredBookings = bookings.filter(b => 
-    b.phone?.includes(bookingSearch) || 
+  const filteredBookings = bookings.filter(b =>
+    b.phone?.includes(bookingSearch) ||
     b.pickup?.toLowerCase().includes(bookingSearch.toLowerCase())
   );
 
@@ -101,7 +101,7 @@ const AdminBookings = () => {
         <div className="flex flex-col md:flex-row items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input 
+            <input
               type="text"
               placeholder="Search Phone or City..."
               className="pl-10 pr-4 py-2 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-yellow-400 w-64 outline-none"
@@ -122,7 +122,7 @@ const AdminBookings = () => {
         </div>
       </div>
 
-      {/* BOOKING LIST */}
+      {/* BOOKING LIST
       <div className="space-y-4">
         {filteredBookings.map(b => {
           const bookingDateObj = b.dateTime ? new Date(b.dateTime) : null;
@@ -173,7 +173,90 @@ const AdminBookings = () => {
             </div>
           );
         })}
+      </div> */}
+
+      {/* BOOKING LIST */}
+      <div className="space-y-4">
+        {filteredBookings.map(b => {
+          const bookingDateObj = b.dateTime ? new Date(b.dateTime) : null;
+          const isCancelled = b.status === "cancelled" || b.status === "rejected";
+          const isAssigned = b.status === "assigned" || b.driverId;
+
+          // Format Date and Time
+          const tripDate = bookingDateObj
+            ? bookingDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            : "Date N/A";
+          const tripTime = bookingDateObj
+            ? bookingDateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+            : "Time N/A";
+
+          return (
+            <div key={b.id} className={`bg-white p-6 rounded-2xl shadow-sm relative border-l-8 ${isCancelled ? 'border-gray-400' : 'border-yellow-400'
+              }`}>
+              {/* Fare and Method Badge */}
+              <div className="absolute top-4 right-4 text-right">
+                <span className="text-[10px] bg-gray-100 px-2 py-1 rounded-full font-bold uppercase text-gray-400 mb-1 block">
+                  {b.bookingMethod?.replace('_', ' ')}
+                </span>
+                <p className="text-lg font-black text-green-600">
+                  ₹{Math.round(b.totalFare || 0).toLocaleString('en-IN')}
+                </p>
+              </div>
+
+              {/* User Info */}
+              <h2 className="text-xl font-black text-gray-800 uppercase">{b.name || "Guest User"}</h2>
+              <p className="text-sm font-bold text-gray-500">{b.phone}</p>
+
+              {/* ⭐ NEW: Date, Time, and Distance Row */}
+              <div className="flex flex-wrap gap-4 mt-3">
+                <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-xs font-bold">
+                  <Calendar size={14} /> {tripDate}
+                </div>
+                <div className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg text-xs font-bold">
+                  <Clock size={14} /> {tripTime}
+                </div>
+                <div className="flex items-center gap-2 bg-gray-100 text-gray-700 px-3 py-1 rounded-lg text-xs font-bold">
+                  <MapPin size={14} /> {b.distance ? Number(b.distance).toFixed(1) : 0} KM
+                </div>
+              </div>
+
+              {/* Route Details */}
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-2xl">
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase font-black mb-1">Pickup</p>
+                  <p className="text-gray-700 font-medium leading-tight">{b.pickup}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase font-black mb-1">Drop</p>
+                  <p className="text-gray-700 font-medium leading-tight">{b.drop}</p>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="mt-6 flex items-center justify-between border-t pt-4">
+                <span className={`text-xs font-black uppercase px-2 py-1 rounded ${b.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                  }`}>
+                  {b.status}
+                </span>
+
+                {!isCancelled && (
+                  <button
+                    onClick={() => openAssignModal(b.id)}
+                    disabled={isAssigned}
+                    className={`px-6 py-2 rounded-xl font-bold transition shadow-md ${isAssigned ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-black text-yellow-400 hover:bg-gray-800"
+                      }`}
+                  >
+                    {isAssigned ? "Driver Assigned" : "Assign Driver"}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+
+
 
       {/* DRIVER MODAL */}
       {showModal && (
@@ -185,7 +268,7 @@ const AdminBookings = () => {
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="p-4 bg-gray-100 border-b">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -201,12 +284,11 @@ const AdminBookings = () => {
 
             <div className="max-h-[400px] overflow-y-auto p-4 space-y-3">
               {filteredDrivers.map(driver => (
-                <div 
-                  key={driver.id} 
-                  onClick={() => handleFinalAssignment(driver.id)} 
-                  className={`bg-white p-4 rounded-2xl border cursor-pointer transition flex justify-between items-center group ${
-                    driver.onTrip ? 'border-orange-200 bg-orange-50' : 'border-gray-100 hover:border-yellow-400'
-                  }`}
+                <div
+                  key={driver.id}
+                  onClick={() => handleFinalAssignment(driver.id)}
+                  className={`bg-white p-4 rounded-2xl border cursor-pointer transition flex justify-between items-center group ${driver.onTrip ? 'border-orange-200 bg-orange-50' : 'border-gray-100 hover:border-yellow-400'
+                    }`}
                 >
                   <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-xl ${driver.onTrip ? 'bg-orange-200 text-orange-700' : 'bg-yellow-100 text-yellow-700'}`}>
