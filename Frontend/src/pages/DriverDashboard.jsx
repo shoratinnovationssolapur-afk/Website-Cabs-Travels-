@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
-import { db, auth } from "../firebase";
-import { doc, updateDoc, onSnapshot, addDoc, collection, query, where, serverTimestamp, setDoc } from "firebase/firestore";
+import { db, auth, rtdb } from "../firebase";
+// Corrected Imports: Firestore and Database are separate
+import { 
+  doc, updateDoc, onSnapshot, addDoc, collection, 
+  query, where, serverTimestamp, setDoc 
+} from "firebase/firestore"; 
+import { 
+  ref, onValue, onDisconnect, set, 
+  serverTimestamp as rtdTimestamp 
+} from "firebase/database";
 
 export default function DriverDashboard() {
   const [driverInfo, setDriverInfo] = useState(null);
@@ -24,34 +32,66 @@ export default function DriverDashboard() {
   //   return () => unsubDriver();
   // }, []);
 
-  // Inside DriverDashboard useEffect
+  // 2. Presence System: Handle closing the website
   useEffect(() => {
     if (!auth.currentUser) return;
 
+    const userStatusDatabaseRef = ref(rtdb, `/status/${auth.currentUser.uid}`);
+    const connectedRef = ref(rtdb, ".info/connected");
+    const driverDocRef = doc(db, "drivers", auth.currentUser.uid);
+
+    const unsubPresence = onValue(connectedRef, (snapshot) => {
+      if (snapshot.val() === false) return;
+
+      // When the driver DISCONNECTS (closes tab/browser)
+      onDisconnect(userStatusDatabaseRef)
+        .set({
+          available: false,
+          lastSeen: rtdTimestamp(),
+        })
+        .then(() => {
+          // When the driver is ACTIVE/ONLINE
+          // We set the RTD status to true
+          set(userStatusDatabaseRef, {
+            available: true,
+            lastSeen: rtdTimestamp(),
+          });
+
+          // Also ensure Firestore stays synced if they are in 'available' mode
+          if (driverInfo?.available) {
+            updateDoc(driverDocRef, { available: true });
+          }
+        });
+    });
+
+    return () => {
+      // Clean up the listener
+      unsubPresence();
+    };
+  }, [auth.currentUser, driverInfo?.available]);
+
+  // 3. Monitor Driver Info (Firestore)
+  useEffect(() => {
+    if (!auth.currentUser) return;
     const driverRef = doc(db, "drivers", auth.currentUser.uid);
 
     const unsubDriver = onSnapshot(driverRef, (snap) => {
       if (snap.exists()) {
         setDriverInfo(snap.data());
       } else {
-        // ⭐ THE FIX: If the document doesn't exist, create it using Auth data
         const initialData = {
           name: auth.currentUser.displayName || "New Driver",
           email: auth.currentUser.email || "",
-          phone: auth.currentUser.phoneNumber || "",
           available: false,
           status: "active",
           createdAt: serverTimestamp()
         };
-        setDoc(driverRef, initialData); // This uses the UID as the ID
+        setDoc(driverRef, initialData);
       }
       setLoading(false);
     });
-
     return () => unsubDriver();
   }, []);
-
-
 
   // 3. Monitor All Rides for this Driver
   useEffect(() => {

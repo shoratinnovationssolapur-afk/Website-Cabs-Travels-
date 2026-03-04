@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../firebase";
+import { db,rtdb } from "../firebase";
+import { ref, onValue } from "firebase/database";
 import {
   collection,
   updateDoc,
@@ -20,8 +21,41 @@ const AdminBookings = () => {
 
   // New: State for filtering bookings
   const [bookingSearch, setBookingSearch] = useState("");
+  const [rtdbStatus, setRtdbStatus] = useState({});
 
   const totalRevenue = bookings.reduce((acc, curr) => acc + (Number(curr.totalFare) || 0), 0);
+
+// 1. Listen to Realtime Database for ALL driver statuses
+useEffect(() => {
+  const statusRef = ref(rtdb, "status");
+  const unsubscribe = onValue(statusRef, (snapshot) => {
+    if (snapshot.exists()) {
+      setRtdbStatus(snapshot.val());
+    }
+  });
+  return () => unsubscribe();
+}, []);
+
+// 2. Monitor Drivers from Firestore and merge with RTD status
+useEffect(() => {
+  const q = query(collection(db, "drivers"), where("status", "==", "active"));
+  
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const driversList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Merge Firestore data with RTD Live Status
+    const readyDrivers = driversList.filter(driver => {
+      const liveStatus = rtdbStatus[driver.id]?.available;
+      
+      // A driver is truly available if:
+      // 1. Firestore says they aren't on a trip
+      // 2. RTD says they are currently connected (Online)
+      return driver.onTrip !== true && liveStatus === true;
+    });
+
+    setAvailableDrivers(readyDrivers);
+  });
+}, [rtdbStatus]); // Re-run when RTD status changes
 
   useEffect(() => {
     const q = collection(db, "bookings");

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../firebase";
+import { db,rtdb } from "../firebase";
+import { ref, onValue } from "firebase/database";
 import {
   collection,
   addDoc,
@@ -17,8 +18,20 @@ const AdminDrivers = () => {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState(""); // Added email state
   const [searchQuery, setSearchQuery] = useState("");
+ const [rtdbStatus, setRtdbStatus] = useState({});
 
-  // Real-time listener for driver fleet
+
+// Listen to Realtime Database for LIVE connection status
+useEffect(() => {
+  const statusRef = ref(rtdb, "status");
+  const unsubscribe = onValue(statusRef, (snapshot) => {
+    if (snapshot.exists()) {
+      setRtdbStatus(snapshot.val());
+    }
+  });
+  return () => unsubscribe();
+}, []);
+// 2. Real-time listener for Firestore driver fleet
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "drivers"), (snapshot) => {
       const list = snapshot.docs.map(d => ({
@@ -29,8 +42,8 @@ const AdminDrivers = () => {
     });
     return () => unsubscribe();
   }, []);
-
   const filteredDrivers = drivers.filter(d =>
+    
     d.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     d.phone?.includes(searchQuery) ||
     d.email?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -123,6 +136,7 @@ const AdminDrivers = () => {
   };
 
   return (
+    
     <div className="p-10 bg-gray-50 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-3xl font-black text-gray-800 uppercase tracking-tight">Fleet Management</h1>
@@ -175,21 +189,27 @@ const AdminDrivers = () => {
 
       {/* DRIVER GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredDrivers.map(d => (
+        {filteredDrivers.map(d => {
+                       const isActuallyConnected = rtdbStatus[d.id]?.available === true;
+                       return (
           <div key={d.id} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 relative hover:shadow-xl transition-shadow duration-300">
-
+          
             {/* STATUS BADGES */}
             <div className="flex justify-between items-start mb-6">
               <div className="flex flex-col gap-2">
-                <span className={`w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${d.status === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
-                  }`}>
-                  {d.status}
-                </span>
-                <span className={`w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${d.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                  }`}>
-                  {d.available ? "Online" : "Offline / Busy"}
-                </span>
-              </div>
+                <span className={`w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+            d.status === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+          }`}>
+            {d.status}
+          </span>
+          
+<span className={`w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
+            isActuallyConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}>
+            {isActuallyConnected && <span className="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse"></span>}
+            {isActuallyConnected ? "Live Now" : "Disconnected"}
+          </span>
+        </div>
               <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full">
                 <Star size={14} className="text-yellow-500 fill-yellow-500" />
                 <span className="text-sm font-bold text-yellow-700">{d.rating || 5}</span>
@@ -207,19 +227,17 @@ const AdminDrivers = () => {
             </div>
 
 
-            {/* LIVE LOCATION SECTION (SYNCED WITH DRIVER DASHBOARD) */}
-            <div className={`mt-6 p-5 rounded-[2rem] flex items-start gap-3 border transition-colors ${d.available ? 'bg-blue-50 border-blue-100' : 'bg-slate-50 border-slate-100 opacity-60'
-              }`}>
-              <MapPin className={`${d.available ? 'text-blue-600' : 'text-gray-400'} shrink-0 mt-1`} size={20} />
-              <div className="overflow-hidden">
-                <div className="flex justify-between items-center mb-1">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                    {d.available ? "Live Tracking Active" : "Last Known Location"}
-                  </p>
-                  {d.available && (
-                    <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-ping"></span>
-                  )}
-                </div>
+{/* LIVE LOCATION SECTION */}
+      <div className={`mt-6 p-5 rounded-[2rem] flex items-start gap-3 border transition-colors ${
+        isActuallyConnected ? 'bg-blue-50 border-blue-100' : 'bg-slate-50 border-slate-100 opacity-60'
+      }`}>
+        <MapPin className={`${isActuallyConnected ? 'text-blue-600' : 'text-gray-400'} shrink-0 mt-1`} size={20} />
+        <div className="overflow-hidden">
+          <div className="flex justify-between items-center mb-1">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              {isActuallyConnected ? "Live Tracking Active" : "Last Known Location"}
+            </p>
+          </div>
 
                 {/* ⭐ UPDATED DATA PATH: d.lastLocation.address */}
                 <p className={`text-sm font-bold leading-tight ${d.available ? 'text-blue-900' : 'text-gray-700'}`}>
@@ -272,7 +290,8 @@ const AdminDrivers = () => {
               </button>
             </div>
           </div>
-        ))}
+                       );
+})}
       </div>
     </div>
   );
