@@ -706,11 +706,11 @@ const submitBooking = async () => {
           {/* LEFT CONTENT */}
           <div>
             <h2 className="text-4xl font-bold mb-6 text-gray-900">
-              About Rathod Cabs & Travels
+              About Rathod Express
             </h2>
 
             <p className="text-gray-700 mb-4 leading-relaxed">
-              Rathod Cabs & Travels is a trusted cab service provider offering
+              Rathod Express is a trusted cab service provider offering
               comfortable, safe, and reliable transportation across Solapur,
               Pune, Mumbai, Goa, and nearby destinations. We specialize in
               outstation travel, airport transfers, and corporate rides with
@@ -829,7 +829,7 @@ const submitBooking = async () => {
       {/* ================= FOOTER ================= */}
       <footer className="bg-yellow-500 text-white font-bold py-8 px-6 text-center">
         <p className="font-bold">
-          Rathod Cabs & Travels
+          Rathod Express
         </p>
         <p>Solapur | Pune | Mumbai | Goa</p>
         <p>Phone: +91 9130067841</p>

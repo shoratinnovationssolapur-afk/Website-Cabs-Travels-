@@ -158,7 +158,7 @@ const RentCarPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-6">
       <h1 className="text-4xl font-bold text-center mb-4">Rent Your Car With Us</h1>
-      <p className="text-center text-gray-600 mb-10">Earn money by listing your vehicle on Rathod Cabs & Travels</p>
+      <p className="text-center text-gray-600 mb-10">Earn money by listing your vehicle on Rathod Express</p>
 
       <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
         <form className="grid md:grid-cols-2 gap-6" onSubmit={handleSubmit}>
