@@ -93,7 +93,7 @@ useEffect(() => {
           onClick={goHome}
           className={`text-xl font-bold  text-yellow-500 cursor-pointer`}
         >
-          Rathod Cabs & Travels
+          Rathod Express
         </h2>
         {username && (
             <div className="  hidden md:block bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl text-yellow-400 font-semibold shadow-lg relative top-0.5">
