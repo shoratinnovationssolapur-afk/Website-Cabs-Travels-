@@ -26,6 +26,7 @@ const AdminBookings = () => {
   const totalRevenue = bookings.reduce((acc, curr) => acc + (Number(curr.totalFare) || 0), 0);
 
 // 1. Listen to Realtime Database for ALL driver statuses
+// 1. Listen to Realtime Database for LIVE connection status
 useEffect(() => {
   const statusRef = ref(rtdb, "status");
   const unsubscribe = onValue(statusRef, (snapshot) => {
@@ -36,27 +37,39 @@ useEffect(() => {
   return () => unsubscribe();
 }, []);
 
-// 2. Monitor Drivers from Firestore and merge with RTD status
+// 2. Monitor Drivers from Firestore and merge with RTD Live Status
 useEffect(() => {
-  const q = query(collection(db, "drivers"), where("status", "==", "active"));
+  // We only pull drivers who are 'active' (account not suspended) 
+  // and have toggled 'available' to true in their app.
+  const q = query(
+    collection(db, "drivers"), 
+    where("status", "==", "active"),
+    where("available", "==", true)
+  );
   
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const driversList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // Merge Firestore data with RTD Live Status
+    // THE FILTER LOGIC:
     const readyDrivers = driversList.filter(driver => {
+      // Check if they are actually online (RTD status)
       const liveStatus = rtdbStatus[driver.id]?.available;
       
-      // A driver is truly available if:
-      // 1. Firestore says they aren't on a trip
-      // 2. RTD says they are currently connected (Online)
-      return driver.onTrip !== true && liveStatus === true;
+      // Check if they are physically on a trip right now
+      // (This only becomes true when they click "Start Trip" in their dashboard)
+      const isNotCurrentlyOnTrip = driver.onTrip !== true;
+      
+      // A driver is visible for assignment if:
+      // - They have the app open (liveStatus)
+      // - AND they aren't currently driving a passenger (isNotCurrentlyOnTrip)
+      return isNotCurrentlyOnTrip && liveStatus === true;
     });
 
     setAvailableDrivers(readyDrivers);
   });
-}, [rtdbStatus]); // Re-run when RTD status changes
 
+  return () => unsubscribe();
+}, [rtdbStatus]); // Re-sync whenever someone connects/disconnects
   useEffect(() => {
     const q = collection(db, "bookings");
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -67,7 +80,13 @@ useEffect(() => {
   }, []);
 
   useEffect(() => {
-    const q = query(collection(db, "drivers"), where("status", "==", "active"), where("available", "==", true));
+    // In Admin/Assignment Logic
+const q = query(
+  collection(db, "drivers"), 
+  where("status", "==", "active"), 
+  where("available", "==", true),
+  where("onTrip", "==", false) // This will now include drivers with upcoming/assigned rides
+);
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const driversList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       const readyDrivers = driversList.filter(d => d.onTrip !== true);
