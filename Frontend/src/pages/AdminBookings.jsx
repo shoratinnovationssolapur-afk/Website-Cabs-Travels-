@@ -18,7 +18,7 @@ const AdminBookings = () => {
   const [showModal, setShowModal] = useState(false);
   const [activeBookingId, setActiveBookingId] = useState(null);
   const [driverSearch, setDriverSearch] = useState("");
-
+  
   // New: State for filtering bookings
   const [bookingSearch, setBookingSearch] = useState("");
   const [rtdbStatus, setRtdbStatus] = useState({});
@@ -168,7 +168,7 @@ useEffect(() => {
             <div key={b.id} className={`bg-white p-6 rounded-2xl shadow-sm relative border-l-8 ${
               isCancelled ? 'border-gray-400 opacity-75' : isExpired ? 'border-red-600' : 'border-yellow-400'
             }`}>
-
+              
               {isExpired && (
                 <div className="mb-4 bg-red-100 border border-red-200 p-3 rounded-xl flex items-center gap-3 animate-pulse">
                   <AlertTriangle className="text-red-600" size={20} />
@@ -230,7 +230,6 @@ useEffect(() => {
                 }`}>
                    {isCancelled ? "CANCELLED" : isExpired ? "EXPIRED" : b.status}
                 </span>
-
                 
                <div className="flex gap-2">
   {/* ⭐ CHANGE: Only show buttons if the trip is NOT cancelled AND NOT completed */}
