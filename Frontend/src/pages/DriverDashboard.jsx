@@ -80,23 +80,40 @@ export default function DriverDashboard() {
     return () => unsubRides();
   }, []);
 
-  // 5. Automatic "Stuck" Status Reset
-  useEffect(() => {
-    const resetStuckStatus = async () => {
-      if (!driverInfo || loading) return;
-      // Driver is only BUSY if a trip is specifically "on_the_way"
-      const hasActiveTrip = allRides.some(ride => ride.status === "on_the_way");
+  // 5. Automatic "Busy/Available" Status Sync
+useEffect(() => {
+  const syncBusyStatus = async () => {
+    if (!driverInfo || loading) return;
 
-      if (driverInfo.onTrip && !hasActiveTrip) {
-        console.log("Resetting busy status: Driver has no active 'on_the_way' trip.");
-        await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
-          onTrip: false,
-          currentRideId: null
-        });
-      }
-    };
-    resetStuckStatus();
-  }, [allRides, driverInfo, loading]);
+    // A driver is BUSY if:
+    // 1. They have a trip starting within 1 hour (the 'current' logic)
+    // 2. OR they are currently 'on_the_way'
+    const hasCurrentOrActiveTrip = allRides.some(ride => {
+      const rideDate = new Date(ride.dateTime);
+      const isWithinHour = rideDate <= oneHourFromNow;
+      return ride.status === "on_the_way" || (isWithinHour && ride.status !== "completed");
+    });
+
+    // If they have a current trip but Firestore says they are free, mark as BUSY
+    if (hasCurrentOrActiveTrip && !driverInfo.onTrip) {
+      console.log("Trip detected in 'Current'. Marking driver as Busy for Admin.");
+      await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
+        onTrip: true
+      });
+    }
+    
+    // If they have NO current trips but Firestore says they are busy, mark as FREE
+    if (!hasCurrentOrActiveTrip && driverInfo.onTrip) {
+      console.log("No trips in 'Current'. Marking driver as Available for Admin.");
+      await updateDoc(doc(db, "drivers", auth.currentUser.uid), {
+        onTrip: false,
+        currentRideId: null
+      });
+    }
+  };
+
+  syncBusyStatus();
+}, [allRides, driverInfo?.onTrip, loading]);
 
   // 6. Ride Logic (Current vs Upcoming)
   const nowTime = new Date();
@@ -117,40 +134,28 @@ export default function DriverDashboard() {
     .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
 
   // 7. Update Ride Status Handler
-  const updateRideStatus = async (ride, status) => {
-    const rideDate = new Date(ride.dateTime);
-    const fiveMinsBefore = new Date(rideDate.getTime() - 5 * 60 * 1000);
+const updateRideStatus = async (ride, status) => {
+  // ... (keep validations for time and confirm)
 
-    if (status === "on_the_way" && new Date() < fiveMinsBefore) {
-      alert(`Too early! Start at ${fiveMinsBefore.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
-      return;
+  try {
+    const bookingRef = doc(db, "bookings", ride.id);
+    const driverRef = doc(db, "drivers", auth.currentUser.uid);
+
+    if (status === "completed") {
+      await addDoc(collection(db, "confirmed_bookings"), { ...ride, status: "completed", completedAt: serverTimestamp() });
+      await updateDoc(bookingRef, { status: "completed" });
+      // The useEffect will detect the change and set onTrip to false automatically
+    } 
+    else if (status === "cancelled") {
+      await updateDoc(bookingRef, { status: "pending", driverId: null });
+    } 
+    else {
+      await updateDoc(bookingRef, { status });
     }
-    if (status === "cancelled" && !window.confirm("Cancel this trip?")) return;
-
-    try {
-      const driverRef = doc(db, "drivers", auth.currentUser.uid);
-      const bookingRef = doc(db, "bookings", ride.id);
-
-      if (status === "on_the_way") {
-        await updateDoc(bookingRef, { status });
-        await updateDoc(driverRef, { onTrip: true, currentRideId: ride.id });
-      } 
-      else if (status === "completed") {
-        await addDoc(collection(db, "confirmed_bookings"), { ...ride, status: "completed", completedAt: serverTimestamp() });
-        await updateDoc(bookingRef, { status: "completed" });
-        await updateDoc(driverRef, { onTrip: false, currentRideId: null });
-      } 
-      else if (status === "cancelled") {
-        await updateDoc(bookingRef, { status: "pending", driverId: null });
-        await updateDoc(driverRef, { onTrip: false });
-      } 
-      else {
-        await updateDoc(bookingRef, { status });
-      }
-    } catch (error) {
-      console.error("Update Error:", error);
-    }
-  };
+  } catch (error) {
+    console.error("Update Error:", error);
+  }
+};
 
   const handleDutyToggle = async () => {
     if (!auth.currentUser) return;
