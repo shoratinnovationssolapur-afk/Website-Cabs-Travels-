@@ -89,12 +89,24 @@ useEffect(() => {
 
       <div className="flex gap-3 items-center" >
         <FaBars className="relative top-0.5 cursor-pointer" onClick={toggleSB} />
-        <h2
-          onClick={goHome}
-          className={`text-xl font-bold  text-yellow-500 cursor-pointer`}
-        >
-          Rathod Express
-        </h2>
+<div 
+  onClick={goHome} 
+  className="flex items-center gap-3 cursor-pointer"
+>
+  {/* Circular Icon Container */}
+  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-yellow-500 shadow-sm">
+    <img 
+      src="/src/assets/logo 1.png" 
+      alt="Logo" 
+      className="w-full h-full object-cover"
+    />
+  </div>
+
+  {/* Text Title */}
+  <h2 className="text-xl font-bold text-yellow-500">
+    Rathod Express
+  </h2>
+</div>
         {username && (
             <div className="  hidden md:block bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl text-yellow-400 font-semibold shadow-lg relative top-0.5">
               Welcome back, {username} 👋
