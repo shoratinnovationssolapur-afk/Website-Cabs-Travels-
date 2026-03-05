@@ -93,6 +93,10 @@ export default function DriverDashboard() {
     return () => unsubDriver();
   }, []);
 
+
+  // 2. Monitor Drivers from Firestore and merge with RTD status
+
+
   // 3. Monitor All Rides for this Driver
   useEffect(() => {
     if (!auth.currentUser) return;

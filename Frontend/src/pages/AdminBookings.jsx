@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db,rtdb } from "../firebase";
+import { db, rtdb } from "../firebase";
 import { ref, onValue } from "firebase/database";
 import {
   collection,
@@ -18,44 +18,106 @@ const AdminBookings = () => {
   const [showModal, setShowModal] = useState(false);
   const [activeBookingId, setActiveBookingId] = useState(null);
   const [driverSearch, setDriverSearch] = useState("");
-  
+
   // New: State for filtering bookings
   const [bookingSearch, setBookingSearch] = useState("");
   const [rtdbStatus, setRtdbStatus] = useState({});
 
   const totalRevenue = bookings.reduce((acc, curr) => acc + (Number(curr.totalFare) || 0), 0);
 
-// 1. Listen to Realtime Database for ALL driver statuses
-useEffect(() => {
-  const statusRef = ref(rtdb, "status");
-  const unsubscribe = onValue(statusRef, (snapshot) => {
-    if (snapshot.exists()) {
-      setRtdbStatus(snapshot.val());
-    }
-  });
-  return () => unsubscribe();
-}, []);
+  // 1. Listen to Realtime Database for ALL driver statuses
+  // 1. Listen to Realtime Database for ALL driver statuses (Keep this as is)
+  useEffect(() => {
+    const statusRef = ref(rtdb, "status");
+    const unsubscribe = onValue(statusRef, (snapshot) => {
+      if (snapshot.exists()) setRtdbStatus(snapshot.val());
+    });
+    return () => unsubscribe();
+  }, []);
 
-// 2. Monitor Drivers from Firestore and merge with RTD status
-useEffect(() => {
-  const q = query(collection(db, "drivers"), where("status", "==", "active"));
-  
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const driversList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  // 2. Monitor Drivers from Firestore and merge with RTD status
+  // useEffect(() => {
+  //   const q = query(collection(db, "drivers"), where("status", "==", "active"));
 
-    // Merge Firestore data with RTD Live Status
-    const readyDrivers = driversList.filter(driver => {
-      const liveStatus = rtdbStatus[driver.id]?.available;
-      
-      // A driver is truly available if:
-      // 1. Firestore says they aren't on a trip
-      // 2. RTD says they are currently connected (Online)
-      return driver.onTrip !== true && liveStatus === true;
+  //   const unsubscribe = onSnapshot(q, (snapshot) => {
+  //     const driversList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  //     // Merge Firestore data with RTD Live Status
+  //     const readyDrivers = driversList.filter(driver => {
+  //       const liveStatus = rtdbStatus[driver.id]?.available;
+
+  //       // A driver is truly available if:
+  //       // 1. Firestore says they aren't on a trip
+  //       // 2. RTD says they are currently connected (Online)
+  //       return driver.onTrip !== true && liveStatus === true;
+  //     });
+
+  //     setAvailableDrivers(readyDrivers);
+  //   });
+  // }, [rtdbStatus]); // Re-run when RTD status changes
+
+
+
+  // useEffect(() => {
+  //   // Query only for 'active' drivers. 
+  //   // We remove the 'available' and 'upcoming' filters from the Firestore query 
+  //   // to handle that logic more flexibly in JavaScript below.
+  //   const q = query(collection(db, "drivers"), where("status", "==", "active"));
+
+  //   const unsubscribe = onSnapshot(q, (snapshot) => {
+  //     const driversList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  //     // Merge Firestore data with RTD Live Status
+  //     const readyDrivers = driversList.filter(driver => {
+  //       const liveStatus = rtdbStatus[driver.id]?.available;
+
+  //       // A driver is selectable if:
+  //       // 1. RTD says they are currently connected (Online)
+  //       const isOnline = liveStatus === true;
+
+  //       // 2. They aren't in the middle of a physical trip right now
+  //       const isNotBusy = driver.onTrip !== true;
+
+  //       // This logic allows them to show up even if they have an 'upcoming' booking 
+  //       // assigned for later today/tomorrow.
+  //       return isOnline && isNotBusy;
+  //     });
+
+  //     setAvailableDrivers(readyDrivers);
+  //   });
+
+  //   return () => unsubscribe();
+  // }, [rtdbStatus]);
+
+
+
+  useEffect(() => {
+    // Query ONLY for active drivers. Do NOT filter 'upcoming' or 'available' in Firestore.
+    const q = query(collection(db, "drivers"), where("status", "==", "active"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const driversList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      const filtered = driversList.filter(driver => {
+        const liveStatus = rtdbStatus[driver.id]?.available;
+
+        // LOGIC:
+        // A driver should show in the modal if:
+        // 1. They are currently Online (RTD)
+        const isOnline = liveStatus === true;
+        // 2. They are NOT currently in the middle of a trip (onTrip field in Firestore)
+        const isNotCurrentlyDriving = driver.onTrip !== true;
+
+        // Note: We IGNORE the 'upcoming' flag here. 
+        // This allows drivers WITH upcoming rides to still show up in the modal.
+        return isOnline && isNotCurrentlyDriving;
+      });
+
+      setAvailableDrivers(filtered);
     });
 
-    setAvailableDrivers(readyDrivers);
-  });
-}, [rtdbStatus]); // Re-run when RTD status changes
+    return () => unsubscribe();
+  }, [rtdbStatus]); // Re-sync when anyone goes online/offline
 
   useEffect(() => {
     const q = collection(db, "bookings");
@@ -66,15 +128,15 @@ useEffect(() => {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const q = query(collection(db, "drivers"), where("status", "==", "active"), where("available", "==", true));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const driversList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      const readyDrivers = driversList.filter(d => d.onTrip !== true);
-      setAvailableDrivers(readyDrivers);
-    });
-    return () => unsubscribe();
-  }, []);
+  // useEffect(() => {
+  //   const q = query(collection(db, "drivers"), where("status", "==", "active"), where("available", "==", true));
+  //   const unsubscribe = onSnapshot(q, (snapshot) => {
+  //     const driversList = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  //     const readyDrivers = driversList.filter(d => d.onTrip !== true);
+  //     setAvailableDrivers(readyDrivers);
+  //   });
+  //   return () => unsubscribe();
+  // }, []);
 
   const updateStatus = async (b, status) => {
     try {
@@ -102,8 +164,8 @@ useEffect(() => {
   };
 
   // Filter Bookings by Phone or Pickup City
-  const filteredBookings = bookings.filter(b => 
-    b.phone?.includes(bookingSearch) || 
+  const filteredBookings = bookings.filter(b =>
+    b.phone?.includes(bookingSearch) ||
     b.pickup?.toLowerCase().includes(bookingSearch.toLowerCase())
   );
 
@@ -125,7 +187,7 @@ useEffect(() => {
           {/* SEARCH BAR FOR BOOKINGS */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input 
+            <input
               type="text"
               placeholder="Search Phone or City..."
               className="pl-10 pr-4 py-2 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-yellow-400 w-64 outline-none"
@@ -153,10 +215,10 @@ useEffect(() => {
           const isCancelled = b.status === "cancelled" || b.status === "rejected";
           const isExpired = bookingDateObj && bookingDateObj < now && b.status !== "completed" && !isCancelled;
 
-          const tripDate = bookingDateObj 
+          const tripDate = bookingDateObj
             ? bookingDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
             : "Date N/A";
-          const tripTime = bookingDateObj 
+          const tripTime = bookingDateObj
             ? bookingDateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
             : "Time N/A";
 
@@ -165,10 +227,9 @@ useEffect(() => {
           const assignedDriverOffline = b.driverId && !availableDrivers.find(d => d.id === b.driverId);
 
           return (
-            <div key={b.id} className={`bg-white p-6 rounded-2xl shadow-sm relative border-l-8 ${
-              isCancelled ? 'border-gray-400 opacity-75' : isExpired ? 'border-red-600' : 'border-yellow-400'
-            }`}>
-              
+            <div key={b.id} className={`bg-white p-6 rounded-2xl shadow-sm relative border-l-8 ${isCancelled ? 'border-gray-400 opacity-75' : isExpired ? 'border-red-600' : 'border-yellow-400'
+              }`}>
+
               {isExpired && (
                 <div className="mb-4 bg-red-100 border border-red-200 p-3 rounded-xl flex items-center gap-3 animate-pulse">
                   <AlertTriangle className="text-red-600" size={20} />
@@ -223,43 +284,41 @@ useEffect(() => {
               </div>
 
               <div className="mt-6 flex items-center justify-between border-t pt-4">
-                <span className={`text-xs font-black uppercase px-2 py-1 rounded ${
-                  b.status === 'completed' ? 'bg-green-100 text-green-700' : 
-                  isCancelled ? 'bg-gray-200 text-gray-500' : 
-                  isExpired ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                }`}>
-                   {isCancelled ? "CANCELLED" : isExpired ? "EXPIRED" : b.status}
+                <span className={`text-xs font-black uppercase px-2 py-1 rounded ${b.status === 'completed' ? 'bg-green-100 text-green-700' :
+                  isCancelled ? 'bg-gray-200 text-gray-500' :
+                    isExpired ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                  }`}>
+                  {isCancelled ? "CANCELLED" : isExpired ? "EXPIRED" : b.status}
                 </span>
-                
-               <div className="flex gap-2">
-  {/* ⭐ CHANGE: Only show buttons if the trip is NOT cancelled AND NOT completed */}
-  {!isCancelled && b.status !== "completed" && (
-    <>
-      {isExpired ? (
-        <button 
-          onClick={() => updateStatus(b, "cancelled")} 
-          className="bg-red-600 text-white font-bold px-6 py-2 rounded-xl hover:bg-red-700 transition"
-        >
-          Cancel Old
-        </button>
-      ) : (
-        <button 
-          onClick={() => openAssignModal(b.id)} 
-          disabled={isAssigned && !assignedDriverOffline}
-          className={`px-6 py-2 rounded-xl font-bold transition shadow-md ${ 
-            (isAssigned && !assignedDriverOffline) 
-              ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
-              : assignedDriverOffline 
-                ? "bg-red-600 text-white" 
-                : "bg-black text-yellow-400 hover:bg-gray-800"
-          }`}
-        >
-          {assignedDriverOffline ? "Reassign Now" : isAssigned ? "Driver Assigned" : "Assign Driver"}
-        </button>
-      )}
-    </>
-  )}
-</div>
+
+                <div className="flex gap-2">
+                  {/* ⭐ CHANGE: Only show buttons if the trip is NOT cancelled AND NOT completed */}
+                  {!isCancelled && b.status !== "completed" && (
+                    <>
+                      {isExpired ? (
+                        <button
+                          onClick={() => updateStatus(b, "cancelled")}
+                          className="bg-red-600 text-white font-bold px-6 py-2 rounded-xl hover:bg-red-700 transition"
+                        >
+                          Cancel Old
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => openAssignModal(b.id)}
+                          disabled={isAssigned && !assignedDriverOffline}
+                          className={`px-6 py-2 rounded-xl font-bold transition shadow-md ${(isAssigned && !assignedDriverOffline)
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : assignedDriverOffline
+                              ? "bg-red-600 text-white"
+                              : "bg-black text-yellow-400 hover:bg-gray-800"
+                            }`}
+                        >
+                          {assignedDriverOffline ? "Reassign Now" : isAssigned ? "Driver Assigned" : "Assign Driver"}
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           );
@@ -306,6 +365,8 @@ useEffect(() => {
                   <UserCheck className="text-gray-300 group-hover:text-green-500 transition" />
                 </div>
               ))}
+              
+
             </div>
           </div>
         </div>
