@@ -83,6 +83,28 @@ export default function AdminLayout() {
           >
             📅 Tour Bookings
           </button>
+
+<button
+  className="text-left hover:bg-white hover:text-black cursor-pointer p-2 transition rounded flex items-center gap-2"
+  onClick={() => navigate("/admin/inquiries")}
+>
+  📩 Customer Inquiries
+</button>
+
+                    <button
+            onClick={() => navigate("/contact-us")}
+            className="block w-full text-left hover:text-yellow-400 font-medium p-2 transition rounded hover:bg-white/10"
+          >
+            📞 Contact Us
+          </button>
+
+                    <button
+            onClick={() => navigate("/about-us")}
+            className="block w-full text-left hover:text-yellow-400 font-medium p-2 transition rounded hover:bg-white/10"
+          >
+            ℹ️ About Us
+          </button>
+
         </nav>
       </aside>
 

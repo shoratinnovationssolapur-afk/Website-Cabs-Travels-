@@ -193,6 +193,7 @@ useEffect(() => {
           <option value="SUV">SUV</option>
           <option value="Sedan">Sedan</option>
           <option value="Luxury">Luxury</option>
+          <option value="Travels">Travels</option>
         </select>
 
         <input

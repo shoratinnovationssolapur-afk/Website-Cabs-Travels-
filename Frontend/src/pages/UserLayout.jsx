@@ -78,6 +78,20 @@ const UserLayout = () => {
           </button>
 
           <button
+            onClick={() => navigate("/contact-us")}
+            className="block w-full text-left hover:text-yellow-400 font-medium p-2 transition rounded hover:bg-white/10"
+          >
+            📞 Contact Us
+          </button>
+
+                    <button
+            onClick={() => navigate("/about-us")}
+            className="block w-full text-left hover:text-yellow-400 font-medium p-2 transition rounded hover:bg-white/10"
+          >
+            ℹ️ About Us
+          </button>
+
+          <button
             onClick={() => navigate("/user/profile")}
             className="block w-full text-left hover:text-yellow-400 font-medium p-2 transition rounded hover:bg-white/10"
           >

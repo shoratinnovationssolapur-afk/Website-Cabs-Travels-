@@ -51,7 +51,8 @@ const HomePage = () => {
   const [selectedService, setSelectedService] = useState(null);
   const [heroPickup, setHeroPickup] = useState("");
   const [heroDrop, setHeroDrop] = useState("");
-  const [vehicles, setVehicles] = useState([]);
+const [vehicles, setVehicles] = useState([]); // Existing
+const [tours, setTours] = useState([]);       // Add this
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
 
   const [calculatedFare, setCalculatedFare] = useState(0);
@@ -104,23 +105,33 @@ useEffect(() => {
 }, [pickup, drop]);
 
 useEffect(() => {
-  // 1. Create a query to the vehicles collection
-  const q = query(collection(db, "vehicles"),where("available", "==", true));
-
-  // 2. Set up the real-time listener
-  const unsubscribe = onSnapshot(q, (snapshot) => {
+  // 1. Vehicle Listener (Existing)
+  const qVehicles = query(collection(db, "vehicles"), where("available", "==", true));
+  const unsubVehicles = onSnapshot(qVehicles, (snapshot) => {
     const vehicleList = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
-    
     setVehicles(vehicleList);
-  }, (error) => {
-    console.error("Error listening to vehicles:", error);
   });
 
-  // 3. Clean up the listener when the component unmounts
-  return () => unsubscribe();
+  // 2. Tours Listener (New)
+  const qTours = query(collection(db, "tours")); // Adjust query if you have an 'available' field here too
+  const unsubTours = onSnapshot(qTours, (snapshot) => {
+    const tourList = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    setTours(tourList);
+  }, (error) => {
+    console.error("Error listening to tours:", error);
+  });
+
+  // 3. Clean up both listeners
+  return () => {
+    unsubVehicles();
+    unsubTours();
+  };
 }, []);
 
 
@@ -540,7 +551,6 @@ const submitBooking = async () => {
         </div>
       </section>
 
-
             {/*Others SHOWCASE*/}
 {/* ================= OTHERS SHOWCASE ================= */}
 <section id="OTHERS" className="py-16 px-6 bg-white">
@@ -574,6 +584,151 @@ const submitBooking = async () => {
   )}
 </section>
     
+
+
+{/* ================= BUSES & TRAVELS SHOWCASE ================= */}
+<section id="TRAVELS" className="py-16 px-6 bg-slate-50">
+  <div className="max-w-7xl mx-auto">
+    <div className="text-center mb-12">
+      <h2 className="text-3xl font-bold text-black font-outfit">
+        Buses & Large Travels
+      </h2>
+      <p className="text-gray-500 mt-2">Perfect for group tours, weddings, and corporate events</p>
+    </div>
+
+    {/* Scroll Container */}
+    <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-6 no-scrollbar">
+      {vehicles
+        .filter(v => v.type === "Travels" || v.type === "Bus")
+        .map(vehicle => (
+          <div 
+            key={vehicle.id}
+            onClick={() => navigate(`/booking?vehicle_id=${vehicle.id}`)}
+            className="min-w-[300px] md:min-w-[380px] bg-white rounded-3xl shadow-md overflow-hidden flex-shrink-0 group cursor-pointer border border-gray-100 hover:shadow-2xl transition-all duration-300"
+          >
+            {/* Image Container with Capacity Badge */}
+            <div className="relative h-52 overflow-hidden">
+              <img
+                src={vehicle.imageUrl}
+                alt={vehicle.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold">
+                {vehicle.capacity || "17-50"} Seater
+              </div>
+            </div>
+
+            <div className="p-5">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-bold text-xl text-gray-900">{vehicle.name}</h3>
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                  {vehicle.acType || "A/C"}
+                </span>
+              </div>
+              
+              <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                {vehicle.desc || "Ideal for long-distance group travel with premium push-back seats."}
+              </p>
+
+              <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                <div>
+                  <span className="text-gray-400 text-xs uppercase font-bold tracking-tighter">Base Rate</span>
+                  <p className="text-lg font-black text-slate-800">
+                    {vehicle.pricePerKm ? `₹${vehicle.pricePerKm}/km` : "Contact for Quote"}
+                  </p>
+                </div>
+                <button className="bg-slate-900 text-white px-5 py-2 rounded-xl text-sm font-bold group-hover:bg-blue-700 transition-colors">
+                  Book Travels
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+    </div>
+
+    {/* Empty State */}
+    {vehicles.filter(v => v.type === "Travels" || v.type === "Bus").length === 0 && (
+      <div className="text-center py-10 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+        <p className="text-gray-400 italic">No large buses available currently. Contact us for offline booking.</p>
+      </div>
+    )}
+  </div>
+</section>
+
+
+{/* ================= TRAVELS / TOURS SHOWCASE ================= */}
+<section id="TRAVELS" className="py-16 px-6 bg-slate-50">
+  <div className="max-w-7xl mx-auto">
+    <div className="flex flex-col md:flex-row justify-between items-end mb-12">
+      <div>
+        <h2 className="text-3xl font-bold text-black">Popular Tour Packages</h2>
+        <p className="text-gray-500 mt-2">Explore the best destinations with our curated travel plans</p>
+      </div>
+      <button 
+        onClick={() => navigate('user/tours')} 
+        className="hidden md:block text-blue-600 font-semibold hover:underline"
+      >
+        View All Packages →
+      </button>
+    </div>
+
+    {/* Scroll Container */}
+    <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-6 no-scrollbar">
+      {/* If you have a 'tours' array from Firestore, use it here. 
+         Otherwise, you can filter your vehicles if they are marked as 'Tour'
+      */}
+      {tours && tours.length > 0 ? (
+        tours.map((tour) => (
+          <div 
+            key={tour.id}
+            onClick={() =>navigate(`/user/tour/${tour.id}`)}
+            className="min-w-[300px] md:min-w-[350px] bg-white rounded-3xl shadow-md overflow-hidden flex-shrink-0 group cursor-pointer border border-gray-100 hover:shadow-xl transition-all duration-300"
+          >
+            <div className="relative h-56 overflow-hidden">
+              <img
+                src={tour.imageUrl}
+                alt={tour.title}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-blue-600 shadow-sm">
+                {tour.duration || "3 Days / 2 Nights"}
+              </div>
+            </div>
+
+            <div className="p-5">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-bold text-xl text-gray-900 group-hover:text-blue-600 transition-colors">
+                  {tour.title}
+                </h3>
+                <div className="flex items-center text-orange-500 font-bold">
+                  ★ <span className="text-gray-700 ml-1 text-sm">{tour.rating || "4.9"}</span>
+                </div>
+              </div>
+              
+              <p className="text-gray-500 text-sm line-clamp-2 mb-4">
+                {tour.description || "Discover the hidden gems and local culture of this beautiful destination."}
+              </p>
+
+              <div className="flex justify-between items-center pt-4 border-t border-gray-50">
+                <div>
+                  <p className="text-xs text-gray-400 uppercase font-black">Starting from</p>
+                  <p className="text-lg font-extrabold text-blue-700">₹{tour.price || "4,999"}</p>
+                </div>
+                <button className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold group-hover:bg-blue-600 transition-colors">
+                  Book Now
+                </button>
+              </div>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="w-full text-center py-10 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+          <p className="text-gray-400">Loading amazing tour packages...</p>
+        </div>
+      )}
+    </div>
+  </div>
+</section>
 
 
         {/* ================= QUICK BOOKING ================= */}
