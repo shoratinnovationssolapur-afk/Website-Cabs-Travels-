@@ -132,28 +132,28 @@ const q = query(
   );
 
   return (
-    <div className="p-10 bg-gray-100 min-h-screen">
+    <div className="p-4 sm:p-6 md:p-10 bg-gray-100 min-h-screen">
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-800 uppercase tracking-tight">Fleet Bookings</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-800 uppercase tracking-tight">Fleet Bookings</h1>
           <p className="text-gray-500 font-bold text-sm">Manage orders and track revenue</p>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center gap-4">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full md:w-auto">
           {/* SEARCH BAR FOR BOOKINGS */}
-          <div className="relative">
+          <div className="relative w-full md:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
               placeholder="Search Phone or City..."
-              className="pl-10 pr-4 py-2 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-yellow-400 w-64 outline-none"
+              className="pl-10 pr-4 py-2 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-yellow-400 w-full md:w-64 outline-none"
               value={bookingSearch}
               onChange={(e) => setBookingSearch(e.target.value)}
             />
           </div>
 
-          <div className="bg-white px-8 py-4 rounded-3xl shadow-sm border border-green-100 flex items-center gap-6">
+          <div className="bg-white px-4 md:px-8 py-4 rounded-3xl shadow-sm border border-green-100 flex items-center gap-4 md:gap-6">
             <div className="bg-green-500 p-3 rounded-2xl text-white"><TrendingUp size={24} /></div>
             <div>
               <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Total Fleet Revenue</p>
@@ -184,7 +184,7 @@ const q = query(
           const assignedDriverOffline = b.driverId && !availableDrivers.find(d => d.id === b.driverId);
 
           return (
-            <div key={b.id} className={`bg-white p-6 rounded-2xl shadow-sm relative border-l-8 ${isCancelled ? 'border-gray-400 opacity-75' : isExpired ? 'border-red-600' : 'border-yellow-400'
+            <div key={b.id} className={`bg-white p-4 md:p-6 rounded-2xl shadow-sm relative border-l-8 ${isCancelled ? 'border-gray-400 opacity-75' : isExpired ? 'border-red-600' : 'border-yellow-400'
               }`}>
 
               {isExpired && (
@@ -194,7 +194,7 @@ const q = query(
                 </div>
               )}
 
-              <div className="absolute top-4 right-4 text-right">
+              <div className="relative md:absolute top-0 md:top-4 right-0 md:right-4 text-left md:text-right mt-2 md:mt-0">
                 <span className={`px-3 py-1 text-[10px] rounded-full font-black uppercase tracking-widest block mb-2 bg-gray-100`}>
                   {b.bookingMethod === "car_specific" ? 'Car Specific' : 'Quick Booking'}
                 </span>
@@ -203,12 +203,12 @@ const q = query(
                 </p>
               </div>
 
-              <div className="flex flex-col md:flex-row justify-between gap-6 pr-32">
+              <div className="flex flex-col md:flex-row justify-between gap-4 md:gap-6 pr-0 md:pr-32 pt-2 md:pt-0">
                 <div className={`flex-1 ${isCancelled ? 'line-through text-gray-400' : ''}`}>
                   <h2 className="text-xl font-black text-gray-800 uppercase">{b.name || "Guest User"}</h2>
                   <p className="text-sm font-bold">{b.phone}</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <div className={`px-4 py-2 rounded-xl border flex items-center gap-2 ${isCancelled ? 'grayscale opacity-50' : isExpired ? 'bg-red-50 border-red-100' : 'bg-blue-50 border-blue-100'}`}>
                     <Calendar size={16} className={isExpired ? 'text-red-600' : 'text-blue-600'} />
                     <span className="text-sm font-bold">{tripDate}</span>
@@ -220,7 +220,7 @@ const q = query(
                 </div>
               </div>
 
-              <div className="mt-4 flex gap-6 text-xs font-bold text-gray-500">
+              <div className="mt-4 flex flex-wrap gap-3 md:gap-6 text-xs font-bold text-gray-500">
                 <span className="bg-gray-100 px-2 py-1 rounded">Distance: {displayDistance} KM</span>
                 <span className="bg-gray-100 px-2 py-1 rounded uppercase">Type: {b.tripType || "City"}</span>
               </div>
@@ -240,7 +240,7 @@ const q = query(
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center justify-between border-t pt-4">
+              <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t pt-4">
                 <span className={`text-xs font-black uppercase px-2 py-1 rounded ${b.status === 'completed' ? 'bg-green-100 text-green-700' :
                   isCancelled ? 'bg-gray-200 text-gray-500' :
                     isExpired ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
@@ -248,7 +248,7 @@ const q = query(
                   {isCancelled ? "CANCELLED" : isExpired ? "EXPIRED" : b.status}
                 </span>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {/* ⭐ CHANGE: Only show buttons if the trip is NOT cancelled AND NOT completed */}
                   {!isCancelled && b.status !== "completed" && (
                     <>

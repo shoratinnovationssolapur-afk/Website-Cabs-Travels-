@@ -137,9 +137,9 @@ useEffect(() => {
 
   return (
     
-    <div className="p-10 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 md:p-10 bg-gray-50 min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <h1 className="text-3xl font-black text-gray-800 uppercase tracking-tight">Fleet Management</h1>
+        <h1 className="text-2xl md:text-3xl font-black text-gray-800 uppercase tracking-tight">Fleet Management</h1>
 
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -154,11 +154,11 @@ useEffect(() => {
       </div>
 
       {/* REGISTRATION FORM */}
-      <div className="bg-white p-6 rounded-3xl shadow-sm mb-10 border border-gray-100 flex flex-wrap gap-4 items-end">
+      <div className="bg-white p-4 sm:p-6 rounded-3xl shadow-sm mb-10 border border-gray-100 flex flex-wrap gap-4 items-end">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-bold text-gray-400 uppercase">Full Name</label>
           <input
-            className="border p-3 rounded-xl w-60 outline-none focus:border-yellow-500"
+            className="border p-3 rounded-xl w-full sm:w-60 outline-none focus:border-yellow-500"
             value={name}
             placeholder="Driver Name"
             onChange={(e) => setName(e.target.value)}
@@ -167,7 +167,7 @@ useEffect(() => {
         <div className="flex flex-col gap-1">
           <label className="text-xs font-bold text-gray-400 uppercase">Phone</label>
           <input
-            className="border p-3 rounded-xl w-48 outline-none focus:border-yellow-500"
+            className="border p-3 rounded-xl w-full sm:w-48 outline-none focus:border-yellow-500"
             value={phone}
             placeholder="Phone Number"
             onChange={(e) => setPhone(e.target.value)}
@@ -176,13 +176,13 @@ useEffect(() => {
         <div className="flex flex-col gap-1">
           <label className="text-xs font-bold text-gray-400 uppercase">Email</label>
           <input
-            className="border p-3 rounded-xl w-60 outline-none focus:border-yellow-500"
+            className="border p-3 rounded-xl w-full sm:w-60 outline-none focus:border-yellow-500"
             value={email}
             placeholder="Email Address"
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <button onClick={addDriver} className="bg-black text-yellow-400 px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition shadow-lg shadow-gray-200">
+        <button onClick={addDriver} className="bg-black text-yellow-400 px-6 sm:px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition shadow-lg shadow-gray-200 w-full sm:w-auto">
           Register Driver
         </button>
       </div>
@@ -192,7 +192,7 @@ useEffect(() => {
         {filteredDrivers.map(d => {
                        const isActuallyConnected = rtdbStatus[d.id]?.available === true;
                        return (
-          <div key={d.id} className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 relative hover:shadow-xl transition-shadow duration-300">
+          <div key={d.id} className="bg-white rounded-[2.5rem] p-5 md:p-8 shadow-sm border border-gray-100 relative hover:shadow-xl transition-shadow duration-300">
           
             {/* STATUS BADGES */}
             <div className="flex justify-between items-start mb-6">
@@ -216,7 +216,7 @@ useEffect(() => {
               </div>
             </div>
 
-            <h2 className="text-2xl font-black text-gray-800 uppercase leading-none">
+            <h2 className="text-xl md:text-2xl font-black text-gray-800 uppercase leading-none">
               {d.name || "Unnamed Driver"}
             </h2>
             <div className="mt-2 space-y-1">

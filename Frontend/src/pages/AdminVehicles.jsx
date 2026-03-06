@@ -167,10 +167,10 @@ useEffect(() => {
   };
 
   return (
-    <div className="p-10 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">Admin — Manage Vehicles</h1>
+    <div className="p-4 sm:p-6 md:p-10 bg-gray-100 min-h-screen">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6">Admin - Manage Vehicles</h1>
 
-      <div className="bg-white p-6 rounded-xl shadow mb-10 grid gap-3">
+      <div className="bg-white p-4 md:p-6 rounded-xl shadow mb-10 grid gap-3">
         <h3 className="font-bold text-xl mb-2">
           {editingId ? `Editing: ${form.name}` : "Add New Vehicle"}
         </h3>
@@ -251,7 +251,7 @@ useEffect(() => {
           className="border p-2 rounded"
         />
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={handleSubmit}
             className={`flex-1 py-2 rounded font-bold text-white ${editingId ? 'bg-blue-600' : 'bg-green-600'}`}
@@ -266,7 +266,7 @@ useEffect(() => {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {vehicles.map(v => (
           <div key={v.id} className="bg-white rounded-xl shadow overflow-hidden">
             <img src={v.imageUrl} alt={v.name} className="h-48 w-full object-cover" />
@@ -285,7 +285,7 @@ useEffect(() => {
               <p className={v.available ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
                 {v.available ? "Available" : "Not Available"}
               </p>
-              <div className="flex gap-2 mt-4">
+              <div className="flex flex-wrap gap-2 mt-4">
                 <button onClick={() => handleEdit(v)} className="bg-blue-500 text-white px-3 py-1 rounded">Edit</button>
                 <button onClick={() => toggleAvailability(v)} className="bg-yellow-500 text-white px-3 py-1 rounded">Toggle</button>
                 <button onClick={() => deleteVehicle(v.id, v.name)} className="bg-red-600 text-white px-3 py-1 rounded">Delete</button>

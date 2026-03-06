@@ -43,14 +43,14 @@ const AdminInquiries = () => {
     }
   };
 
-  if (loading) return <div className="p-10 text-center font-bold">Loading Inquiries...</div>;
+  if (loading) return <div className="p-6 md:p-10 text-center font-bold">Loading Inquiries...</div>;
 
   return (
-    <div className="bg-slate-50 min-h-screen p-6">
+    <div className="bg-slate-50 min-h-screen p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 font-outfit">Customer Inquiries</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 font-outfit">Customer Inquiries</h1>
             <p className="text-slate-500">Manage messages sent from the Contact Us page</p>
           </div>
           <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-200">
@@ -59,7 +59,7 @@ const AdminInquiries = () => {
         </div>
 
         {inquiries.length === 0 ? (
-          <div className="bg-white p-20 rounded-3xl text-center border-2 border-dashed border-slate-200">
+          <div className="bg-white p-10 md:p-20 rounded-3xl text-center border-2 border-dashed border-slate-200">
             <MessageSquare size={48} className="mx-auto text-slate-300 mb-4" />
             <p className="text-slate-500 font-medium">No inquiries found yet.</p>
           </div>
@@ -106,7 +106,7 @@ const AdminInquiries = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex md:flex-col gap-2 justify-end">
+                  <div className="flex flex-wrap md:flex-col gap-2 justify-end">
                     <button 
                       onClick={() => window.location.href = `mailto:${item.email}?subject=Re: ${item.subject}`}
                       className="flex items-center justify-center gap-2 bg-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-600 transition"

@@ -83,13 +83,13 @@ const updateStatus = async (id, newStatus) => {
     }
   };
 
-  if (loading) return <div className="p-10 text-center animate-pulse">Loading Admin Panel...</div>;
+  if (loading) return <div className="p-6 md:p-10 text-center animate-pulse">Loading Admin Panel...</div>;
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">Vendor Management</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Vendor Management</h1>
           <p className="text-gray-500">Approve or Reject car rental listings from vendors.</p>
         </header>
 
@@ -108,7 +108,7 @@ const updateStatus = async (id, newStatus) => {
                 </div>
 
                 {/* Info Section */}
-                <div className="p-6 flex-1 grid md:grid-cols-3 gap-4">
+                <div className="p-4 md:p-6 flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                       {item.carModel} <span className="text-xs font-normal text-gray-400">({item.year})</span>
@@ -134,7 +134,7 @@ const updateStatus = async (id, newStatus) => {
                     </span>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {item.status !== "approved" && (
                         <button 
                           onClick={() => updateStatus(item.id, "approved")}

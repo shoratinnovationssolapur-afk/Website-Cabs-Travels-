@@ -16,18 +16,18 @@ export default function AdminProfile() {
     fetchAdmin();
   }, []);
 
-  if (!admin) return <p>Loading...</p>;
+  if (!admin) return <p className="p-4 md:p-6">Loading...</p>;
 
   return (
-    <div className="bg-white p-6 rounded shadow max-w-xl">
+    <div className="bg-white p-4 md:p-6 rounded shadow max-w-xl mx-auto">
 
-      <h2 className="text-2xl font-bold mb-6">
+      <h2 className="text-xl md:text-2xl font-bold mb-6">
         Admin Profile
       </h2>
 
       <img
         src={admin.photo || "https://via.placeholder.com/120"}
-        className="w-28 h-28 rounded-full mb-4"
+        className="w-20 h-20 md:w-28 md:h-28 rounded-full mb-4"
       />
 
       <p><b>Name:</b> {admin.name}</p>

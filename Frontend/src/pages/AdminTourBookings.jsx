@@ -47,11 +47,11 @@ const AdminTourBookings = () => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  if (loading) return <div className="p-10 text-center font-bold">Loading Tour Bookings...</div>;
+  if (loading) return <div className="p-6 md:p-10 text-center font-bold">Loading Tour Bookings...</div>;
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-black mb-8 text-gray-800 border-b pb-4">
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
+      <h1 className="text-2xl md:text-3xl font-black mb-8 text-gray-800 border-b pb-4">
         Tour Package Management
       </h1>
 
@@ -60,7 +60,7 @@ const AdminTourBookings = () => {
           <div key={b.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition">
             
             {/* Top Row: Main Info */}
-            <div className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="p-4 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
@@ -102,7 +102,7 @@ const AdminTourBookings = () => {
 
             {/* Expandable Details Section */}
             {expandedId === b.id && (
-              <div className="bg-gray-50 p-6 border-t border-gray-100 animate-in fade-in slide-in-from-top-2">
+              <div className="bg-gray-50 p-4 md:p-6 border-t border-gray-100 animate-in fade-in slide-in-from-top-2">
                 <div className="grid md:grid-cols-2 gap-8">
                   
                   {/* Left: Booker & Tour Info */}
@@ -120,7 +120,7 @@ const AdminTourBookings = () => {
                     <h3 className="font-bold text-gray-400 uppercase text-xs tracking-widest">Traveler Documents</h3>
                     <div className="grid gap-4">
                       {b.travelers?.map((t, idx) => (
-                        <div key={idx} className="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center">
+                        <div key={idx} className="bg-white p-4 rounded-xl border border-gray-200 flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
                           <div>
                             <p className="font-bold text-gray-800">{t.name} <span className="text-gray-400 font-normal">({t.age} yrs)</span></p>
                             <p className="text-xs text-gray-500">{t.phone || "No phone provided"}</p>

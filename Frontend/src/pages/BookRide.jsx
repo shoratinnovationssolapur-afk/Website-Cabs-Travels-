@@ -185,19 +185,19 @@ const BookRide = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="relative h-[200px] bg-blue-900 flex items-center px-8">
+      <div className="relative h-[180px] md:h-[200px] bg-blue-900 flex items-center px-4 md:px-8">
         <button
           onClick={() => navigate(-1)}
           className="absolute top-6 left-6 bg-white/20 p-2 rounded-full text-white hover:bg-white/40 transition"
         >
           <ChevronLeft size={28} />
         </button>
-        <h1 className="text-4xl font-black text-white">Book Your City Ride</h1>
+        <h1 className="text-2xl md:text-4xl font-black text-white">Book Your City Ride</h1>
       </div>
 
-      <main className="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-8 -mt-10">
+      <main className="max-w-6xl mx-auto px-4 md:px-6 grid lg:grid-cols-3 gap-6 md:gap-8 -mt-6 md:-mt-10">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mt-20">
+          <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100 mt-10 md:mt-20">
             <h3 className="font-bold text-xl mb-4 flex items-center gap-2">
               <MapPin className="text-yellow-500" /> Route Details
             </h3>
@@ -217,7 +217,7 @@ const BookRide = () => {
             />
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
             <h3 className="font-bold mb-4">Passenger Details</h3>
             {passengers.map((p, i) => (
               <div key={i} className="p-4 bg-gray-50 rounded-xl mb-4 space-y-3">
@@ -270,7 +270,7 @@ const BookRide = () => {
         </div>
 
         <div className="lg:col-span-1">
-          <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 mt-20 sticky top-24">
+          <div className="bg-white p-5 md:p-8 rounded-3xl shadow-lg border border-gray-100 mt-10 md:mt-20 sticky top-24">
             <h3 className="text-2xl font-bold mb-6">Fare Summary</h3>
             <div className="space-y-4 text-gray-600">
               <div className="flex justify-between">
@@ -285,7 +285,7 @@ const BookRide = () => {
                 <span>Booking Fee</span>
                 <span className="text-black font-semibold">₹{basefare}</span>
               </div>
-              <div className="flex justify-between text-2xl font-black text-blue-900 pt-2">
+              <div className="flex justify-between text-xl md:text-2xl font-black text-blue-900 pt-2">
                 <span>Total</span>
                 <span>₹{Math.round(totalAmount)}</span>
               </div>

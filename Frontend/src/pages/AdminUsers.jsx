@@ -52,12 +52,12 @@ const AdminUsers = () => {
   );
 
   return (
-    <div className="p-10 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-black text-gray-800">User Management</h1>
+    <div className="p-4 sm:p-6 md:p-10 bg-gray-50 min-h-screen">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
+        <h1 className="text-2xl md:text-3xl font-black text-gray-800">User Management</h1>
         
         {/* Search Bar */}
-        <div className="relative w-72">
+        <div className="relative w-full md:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input 
             placeholder="Search name or email..."
@@ -70,7 +70,7 @@ const AdminUsers = () => {
 
       <div className="grid gap-4">
         {filteredUsers.map(u => (
-          <div key={u.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md transition">
+          <div key={u.id} className="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 hover:shadow-md transition">
             <div>
               <p className="font-bold text-gray-800">{u.name}</p>
               <p className="text-sm text-gray-500">{u.email}</p>
@@ -81,11 +81,11 @@ const AdminUsers = () => {
               </span>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3 w-full sm:w-auto">
               {u.role === "Admin" ? (
                 <button
                   onClick={() => removeAdmin(u.id)}
-                  className="flex items-center gap-2 bg-yellow-50 text-yellow-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-yellow-100 transition"
+                  className="flex items-center gap-2 bg-yellow-50 text-yellow-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-yellow-100 transition w-full sm:w-auto justify-center"
                   title="Remove Admin Rights"
                 >
                   <UserMinus size={16} /> Demote
@@ -93,7 +93,7 @@ const AdminUsers = () => {
               ) : (
                 <button
                   onClick={() => makeAdmin(u.id)}
-                  className="flex items-center gap-2 bg-purple-50 text-purple-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-purple-100 transition"
+                  className="flex items-center gap-2 bg-purple-50 text-purple-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-purple-100 transition w-full sm:w-auto justify-center"
                 >
                   <ShieldAlert size={16} /> Make Admin
                 </button>

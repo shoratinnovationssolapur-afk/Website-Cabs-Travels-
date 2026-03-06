@@ -201,23 +201,23 @@ const BookingDetails = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* HERO */}
-      <div className="relative h-[420px] bg-black">
+      <div className="relative h-[280px] md:h-[420px] bg-black">
         <img src={vehicle?.imageUrl} alt={vehicle?.name} className="w-full h-full object-cover opacity-80" />
         <button onClick={() => navigate(-1)} className="absolute top-6 left-6 bg-white/20 p-2 rounded-full text-white">
           <ChevronLeft size={28} />
         </button>
-        <div className="absolute bottom-10 left-8 text-white">
-          <h1 className="text-5xl font-black">{vehicle?.name}</h1>
-          <p className="text-yellow-400 font-bold text-2xl">
+        <div className="absolute bottom-6 md:bottom-10 left-4 md:left-8 text-white">
+          <h1 className="text-3xl md:text-5xl font-black break-words">{vehicle?.name}</h1>
+          <p className="text-yellow-400 font-bold text-lg md:text-2xl">
             {isVendorRental ? `₹${dailyRate} / Day` : `₹${ratePerKm} / km`}
           </p>
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-6 grid lg:grid-cols-3 gap-8 -mt-10">
+      <main className="max-w-6xl mx-auto px-4 md:px-6 grid lg:grid-cols-3 gap-6 md:gap-8 -mt-6 md:-mt-10">
         <div className="lg:col-span-2 space-y-6">
           {/* ROUTE SECTION */}
-          <div className="bg-white p-6 mt-20 rounded-2xl shadow">
+          <div className="bg-white p-4 md:p-6 mt-10 md:mt-20 rounded-2xl shadow">
             <h3 className="font-bold text-xl mb-4 flex gap-2"><MapPin className="text-yellow-500" /> Route</h3>
             <LocationInputs pickup={pickup} setPickup={setPickup} drop={drop} setDrop={setDrop} />
             {/* Attached Ref Here */}
@@ -232,9 +232,9 @@ const BookingDetails = () => {
 
           {/* TRIP SETTINGS */}
           {!isVendorRental && (
-            <div className="bg-white p-6 rounded-2xl shadow">
+            <div className="bg-white p-4 md:p-6 rounded-2xl shadow">
               <h3 className="font-bold mb-3">Trip Type</h3>
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <button onClick={() => setTripType("city")} className={`px-6 py-3 rounded-xl border ${tripType === "city" ? "bg-yellow-400" : "bg-white border-gray-300"}`}>🏙️ City</button>
                 <button onClick={() => setTripType("outstation")} className={`px-6 py-3 rounded-xl border ${tripType === "outstation" ? "bg-yellow-400" : "bg-white border-gray-300"}`}>🚗 Outstation</button>
               </div>
@@ -243,7 +243,7 @@ const BookingDetails = () => {
 
           {/* DURATION SETTINGS */}
           {(tripType === "outstation" || isVendorRental) && (
-            <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
+            <div className="bg-white p-4 md:p-6 rounded-2xl shadow flex justify-between items-center">
               <div>
                 <h3 className="font-bold">{isVendorRental ? "Rental Duration" : "Trip Duration"}</h3>
                 <p>{days} Days</p>
@@ -256,7 +256,7 @@ const BookingDetails = () => {
           )}
 
           {/* PASSENGERS */}
-          <div className="bg-white p-6 rounded-2xl shadow">
+          <div className="bg-white p-4 md:p-6 rounded-2xl shadow">
             <h3 className="font-bold mb-3">Passenger List</h3>
             {passengers.map((p, i) => (
               <div key={i} className="grid md:grid-cols-4 gap-3 mb-4 border-b pb-4 last:border-0">
@@ -275,7 +275,7 @@ const BookingDetails = () => {
         </div>
 
         {/* SIDEBAR - FARE SUMMARY */}
-        <div className="bg-white p-8 mt-20 rounded-3xl shadow sticky top-20 h-fit">
+        <div className="bg-white p-5 md:p-8 mt-10 md:mt-20 rounded-3xl shadow sticky top-20 h-fit">
           <h3 className="text-2xl font-bold mb-6">Fare Details</h3>
           <div className="space-y-3">
             {isVendorRental ? (
@@ -292,7 +292,7 @@ const BookingDetails = () => {
                 {tripType === "outstation" && <div className="flex justify-between text-blue-600 font-bold"><span>Duration</span><span>x {days} Days</span></div>}
               </>
             )}
-            <div className="pt-4 flex justify-between text-3xl font-black text-slate-800">
+            <div className="pt-4 flex justify-between text-2xl md:text-3xl font-black text-slate-800">
               <span>Total</span>
               <span>₹{Math.round(totalAmount)}</span>
             </div>

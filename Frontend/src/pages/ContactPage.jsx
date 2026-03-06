@@ -34,19 +34,19 @@ const ContactPage = () => {
     {
       icon: <Phone className="text-blue-600" />,
       title: "Call Us",
-      details: "+91 8855870266",
+      details: "+91 9130067841",
       subText: "Mon-Sun, 24/7 Support",
     },
     {
       icon: <Mail className="text-blue-600" />,
       title: "Email Us",
-      details: "support@yourtravels.com",
+      details: "rathodexpressofficial@gmail.com",
       subText: "Online support 24/7",
     },
     {
       icon: <MapPin className="text-blue-600" />,
       title: "Visit Us",
-      details: "Sakhar Peth, Solapur",
+      details: "Wagholi,Pune",
       subText: "Maharashtra, 413001",
     },
   ];
@@ -97,7 +97,7 @@ const ContactPage = () => {
                 </div>
               </div>
               <button 
-                onClick={() => window.open('https://wa.me/918855870266', '_blank')}
+                onClick={() => window.open('https://wa.me/919130067841?text=Hi%20there', '_blank')}
                 className="w-full mt-6 bg-white text-blue-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-100 transition"
               >
                 <MessageCircle size={18} /> Chat on WhatsApp
@@ -119,7 +119,7 @@ const ContactPage = () => {
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
                       className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition"
-                      placeholder="John Doe"
+                      placeholder="Enter your name"
                     />
                   </div>
                   <div>
@@ -130,7 +130,7 @@ const ContactPage = () => {
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                       className="w-full bg-slate-50 border border-slate-200 p-4 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition"
-                      placeholder="john@example.com"
+                      placeholder="Enter your email"
                     />
                   </div>
                 </div>
@@ -172,7 +172,7 @@ const ContactPage = () => {
         {/* Map Section */}
         <div className="mt-16 rounded-3xl overflow-hidden shadow-sm border border-slate-200 h-[400px]">
           <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d60831.06648780655!2d75.8770289746395!3d17.664874229136277!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc5da6395357375%3A0x866173a1e2f31f94!2sSolapur%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1709724000000!5m2!1sen!2sin" 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30256.02842251116!2d73.95876813418015!3d18.573878562532773!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2c3819fdef877%3A0xd4193e985f354be0!2sWagholi%2C%20Pune%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1772781866158!5m2!1sen!2sin"
             width="100%" 
             height="100%" 
             style={{ border: 0 }} 

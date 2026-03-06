@@ -1,16 +1,10 @@
 import { useState } from "react";
-import { ArrowLeftRight } from "lucide-react"; // Using an icon for the swap button
+import { ArrowLeftRight } from "lucide-react";
 
-export default function LocationInputs({
-  pickup,
-  setPickup,
-  drop,
-  setDrop
-}) {
+export default function LocationInputs({ pickup, setPickup, drop, setDrop }) {
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [dropSuggestions, setDropSuggestions] = useState([]);
 
-  // 🔍 Search address logic
   let timer;
   const searchLocation = (query, setResults) => {
     clearTimeout(timer);
@@ -29,14 +23,12 @@ export default function LocationInputs({
     }, 500);
   };
 
-  // 🔄 Swap Function
   const handleSwap = () => {
     const temp = pickup;
     setPickup(drop);
     setDrop(temp);
   };
 
-  // 📍 Get current location logic
   const getCurrentLocation = () => {
     navigator.geolocation.getCurrentPosition(async (pos) => {
       const lat = pos.coords.latitude;
@@ -57,8 +49,7 @@ export default function LocationInputs({
   };
 
   return (
-    <div className="relative flex flex-col md:flex-row items-center gap-4 w-full">
-      {/* PICKUP */}
+    <div className="relative w-full space-y-3">
       <div className="relative w-full">
         <input
           value={pickup}
@@ -67,10 +58,10 @@ export default function LocationInputs({
             searchLocation(e.target.value, setPickupSuggestions);
           }}
           placeholder="Pickup Location"
-          className="border p-3 rounded-lg w-full placeholder-black"
+          className="border p-3 rounded-lg w-full h-11 placeholder-black"
         />
         {pickupSuggestions.length > 0 && (
-          <div className="absolute bg-white border w-full max-h-40 overflow-y-auto z-20 shadow-lg mt-1">
+          <div className="absolute bg-white border w-full max-h-40 overflow-y-auto z-20 shadow-lg mt-1 rounded-lg">
             {pickupSuggestions.map((place, i) => (
               <div
                 key={i}
@@ -90,21 +81,21 @@ export default function LocationInputs({
           </div>
         )}
         <button onClick={getCurrentLocation} className="text-blue-600 text-xs mt-1 block">
-          📍 Use current location
+          Use current location
         </button>
       </div>
 
-      {/* 🔄 SWAP BUTTON */}
-      <button
-        type="button"
-        onClick={handleSwap}
-        className="bg-gray-100 p-2 rounded-full hover:bg-yellow-400 transition-colors shadow-sm z-10 md:mt-[-15px]"
-        title="Swap Locations"
-      >
-        <ArrowLeftRight size={20} className="text-gray-700 hover:text-black rotate-90 md:rotate-0" />
-      </button>
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={handleSwap}
+          className="bg-gray-100 p-2 rounded-full hover:bg-yellow-400 transition-colors shadow-sm z-10"
+          title="Swap Locations"
+        >
+          <ArrowLeftRight size={20} className="text-gray-700 hover:text-black rotate-90" />
+        </button>
+      </div>
 
-      {/* DROP */}
       <div className="relative w-full">
         <input
           value={drop}
@@ -113,10 +104,10 @@ export default function LocationInputs({
             searchLocation(e.target.value, setDropSuggestions);
           }}
           placeholder="Drop Location"
-          className="border p-3 rounded-lg w-full placeholder-black"
+          className="border p-3 rounded-lg w-full h-11 placeholder-black"
         />
         {dropSuggestions.length > 0 && (
-          <div className="absolute bg-white border w-full max-h-40 overflow-y-auto z-20 shadow-lg mt-1">
+          <div className="absolute bg-white border w-full max-h-40 overflow-y-auto z-20 shadow-lg mt-1 rounded-lg">
             {dropSuggestions.map((place, i) => (
               <div
                 key={i}

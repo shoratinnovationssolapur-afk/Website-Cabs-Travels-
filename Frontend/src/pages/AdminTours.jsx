@@ -85,9 +85,9 @@ export default function AdminTours() {
   };
 
   return (
-    <div className="p-10 bg-gray-100 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Admin — Manage Tours</h1>
+    <div className="p-4 sm:p-6 md:p-10 bg-gray-100 min-h-screen">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold">Admin - Manage Tours</h1>
         {editingId && (
           <button onClick={cancelEdit} className="flex items-center gap-2 text-red-600 font-bold bg-red-50 px-4 py-2 rounded-lg">
             <X size={18} /> Cancel Editing
@@ -96,7 +96,7 @@ export default function AdminTours() {
       </div>
 
       {/* FORM SECTION */}
-      <div className={`p-6 rounded-xl shadow-lg mb-10 grid gap-4 transition-colors ${editingId ? 'bg-blue-50 border-2 border-blue-200' : 'bg-white'}`}>
+      <div className={`p-4 md:p-6 rounded-xl shadow-lg mb-10 grid gap-4 transition-colors ${editingId ? 'bg-blue-50 border-2 border-blue-200' : 'bg-white'}`}>
         <h2 className="font-bold text-gray-700 uppercase tracking-wider">
           {editingId ? "Edit Tour Details" : "Add New Tour"}
         </h2>
@@ -121,7 +121,7 @@ export default function AdminTours() {
       </div>
 
       {/* TOUR LIST */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         {tours.map(t => (
           <div key={t.id} className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 group">
             <img src={t.imageUrl} className="h-48 w-full object-cover group-hover:scale-105 transition-transform duration-500" alt={t.title} />

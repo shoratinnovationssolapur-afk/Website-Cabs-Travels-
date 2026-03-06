@@ -38,9 +38,9 @@ export default function DriverLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 w-full max-w-md">
-        <div className="mb-10 text-center">
-          <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Driver Console</h2>
+      <div className="bg-white p-6 sm:p-10 rounded-[2.5rem] shadow-sm border border-gray-100 w-full max-w-md">
+        <div className="mb-8 sm:mb-10 text-center">
+          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tighter">Driver Console</h2>
           <p className="text-gray-400 text-sm font-bold uppercase tracking-widest mt-2">Secure Access</p>
         </div>
 
@@ -68,7 +68,7 @@ export default function DriverLogin() {
           <button
             onClick={login}
             disabled={loading}
-            className="bg-black text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all disabled:bg-gray-200 mt-4 shadow-xl shadow-gray-200"
+            className="bg-black text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-gray-800 transition-all disabled:bg-gray-200 mt-4 shadow-xl shadow-gray-200"
           >
             {loading ? "Authenticating..." : "Sign In to Drive"}
           </button>

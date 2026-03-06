@@ -1,9 +1,8 @@
-import React,{useState,useEffect} from 'react';
+import React, { useState, useEffect } from "react";
 import { useAuthContext } from "../context/AuthContext";
-import { Navigate,useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
-
 
 const UserDashboard = () => {
   const { user } = useAuthContext();
@@ -12,29 +11,28 @@ const UserDashboard = () => {
 
   useEffect(() => {
     const fetchName = async () => {
-      if (user?.uid) {
-        const snap = await getDoc(doc(db, "users", user.uid));
-        if (snap.exists()) {
-          setUserName(snap.data().name); // Get name from your 'users' collection
-        }
+      if (!user?.uid) return;
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists()) {
+        setUserName(snap.data().name || "");
       }
     };
     fetchName();
   }, [user]);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">User Dashboard</h1>
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold">Hi, {userName || user?.displayName || "Traveler"}!</h2>
-        <p className="text-gray-600 mt-2">Manage your bookings and profile from here.</p>
-        
+    <div className="p-4 md:p-6">
+      <h1 className="text-2xl md:text-3xl font-bold mb-4">User Dashboard</h1>
+      <div className="bg-white p-4 md:p-6 rounded-lg shadow-md">
+        <h2 className="text-lg md:text-xl font-semibold">Hi, {userName || user?.displayName || "Traveler"}!</h2>
+        <p className="text-gray-600 mt-2 text-sm md:text-base">Manage your bookings and profile from here.</p>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
           <div className="border p-4 rounded hover:bg-gray-50 cursor-pointer" onClick={() => navigate("/user/bookings")}>
-            <h3 className="font-bold" >My Bookings</h3>
+            <h3 className="font-bold">My Bookings</h3>
             <p className="text-sm text-gray-500">View and manage your cab requests.</p>
           </div>
-          <div className="border p-4 rounded hover:bg-gray-50 cursor-pointer" onClick={()=> navigate("/user/profile")}>
+          <div className="border p-4 rounded hover:bg-gray-50 cursor-pointer" onClick={() => navigate("/user/profile")}>
             <h3 className="font-bold">Account Settings</h3>
             <p className="text-sm text-gray-500">Update your personal information.</p>
           </div>

@@ -47,25 +47,25 @@ export default function DriverProfile() {
     }
   };
 
-  if (authLoading || loading) return <div className="p-10 text-center">Loading Driver Profile...</div>;
+  if (authLoading || loading) return <div className="p-6 md:p-10 text-center">Loading Driver Profile...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto p-3 sm:p-0">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Header Section */}
-        <div className="bg-slate-900 h-32 relative">
-          <div className="absolute -bottom-12 left-8">
-            <div className="w-24 h-24 bg-green-500 rounded-2xl border-4 border-white flex items-center justify-center text-white text-3xl font-bold">
+        <div className="bg-slate-900 h-24 sm:h-32 relative">
+          <div className="absolute -bottom-10 sm:-bottom-12 left-4 sm:left-8">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-green-500 rounded-2xl border-4 border-white flex items-center justify-center text-white text-2xl sm:text-3xl font-bold">
               {driverData?.name?.charAt(0) || "D"}
             </div>
           </div>
         </div>
 
-        <div className="pt-16 p-8">
-          <div className="flex justify-between items-start mb-8">
+        <div className="pt-12 sm:pt-16 p-4 sm:p-6 md:p-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{driverData?.name}</h1>
-              <p className="text-gray-500">{driverData?.email}</p>
+              <p className="text-gray-500 break-all">{driverData?.email}</p>
               <div className="flex gap-2 mt-2">
                 <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">
                   {driverData?.status?.toUpperCase()}
@@ -118,7 +118,7 @@ export default function DriverProfile() {
                   rows="3"
                 />
               </div>
-              <button type="submit" className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition">
+              <button type="submit" className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition w-full sm:w-auto">
                 Save Changes
               </button>
             </form>
@@ -131,7 +131,7 @@ export default function DriverProfile() {
                 </div>
                 <div>
                   <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Registered Address</h3>
-                  <p className="text-gray-800 font-medium">{driverData?.address || "No address provided"}</p>
+                  <p className="text-gray-800 font-medium break-words">{driverData?.address || "No address provided"}</p>
                 </div>
               </div>
 

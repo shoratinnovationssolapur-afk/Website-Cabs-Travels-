@@ -173,19 +173,19 @@ const updateRideStatus = async (ride, status) => {
     }
   };
 
-  if (loading) return <div className="p-10 text-center text-gray-500 font-bold">Initializing Dashboard...</div>;
+  if (loading) return <div className="p-6 md:p-10 text-center text-gray-500 font-bold">Initializing Dashboard...</div>;
 
   return (
     <div className="max-w-2xl mx-auto p-4 bg-gray-50 min-h-screen">
       {/* Duty Card */}
-      <div className={`p-6 rounded-2xl mb-8 flex justify-between items-center shadow-sm transition-all ${driverInfo?.available ? 'bg-green-600 text-white' : 'bg-white text-gray-800 border'}`}>
-        <div className="flex-1 overflow-hidden mr-4">
+      <div className={`p-4 md:p-6 rounded-2xl mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 shadow-sm transition-all ${driverInfo?.available ? 'bg-green-600 text-white' : 'bg-white text-gray-800 border'}`}>
+        <div className="flex-1 overflow-hidden sm:mr-4">
           <h2 className="font-black uppercase tracking-tight text-xl">{driverInfo?.available ? "Online" : "Offline"}</h2>
           <p className="text-xs opacity-90 font-bold truncate">
             {driverInfo?.available ? (driverInfo?.address || "Fetching location...") : "Duty is currently OFF"}
           </p>
         </div>
-        <button onClick={handleDutyToggle} className={`px-6 py-2 rounded-full font-bold shadow-md transition-all ${driverInfo?.available ? 'bg-white text-green-600' : 'bg-black text-white'}`}>
+        <button onClick={handleDutyToggle} className={`w-full sm:w-auto px-6 py-2 rounded-full font-bold shadow-md transition-all ${driverInfo?.available ? 'bg-white text-green-600' : 'bg-black text-white'}`}>
           {driverInfo?.available ? "Go Offline" : "Go Online"}
         </button>
       </div>
@@ -202,7 +202,7 @@ function Section({ title, data, emptyMsg, onUpdate, isCurrent }) {
     <>
       <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4 mt-8">{title}</h3>
       {data.length === 0 ? (
-        <div className="bg-white p-10 text-center rounded-2xl border border-dashed text-gray-400 font-bold">{emptyMsg}</div>
+        <div className="bg-white p-6 md:p-10 text-center rounded-2xl border border-dashed text-gray-400 font-bold">{emptyMsg}</div>
       ) : (
         data.map(ride => <RideCard key={ride.id} ride={ride} onUpdate={onUpdate} isCurrent={isCurrent} />)
       )}
@@ -213,8 +213,8 @@ function Section({ title, data, emptyMsg, onUpdate, isCurrent }) {
 function RideCard({ ride, onUpdate, isCurrent }) {
   const rideDate = new Date(ride.dateTime);
   return (
-    <div className={`bg-white border rounded-[2rem] p-6 mb-4 shadow-sm transition-all ${!isCurrent && 'opacity-75 grayscale-[0.3]'}`}>
-      <div className="flex justify-between items-start mb-6">
+    <div className={`bg-white border rounded-[2rem] p-4 md:p-6 mb-4 shadow-sm transition-all ${!isCurrent && 'opacity-75 grayscale-[0.3]'}`}>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
         <div className="flex gap-3 items-center">
           <div className="bg-blue-100 text-blue-700 p-3 rounded-2xl font-black text-lg">
             {rideDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -233,11 +233,11 @@ function RideCard({ ride, onUpdate, isCurrent }) {
       <div className="space-y-4 mb-8">
         <div className="flex gap-3">
           <div className="w-1 bg-blue-500 rounded-full"></div>
-          <div><p className="text-[9px] font-black text-gray-400 uppercase">Pickup</p><p className="text-sm font-bold text-gray-700">{ride.pickup}</p></div>
+          <div><p className="text-[9px] font-black text-gray-400 uppercase">Pickup</p><p className="text-sm font-bold text-gray-700 break-words">{ride.pickup}</p></div>
         </div>
         <div className="flex gap-3">
           <div className="w-1 bg-green-500 rounded-full"></div>
-          <div><p className="text-[9px] font-black text-gray-400 uppercase">Dropoff</p><p className="text-sm font-bold text-gray-700">{ride.drop}</p></div>
+          <div><p className="text-[9px] font-black text-gray-400 uppercase">Dropoff</p><p className="text-sm font-bold text-gray-700 break-words">{ride.drop}</p></div>
         </div>
       </div>
 

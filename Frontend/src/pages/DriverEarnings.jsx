@@ -43,8 +43,8 @@ const DriverEarnings = () => {
   const cardStyle = "bg-white p-6 rounded-3xl shadow-sm border border-gray-100";
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-slate-800">Earnings Dashboard</h1>
+    <div className="space-y-6 md:space-y-8">
+      <h1 className="text-xl md:text-2xl font-bold text-slate-800">Earnings Dashboard</h1>
 
       {/* STATS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -68,7 +68,7 @@ const DriverEarnings = () => {
       </div>
 
       {/* EARNINGS LOGIC HINT */}
-      <div className="bg-green-50 p-6 rounded-2xl flex items-center justify-between">
+      <div className="bg-green-50 p-4 md:p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h3 className="text-green-800 font-bold">Payout Status</h3>
           <p className="text-green-600 text-sm">Your next payout will be processed on the 1st of next month.</p>
@@ -77,7 +77,7 @@ const DriverEarnings = () => {
       </div>
 
       {/* RECENT PERFORMANCE */}
-      <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-gray-100">
         <h3 className="font-bold mb-4 text-slate-800">Performance Summary</h3>
         <div className="space-y-4">
           <div className="flex justify-between items-center text-sm">

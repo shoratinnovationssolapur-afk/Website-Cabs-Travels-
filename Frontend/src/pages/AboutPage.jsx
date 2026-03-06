@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ChevronDown, Star, Users, Award, ShieldCheck, Car } from "lucide-react";
+import { db } from "../firebase";
+import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 
 const AboutPage = () => {
   const [activeFaq, setActiveFaq] = useState(null);
+  const [userFeedbacks, setUserFeedbacks] = useState([]);
 
   const stats = [
     { icon: <Users size={24} />, value: "5000+", label: "Happy Customers" },
@@ -35,7 +38,7 @@ const AboutPage = () => {
   const faqs = [
     {
       q: "How do I book a vehicle?",
-      a: "You can book directly through our website by selecting your preferred vehicle, or simply call/WhatsApp us at +91 8855870266 for instant booking."
+      a: "You can book directly through our website by selecting your preferred vehicle, or simply call/WhatsApp us at +91 9130067841 for instant booking."
     },
     {
       q: "Are the prices inclusive of toll and taxes?",
@@ -51,14 +54,30 @@ const AboutPage = () => {
     }
   ];
 
+  useEffect(() => {
+    const feedbackQuery = query(collection(db, "feedbacks"), orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(feedbackQuery, (snapshot) => {
+      const feedbacks = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setUserFeedbacks(feedbacks);
+    }, (error) => {
+      console.error("Error loading feedbacks:", error);
+      setUserFeedbacks([]);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="bg-white min-h-screen">
       {/* Hero Section */}
       <section className="bg-slate-900 py-24 px-6 text-center text-white">
-        <h1 className="text-4xl md:text-6xl font-extrabold mb-6 font-outfit">Moving Solapur Forward</h1>
+        <h1 className="text-4xl md:text-6xl font-extrabold mb-6 font-outfit">Rathod Express</h1>
         <p className="text-slate-400 max-w-3xl mx-auto text-lg">
           We are more than just a car rental service. We are your partners in travel, 
-          providing comfort, safety, and luxury since 2015.
+          providing comfort, safety, and luxury since 2026.
         </p>
       </section>
 
@@ -102,6 +121,41 @@ const AboutPage = () => {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* User Feedback from Home Page */}
+      <section className="py-20 px-6 bg-white border-t">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-slate-900 mb-3">Latest Customer Feedback</h2>
+          <p className="text-slate-500 mb-10">Submitted directly from the Home page feedback form.</p>
+
+          {userFeedbacks.length === 0 ? (
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 text-slate-500">
+              No feedback submitted yet. Be the first one to share your experience.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {userFeedbacks.map((item) => (
+                <div key={item.id} className="bg-slate-50 p-8 rounded-3xl border border-slate-100">
+                  <div className="flex text-orange-400 mb-4">
+                    {[...Array(item.rating || 5)].map((_, i) => (
+                      <Star key={i} size={14} fill="currentColor" />
+                    ))}
+                  </div>
+                  <p className="text-slate-700 italic mb-6">"{item.comment}"</p>
+                  <div>
+                    <h4 className="font-bold text-slate-900">{item.name}</h4>
+                    <p className="text-slate-400 text-xs">
+                      {item.createdAt?.toDate
+                        ? item.createdAt.toDate().toLocaleDateString()
+                        : "Recently"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

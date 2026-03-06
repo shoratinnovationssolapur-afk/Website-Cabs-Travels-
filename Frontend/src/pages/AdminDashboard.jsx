@@ -102,8 +102,8 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-white p-8">
-      <h1 className="text-4xl font-bold mb-8 text-yellow-500">Admin Dashboard</h1>
+    <div className="min-h-screen bg-[#0a0a0b] text-white p-4 sm:p-6 md:p-8">
+      <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-8 text-yellow-500">Admin Dashboard</h1>
 
       {/* Adjusted Grid to match 6-column layout in screenshot */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-10">
@@ -115,8 +115,8 @@ export default function AdminDashboard() {
         <Card title="Vehicles" value={stats.vehicles} color="from-[#4b5563] to-[#374151]" />
       </div>
       
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="bg-[#141416] p-6 rounded-2xl shadow-2xl border border-white/5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div className="bg-[#141416] p-4 sm:p-6 rounded-2xl shadow-2xl border border-white/5">
           <h2 className="font-bold mb-6 text-xl text-gray-200 uppercase tracking-tight">Monthly Bookings</h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={monthlyData}>
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-[#141416] p-6 rounded-2xl shadow-2xl border border-white/5">
+        <div className="bg-[#141416] p-4 sm:p-6 rounded-2xl shadow-2xl border border-white/5">
           <h2 className="font-bold mb-6 text-xl text-gray-200 uppercase tracking-tight">Booking Status</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
