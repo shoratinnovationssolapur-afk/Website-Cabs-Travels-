@@ -287,7 +287,8 @@ const BookingDetails = () => {
               <>
                 <div className="flex justify-between text-gray-600"><span>Distance</span><span>{distance ? distance.toFixed(1) : 0} km</span></div>
                 <div className="flex justify-between text-gray-600"><span>Rate</span><span>₹{ratePerKm}/km</span></div>
-                <div className="flex justify-between text-gray-600 border-b pb-2"><span>Base Fee</span><span>₹{baseServiceFee}</span></div>
+                <div className="flex justify-between text-gray-600"><span>Base Fee</span><span>₹{baseServiceFee}</span></div>
+                <div className="flex justify-between text-gray-600 border-b "><span>Rate + Base Fee</span><span>₹{Math.round(ratePerKm+baseServiceFee)}/km</span></div>
                 {tripType === "outstation" && <div className="flex justify-between text-blue-600 font-bold"><span>Duration</span><span>x {days} Days</span></div>}
               </>
             )}

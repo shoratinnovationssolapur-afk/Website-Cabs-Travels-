@@ -36,6 +36,7 @@ import Tours from "./pages/Tours"
 
 
 
+
 import {
   createBrowserRouter,
   RouterProvider,
@@ -48,6 +49,12 @@ import DriverEarnings from "./pages/DriverEarnings";
 import BookingSuccess from "./pages/BookingSuccess";
 import AdminTourBookings from "./pages/AdminTourBookings";
 import BookRide from "./pages/BookRide";
+import { Contact } from "lucide-react"; 
+import ContactPage from "./pages/ContactPage";
+import AboutPage from "./pages/AboutPage";
+import AdminInquiries from "./pages/AdminInquiries";
+
+
 
 // ================= LAYOUT =================
 function Layout() {
@@ -243,6 +250,8 @@ const router = createBrowserRouter([
       // ================= PUBLIC ROUTES =================
       { path: "/", element: <HomePage /> },
       { path: "driver-login", element: <DriverLogin /> },
+      { path: "contact-us", element: <ContactPage /> },
+      { path: "about-us", element: <AboutPage /> },
 
       // // ================= TOUR BOOKING (PROTECTED) =================
       // { 
@@ -297,6 +306,7 @@ const router = createBrowserRouter([
       { path: "vendors", element: <AdminVendorManagement /> },
       { path: "tours", element: <AdminTours /> },
       { path: "tourbookings", element: <AdminTourBookings /> },
+      { path:"inquiries", element:<AdminInquiries /> } ,
     ],
   },
 
@@ -317,13 +327,6 @@ const router = createBrowserRouter([
     ],
   },
 ]);
-
-
-
-
-
-
-
 
 
 function App() {

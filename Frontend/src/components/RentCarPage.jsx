@@ -173,6 +173,7 @@ const RentCarPage = () => {
             <option value="Sedan">Sedan</option>
             <option value="SUV">SUV</option>
             <option value="Luxury">Luxury</option>
+            <option value="Travels">Travels</option>
             <option value="Others">Others</option>
           </select>
 

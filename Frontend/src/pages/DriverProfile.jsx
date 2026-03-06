@@ -10,17 +10,18 @@ export default function DriverProfile() {
   const [isEditing, setIsEditing] = useState(false);
 
   // Form States
+  const [name, setName] = useState(""); // Added name state
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
 
   useEffect(() => {
     if (!user) return;
 
-    // Real-time listener for driver-specific data
     const unsub = onSnapshot(doc(db, "drivers", user.uid), (snap) => {
       if (snap.exists()) {
         const data = snap.data();
         setDriverData(data);
+        setName(data.name || ""); // Initialize name
         setPhone(data.phone || "");
         setAddress(data.address || "");
       }
@@ -34,8 +35,10 @@ export default function DriverProfile() {
     e.preventDefault();
     try {
       await updateDoc(doc(db, "drivers", user.uid), {
+        name, // Now updates the name in Firestore
         phone,
         address,
+        updatedAt: new Date(), // Good practice to track the update time
       });
       setIsEditing(false);
       alert("Profile updated successfully!");
@@ -84,6 +87,19 @@ export default function DriverProfile() {
 
           {isEditing ? (
             <form onSubmit={handleUpdate} className="space-y-4 max-w-md">
+              {/* Added Name Input Field */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Full Name</label>
+                <input 
+                  type="text" 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full border p-3 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                  placeholder="Enter your name"
+                  required
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Phone Number</label>
                 <input 
