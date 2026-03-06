@@ -389,7 +389,7 @@ const submitBooking = async () => {
           
          
          
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fadeInUp">
+          <h1 className="text-4xl md:text-7xl font-bold mb-6 animate-fadeInUp">
             Rathod on Road,
             <span className="text-yellow-400"> Comfort on Board</span>
           </h1>
@@ -750,51 +750,7 @@ const submitBooking = async () => {
           <button className="w-full bg-yellow-500 text-black py-4 rounded-xl font-bold hover:bg-black hover:text-yellow-400 transition" onClick={submitBooking}>Submit Booking Request</button>
         </div>
       </section>
-
-
-      {/* ⭐ NEW CITY ROUTES SECTION (Hyperlinks added here) */}
-      <section className="py-16 px-6 bg-white border-t">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Popular Outstation Routes</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Solapur Routes</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                {["Solapur to Pune", "Solapur to Mumbai", "Solapur to Goa", "Solapur to Tuljapur"].map(r => (
-                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} taxi</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Pune Routes</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                {["Pune to Mahabaleshwar", "Pune to Shirdi", "Pune to Mumbai Airport", "Pune to Lonavala"].map(r => (
-                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} cab</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Mumbai Routes</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                {["Mumbai to Solapur", "Mumbai to Pune", "Mumbai to Goa", "Mumbai to Nashik"].map(r => (
-                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} car rental</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Goa Routes</h3>
-              <ul className="space-y-2 text-sm text-gray-600">
-                {["Goa to Solapur", "Goa to Pune", "Goa to Mumbai", "Goa Airport to Calangute"].map(r => (
-                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} trip</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      {/* ================= SERVICES ================= */}
+{/* ================= SERVICES ================= */}
       <section className="py-24 px-6 bg-gradient-to-br from-indigo-100 via-white to-blue-100">
 
         <h2 className="text-8xl font-bold text-center mb-16">
@@ -859,7 +815,7 @@ const submitBooking = async () => {
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
 
           {/* LEFT CONTENT */}
-          <div>
+          <div id="aboutus" className="animate-[zoom_20s_linear_infinite]">
             <h2 className="text-4xl font-bold mb-6 text-gray-900">
               About Rathod Express
             </h2>
@@ -881,7 +837,7 @@ const submitBooking = async () => {
           </div>
 
           {/* RIGHT IMAGE */}
-          <div>
+          <div className="animate-[zoom_20s_linear_infinite]">
             <img
               src={outstationcar}
               alt="Cab Service"
@@ -895,7 +851,7 @@ const submitBooking = async () => {
       <section className="py-20 px-6 bg-gray-100">
         <div className="max-w-6xl mx-auto text-center">
 
-          <h2 className="text-8xl font-bold mb-12">
+          <h2 className="text-5xl font-bold mb-12">
             Why Choose Us
           </h2>
 
@@ -903,7 +859,7 @@ const submitBooking = async () => {
 
             {/* SAFE & RELIABLE */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-8xl mb-4">🛡️</div>
+              <div className="text-4xl mb-4">🛡️</div>
               <h3 className="text-xl font-semibold mb-2">
                 Safe & Reliable
               </h3>
@@ -915,7 +871,7 @@ const submitBooking = async () => {
 
             {/* ON-TIME SERVICE */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-8xl mb-4">⏱️</div>
+              <div className="text-4xl mb-4">⏱️</div>
               <h3 className="text-xl font-semibold mb-2">
                 Always On Time
               </h3>
@@ -928,7 +884,7 @@ const submitBooking = async () => {
 
             {/* AFFORDABLE PRICING */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-8xl mb-4">💰</div>
+              <div className="text-4xl mb-4">💰</div>
               <h3 className="text-xl font-semibold mb-2">
                 Transparent Pricing
               </h3>
@@ -940,7 +896,7 @@ const submitBooking = async () => {
 
             {/* 24x7 SUPPORT */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-8xl mb-4">📞</div>
+              <div className="text-4xl mb-4">📞</div>
               <h3 className="text-xl font-semibold mb-2">
                 24×7 Customer Support
               </h3>
@@ -952,7 +908,7 @@ const submitBooking = async () => {
 
             {/* CLEAN VEHICLES */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-8xl mb-4">✨</div>
+              <div className="text-4xl mb-4">✨</div>
               <h3 className="text-xl font-semibold mb-2">
                 Clean & Comfortable
               </h3>
@@ -964,7 +920,7 @@ const submitBooking = async () => {
 
             {/* WIDE COVERAGE */}
             <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
-              <div className="text-8xl mb-4">🌍</div>
+              <div className="text-4xl mb-4">🌍</div>
               <h3 className="text-xl font-semibold mb-2">
                 Wide Service Area
               </h3>
@@ -976,6 +932,47 @@ const submitBooking = async () => {
 
           </div>
 
+        </div>
+      </section>
+
+        {/* ⭐ NEW CITY ROUTES SECTION (Hyperlinks added here) */}
+        <section className="py-16 px-6 bg-white border-t">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12">Popular Outstation Routes</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div>
+              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Solapur Routes</h3>
+              <ul className="space-y-2 text-sm text-gray-600 font-bold">
+                {["Solapur to Pune", "Solapur to Mumbai", "Solapur to Goa", "Solapur to Tuljapur"].map(r => (
+                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} taxi</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Pune Routes</h3>
+              <ul className="space-y-2 text-sm text-gray-600 font-bold">
+                {["Pune to Mahabaleshwar", "Pune to Shirdi", "Pune to Mumbai Airport", "Pune to Lonavala"].map(r => (
+                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} cab</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Mumbai Routes</h3>
+              <ul className="space-y-2 text-sm text-gray-600 font-bold">
+                {["Mumbai to Solapur", "Mumbai to Pune", "Mumbai to Goa", "Mumbai to Nashik"].map(r => (
+                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} car rental</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Goa Routes</h3>
+              <ul className="space-y-2 text-sm text-gray-600 font-bold">
+                {["Goa to Solapur", "Goa to Pune", "Goa to Mumbai", "Goa Airport to Calangute"].map(r => (
+                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} trip</li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 
