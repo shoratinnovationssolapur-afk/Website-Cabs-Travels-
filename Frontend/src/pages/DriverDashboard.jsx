@@ -212,8 +212,16 @@ function Section({ title, data, emptyMsg, onUpdate, isCurrent }) {
 
 function RideCard({ ride, onUpdate, isCurrent }) {
   const rideDate = new Date(ride.dateTime);
+  
+  const handleCall = (phone) => {
+    if (phone) window.location.href = `tel:${phone}`;
+    else alert("Phone number not available");
+  };
+
   return (
     <div className={`bg-white border rounded-[2rem] p-4 md:p-6 mb-4 shadow-sm transition-all ${!isCurrent && 'opacity-75 grayscale-[0.3]'}`}>
+      
+      {/* Header: Time, Status, and Fare */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
         <div className="flex gap-3 items-center">
           <div className="bg-blue-100 text-blue-700 p-3 rounded-2xl font-black text-lg">
@@ -230,28 +238,64 @@ function RideCard({ ride, onUpdate, isCurrent }) {
         </div>
       </div>
 
-      <div className="space-y-4 mb-8">
-        <div className="flex gap-3">
-          <div className="w-1 bg-blue-500 rounded-full"></div>
-          <div><p className="text-[9px] font-black text-gray-400 uppercase">Pickup</p><p className="text-sm font-bold text-gray-700 break-words">{ride.pickup}</p></div>
+      {/* 3-Column Info Section: Customer, Car, and Type */}
+      <div className="grid grid-cols-3 gap-2 mb-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+        <div className="border-r border-gray-200 pr-1">
+          <p className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Customer</p>
+          <p className="text-[11px] font-bold text-gray-800 truncate">{ride.name || "Guest"}</p>
         </div>
-        <div className="flex gap-3">
-          <div className="w-1 bg-green-500 rounded-full"></div>
-          <div><p className="text-[9px] font-black text-gray-400 uppercase">Dropoff</p><p className="text-sm font-bold text-gray-700 break-words">{ride.drop}</p></div>
+        <div className="border-r border-gray-200 px-1">
+          <p className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Vehicle</p>
+          <p className="text-[11px] font-bold text-gray-800 truncate">{ride.vehicleName || "N/A"}</p>
+        </div>
+        <div className="pl-1">
+          <p className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">Type</p>
+          <p className="text-[11px] font-bold text-blue-600 uppercase italic">
+            {ride.tripType === 'city' ? 'Local' : ride.tripType || 'Standard'}
+          </p>
         </div>
       </div>
 
+      {/* Call Button */}
+      {isCurrent && ride.phone && (
+        <button 
+          onClick={() => handleCall(ride.phone)}
+          className="w-full mb-6 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 py-2 rounded-xl text-xs font-bold border border-blue-100 hover:bg-blue-100 transition"
+        >
+          📞 Call Customer
+        </button>
+      )}
+
+      {/* Routes Section */}
+      <div className="space-y-4 mb-8">
+        <div className="flex gap-3">
+          <div className="w-1 bg-blue-500 rounded-full"></div>
+          <div>
+            <p className="text-[9px] font-black text-gray-400 uppercase">Pickup</p>
+            <p className="text-sm font-bold text-gray-700 break-words line-clamp-1">{ride.pickup}</p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <div className="w-1 bg-green-500 rounded-full"></div>
+          <div>
+            <p className="text-[9px] font-black text-gray-400 uppercase">Dropoff</p>
+            <p className="text-sm font-bold text-gray-700 break-words line-clamp-1">{ride.drop}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
           {(ride.status === "assigned" || ride.status === "approved") && isCurrent && (
-            <button onClick={() => onUpdate(ride, "on_the_way")} className="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-700 transition">Start Trip</button>
+            <button onClick={() => onUpdate(ride, "on_the_way")} className="flex-[2] bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest">Start Trip</button>
           )}
           {ride.status === "on_the_way" && (
-            <button onClick={() => onUpdate(ride, "completed")} className="flex-1 bg-green-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-green-700 transition">Finish Trip</button>
+            <button onClick={() => onUpdate(ride, "completed")} className="flex-1 bg-green-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest">Finish Trip</button>
           )}
         </div>
         {(ride.status === "assigned" || ride.status === "approved") && (
-          <button onClick={() => onUpdate(ride, "cancelled")} className="w-full bg-red-50 text-red-500 py-3 rounded-2xl font-bold uppercase text-xs tracking-widest hover:bg-red-100 transition">Cancel Trip</button>
+          <button onClick={() => onUpdate(ride, "cancelled")} className="w-full bg-red-50 text-red-500 py-3 rounded-2xl font-bold uppercase text-[10px] tracking-widest">Cancel Trip</button>
         )}
       </div>
     </div>
