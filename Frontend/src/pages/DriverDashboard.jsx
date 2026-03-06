@@ -137,6 +137,8 @@ useEffect(() => {
 const updateRideStatus = async (ride, status) => {
   // ... (keep validations for time and confirm)
 
+     if (status === "cancelled" && !window.confirm("Cancel this trip?")) return;
+
   try {
     const bookingRef = doc(db, "bookings", ride.id);
     const driverRef = doc(db, "drivers", auth.currentUser.uid);
