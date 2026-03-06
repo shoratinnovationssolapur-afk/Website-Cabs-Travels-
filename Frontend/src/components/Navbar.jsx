@@ -26,18 +26,21 @@ const goHome = () => {
 const toggleSB = () => {
   // 1. Handle Unauthenticated (Non-Logged) Users
   if (!user) {
-    openLogin(); // Use the prop function instead of navigate("/login")
-    return;
-  }
+    openLogin();
+    }
+
+    
+  
+  
 
   // 2. Admin Logic
   if (role === "Admin") {
-    location.pathname.startsWith("/admin") ? navigate("/") : navigate("/admin/dashboard");
+    navigate("/admin/dashboard");
   } 
   
   // 3. Driver Logic
   else if (role === "Driver") {
-    location.pathname.startsWith("/driver") ? navigate("/") : navigate("/driver/dashboard");
+    navigate("/driver/dashboard");
   } 
   
   // 4. User/Customer Logic
