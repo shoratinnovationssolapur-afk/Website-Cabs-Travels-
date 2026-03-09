@@ -72,7 +72,7 @@ const Navbar = ({ openLogin, openLogout }) => {
 
           <div onClick={goHome} className="flex items-center gap-3 cursor-pointer min-w-0">
             <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-yellow-500 shadow-sm shrink-0">
-              <img src="/src/assets/logo 1.png" alt="Logo" className="w-full h-full object-cover" />
+              <img src="https://res.cloudinary.com/dx8vqwqxq/image/upload/v1773059045/logo_1_ioobkr.png" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <h2 className="text-xl font-bold text-yellow-500 truncate">Rathod Express</h2>
           </div>
