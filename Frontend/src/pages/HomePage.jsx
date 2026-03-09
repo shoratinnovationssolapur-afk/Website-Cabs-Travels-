@@ -55,6 +55,7 @@ const HomePage = () => {
   const [heroDrop, setHeroDrop] = useState("");
   const [vehicles, setVehicles] = useState([]); // Existing
   const [tours, setTours] = useState([]);       // Add this
+  const [activeRideVehicleIds, setActiveRideVehicleIds] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
 
   const [calculatedFare, setCalculatedFare] = useState(0);
@@ -132,10 +133,77 @@ const HomePage = () => {
       console.error("Error listening to tours:", error);
     });
 
-    // 3. Clean up both listeners
+    // 3. Active ride listener: hide cars currently on trip from homepage
+    const qActiveRides = query(
+      collection(db, "bookings"),
+      where("status", "in", ["assigned", "approved", "on_the_way"])
+    );
+    const unsubActiveRides = onSnapshot(qActiveRides, (snapshot) => {
+      const vehicleIds = snapshot.docs
+        .map((bookingDoc) => bookingDoc.data()?.vehicleId)
+        .filter((id) => id && id !== "quick_choice" && id !== "city_ride");
+      setActiveRideVehicleIds(vehicleIds);
+    }, (error) => {
+      console.error("Error listening to active rides:", error);
+    });
+
+    // 4. Clean up listeners
     return () => {
       unsubVehicles();
       unsubTours();
+      unsubActiveRides();
+    };
+  }, []);
+
+  const activeRideVehicleSet = new Set(activeRideVehicleIds);
+  const visibleVehicles = vehicles.filter((v) => !activeRideVehicleSet.has(v.id));
+
+  // Fallback auto-refresh in case realtime listeners miss updates on slow networks.
+  useEffect(() => {
+    let isMounted = true;
+
+    const refreshHomeData = async () => {
+      try {
+        const [vehiclesSnap, toursSnap, ridesSnap] = await Promise.all([
+          getDocs(query(collection(db, "vehicles"), where("available", "==", true))),
+          getDocs(query(collection(db, "tours"))),
+          getDocs(
+            query(
+              collection(db, "bookings"),
+              where("status", "in", ["assigned", "approved", "on_the_way"])
+            )
+          ),
+        ]);
+
+        if (!isMounted) return;
+
+        const vehicleList = vehiclesSnap.docs.map((vehicleDoc) => ({
+          id: vehicleDoc.id,
+          ...vehicleDoc.data(),
+        }));
+
+        const tourList = toursSnap.docs.map((tourDoc) => ({
+          id: tourDoc.id,
+          ...tourDoc.data(),
+        }));
+
+        const vehicleIds = ridesSnap.docs
+          .map((bookingDoc) => bookingDoc.data()?.vehicleId)
+          .filter((id) => id && id !== "quick_choice" && id !== "city_ride");
+
+        setVehicles(vehicleList);
+        setTours(tourList);
+        setActiveRideVehicleIds(vehicleIds);
+      } catch (error) {
+        console.error("Auto-refresh failed:", error);
+      }
+    };
+
+    const intervalId = setInterval(refreshHomeData, 20000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -486,7 +554,7 @@ const HomePage = () => {
         </h2>
         {/* Scroll Container */}
         <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
-          {vehicles
+          {visibleVehicles
             .filter(v => v.type === "Sedan")
             .map(vehicle => (
               <div key={vehicle.id}
@@ -510,6 +578,8 @@ const HomePage = () => {
 
         </div>
       </section>
+      {/* ================= SUV SHOWCASE ================= */}
+
       <section id="SUV" className="py-14 md:py-16 px-4 md:px-6 bg-white ">
         <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 md:mb-12 text-black">
           Our Premium SUV Fleet
@@ -517,7 +587,7 @@ const HomePage = () => {
 
         {/* Scroll Container */}
         <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
-          {vehicles
+          {visibleVehicles
             .filter(v => v.type === "SUV")
             .map(vehicle => (
               <div
@@ -554,7 +624,7 @@ const HomePage = () => {
         </h2>
         {/* Scroll Container */}
         <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
-          {vehicles
+          {visibleVehicles
             .filter(v => v.type === "Luxury")
             .map(vehicle => (
               <div key={vehicle.id}
@@ -581,8 +651,7 @@ const HomePage = () => {
       </section>
 
 
-      {/* ================= SUV SHOWCASE ================= */}
-
+      
 
       {/*Others SHOWCASE*/}
       {/* ================= OTHERS SHOWCASE ================= */}
@@ -591,7 +660,7 @@ const HomePage = () => {
           Cabs on Per day basis
         </h2>
         <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
-          {vehicles
+          {visibleVehicles
             .filter(v => v.type === "Others")
             .map(vehicle => (
               <div
@@ -612,7 +681,7 @@ const HomePage = () => {
             ))}
         </div>
         {/* Show message if no "Other" cars are available */}
-        {vehicles.filter(v => v.type === "Others").length === 0 && (
+        {visibleVehicles.filter(v => v.type === "Others").length === 0 && (
           <p className="text-center text-gray-400 italic">More vehicles coming soon!</p>
         )}
       </section>
@@ -631,7 +700,7 @@ const HomePage = () => {
 
           {/* Scroll Container */}
           <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-6 no-scrollbar">
-            {vehicles
+            {visibleVehicles
               .filter(v => v.type === "Travels" || v.type === "Bus")
               .map(vehicle => (
                 <div
@@ -680,7 +749,7 @@ const HomePage = () => {
           </div>
 
           {/* Empty State */}
-          {vehicles.filter(v => v.type === "Travels" || v.type === "Bus").length === 0 && (
+          {visibleVehicles.filter(v => v.type === "Travels" || v.type === "Bus").length === 0 && (
             <div className="text-center py-10 bg-white rounded-3xl border-2 border-dashed border-gray-200">
               <p className="text-gray-400 italic">No large buses available currently. Contact us for offline booking.</p>
             </div>
@@ -786,7 +855,7 @@ const HomePage = () => {
       {/* ================= SERVICES ================= */}
       <section className="py-14 md:py-24 px-4 md:px-6 bg-gradient-to-br from-indigo-100 via-white to-blue-100">
 
-        <h2 className="text-4xl md:text-6xl lg:text-8xl font-bold text-center mb-10 md:mb-16">
+        <h2 className="text-4xl md:text-6xl lg:text-5xl font-bold text-center mb-10 md:mb-16">
           Our Services
         </h2>
 
