@@ -78,7 +78,7 @@ const TourBookingPage = () => {
           data.append("images", aadharFiles[i]); // Matches your backend field name
           data.append("userId", auth.currentUser.uid);
 
-          const response = await axios.post("http://localhost:3000/api/images/upload", data);
+          const response = await axios.post("https://website-cabs-travels.onrender.com/api/images/upload", data);
           aadharUrl = response.data.urls[0]; 
         }
 

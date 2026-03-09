@@ -53,7 +53,7 @@ const UserProfile = () => {
     data.append("userId", user.uid);
 
     try {
-      const response = await axios.post("http://localhost:3000/api/images/upload", data);
+      const response = await axios.post("https://website-cabs-travels.onrender.com/api/images/upload", data);
       const newImageUrl = response.data.urls[0];
       await updateDoc(doc(db, "users", user.uid), { photo: newImageUrl });
       alert("Profile picture updated!");

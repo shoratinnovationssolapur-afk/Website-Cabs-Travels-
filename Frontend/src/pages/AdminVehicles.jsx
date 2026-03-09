@@ -98,7 +98,7 @@ useEffect(() => {
         data.append("userId", auth.currentUser.uid);
       }
 
-      const response = await axios.post("http://localhost:3000/api/images/upload", data);
+      const response = await axios.post("https://website-cabs-travels.onrender.com/api/images/upload", data);
       if (response.data.urls && response.data.urls.length > 0) {
         setForm(prev => ({ ...prev, imageUrl: response.data.urls[0] }));
       }
