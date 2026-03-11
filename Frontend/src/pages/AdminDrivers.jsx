@@ -223,9 +223,9 @@ const AdminDrivers = () => {
                   </div>
 
                   {/* ⭐ UPDATED DATA PATH: d.lastLocation.address */}
-                  <p className={`text-sm font-bold leading-tight ${d.available ? 'text-blue-900' : 'text-gray-700'}`}>
+                  {/* <p className={`text-sm font-bold leading-tight ${d.available ? 'text-blue-900' : 'text-gray-700'}`}>
                     {d.lastLocation?.address || "Wait for driver to go online..."}
-                  </p>
+                  </p> */}
 
                   <div className="flex gap-4 mt-2">
                     <p className="text-[9px] text-gray-400 font-bold">
