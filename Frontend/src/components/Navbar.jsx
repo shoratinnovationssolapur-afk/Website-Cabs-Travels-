@@ -40,25 +40,25 @@ const Navbar = ({ openLogin, openLogout }) => {
     }
   };
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
-      if (!authUser) {
-        setUsername("");
-        return;
-      }
+  // useEffect(() => {
+  //   const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
+  //     if (!authUser) {
+  //       setUsername("");
+  //       return;
+  //     }
 
-      try {
-        const snap = await getDoc(doc(db, "users", authUser.uid));
-        if (snap.exists()) {
-          setUsername(snap.data().name || "");
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    });
+  //     try {
+  //       const snap = await getDoc(doc(db, "users", authUser.uid));
+  //       if (snap.exists()) {
+  //         setUsername(snap.data().name || "");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching user:", error);
+  //     }
+  //   });
 
-    return () => unsubscribe();
-  }, []);
+  //   return () => unsubscribe();
+  // }, []);
 
   useEffect(() => {
     setMobileMenuOpen(false);

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuthContext } from "../context/AuthContext";
 import { db } from "../firebase";
 import { doc, onSnapshot, updateDoc } from "firebase/firestore";
-import { Camera, User, Mail, Phone, MapPin, Save, X, ShieldCheck } from "lucide-react";
+import { Camera, User, Mail, Phone, MapPin, Save, X, ShieldCheck,Trash2 } from "lucide-react";
 import axios from "axios";
 
 const UserProfile = () => {
@@ -41,6 +41,28 @@ const UserProfile = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+
+  const handleDeleteUserImage = async () => {
+    if (!user?.uid) return;
+    if (!window.confirm("Are you sure you want to remove your profile picture?")) return;
+
+    setUploading(true);
+    try {
+      // This removes the field or sets it to an empty string in Firestore
+      await updateDoc(doc(db, "users", user.uid), {
+        photo: ""
+      });
+
+      setFormData(prev => ({ ...prev, photoURL: "" }));
+      alert("Profile picture removed!");
+    } catch (error) {
+      console.error("Delete failed", error);
+      alert("Failed to remove image");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleImageChange = async (e) => {
@@ -95,11 +117,22 @@ const UserProfile = () => {
           <div className="absolute -bottom-10 sm:-bottom-12 left-4 sm:left-8 flex items-end gap-4">
             <div className="relative group">
               {formData.photoURL ? (
+                <>
                 <img
+                
                   src={formData.photoURL}
+                  
                   alt="Profile"
                   className="w-10 h-10 sm:w-28 sm:h-28 rounded-2xl border-4 border-white object-cover bg-white shadow-md"
                 />
+                <button
+                    onClick={handleDeleteUserImage}
+                    className="absolute -top-2 -right-2 p-1.5 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition transform hover:scale-110"
+                    title="Delete Photo"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                  </>
               ) : (
                 <div className="w-10 h-10 sm:w-28 sm:h-28 bg-gray-100 rounded-2xl border-4 border-white flex items-center justify-center">
                   <User size={40} className="text-gray-400" />

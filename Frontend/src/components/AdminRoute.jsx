@@ -10,6 +10,7 @@ const AdminRoute = ({ children }) => {
   if (!user) return <Navigate to="/" />; 
 
   // If they are logged in but NOT an admin, also send them away
+  
   if (role !== "Admin") return <Navigate to="/" />;
 
   return children;
