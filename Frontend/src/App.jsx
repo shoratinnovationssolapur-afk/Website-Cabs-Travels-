@@ -32,6 +32,7 @@ import HomePage from "./pages/HomePage";
 import UserBookings from "./pages/UserBookings";
 // import ToursSection from "./utils/ToursSection";
 import Tours from "./pages/Tours"
+import AuthRedirectHandler from "./components/AuthRedirectHandler"
 
 
 
@@ -53,6 +54,7 @@ import { Contact } from "lucide-react";
 import ContactPage from "./pages/ContactPage";
 import AboutPage from "./pages/AboutPage";
 import AdminInquiries from "./pages/AdminInquiries";
+import AdminProfile from "./pages/AdminProfile";
 
 
 
@@ -96,147 +98,8 @@ function Layout() {
 }
 
 
-// ================= ROUTER =================
 
 
-// const router = createBrowserRouter([
-//   {
-//     element: <Layout />,
-//     children: [
-//       { path: "/", element: <HomePage /> },
-//       { path: "booking", element: <BookingDetails /> },
-//       { path: "profile", element: <UserProfile /> },
-//       { path: "rent-your-car", element: <RentCarPage /> },
-//       { path: "bookings", element: <UserBookings /> },
-//       { path: "tour/:id", element: <TourDetails /> },
-      
-
-//       // ================= USER DASHBOARD =================
-//       {
-//         path: "/user",
-//         element: (
-//           <UserRoute>
-//             <UserLayout />
-//           </UserRoute>
-//         ),
- 
-//       children: [
-//     { index: true, element: <UserDashboard /> }, // matches "/user"
-//     { path: "dashboard", element: <UserDashboard /> }, // matches "/user/dashboard"
-//     { path: "profile", element: <UserProfile /> },
-//   ],},
-
-//       // ================= DRIVER SECTION =================
-//       {
-//         path: "/driver-login",
-//         element: <DriverLogin />,
-//       },
-//    {
-//   path: "/driver",
-//   element: (
-//     <DriverRoute>
-//       <DriverLayout />
-//     </DriverRoute>
-//   ),
-//   children: [
-//     { path: "dashboard", element: <DriverDashboard /> },
-//     { path: "profile", element: <DriverProfile /> }, // This is where you use it
-//     { path: "history", element: <DriverHistory /> },
-//     { path: "earnings", element: <DriverEarnings /> },
-//   ]
-// },
-
-//       // ================= ADMIN DASHBOARD =================
-//       {
-//         path: "/admin",
-//         element: (
-//           <AdminRoute>
-//             <AdminLayout />
-//           </AdminRoute>
-//         ),
-//         // If your AdminLayout also has an <Outlet />, you can move admin pages here as children
-//       },
-//       {
-//         path: "/admin/dashboard",
-//         element: (
-//           <AdminRoute>
-//             <AdminDashboard />
-//           </AdminRoute>
-//         ),
-//       },
-//       {
-//         path: "/admin/vehicles",
-//         element: (
-//           <AdminRoute>
-//             <AdminVehicles />
-//           </AdminRoute>
-//         ),
-//       },
-//       {
-//         path: "/admin/bookings",
-//         element: (
-//           <AdminRoute>
-//             <AdminBookings />
-//           </AdminRoute>
-//         ),
-//       },
-//       {
-//         path: "/admin/users",
-//         element: (
-//           <AdminRoute>
-//             <AdminUsers />
-//           </AdminRoute>
-//         ),
-//       },
-//       {
-//         path: "/admin/drivers",
-//         element: (
-//           <AdminRoute>
-//             <AdminDrivers />
-//           </AdminRoute>
-//         ),
-//       },
-//             {
-//         path: "/admin/vendors",
-//         element: (
-//           <AdminRoute>
-//             <AdminVendorManagement />
-//           </AdminRoute>
-//         ),
-//       },
-//       {
-//         path: "/admin/tours",
-//         element: (
-//           <AdminRoute>
-//             <AdminTours />
-//           </AdminRoute>
-//         ),
-//       },
-//       {
-//         path: "/admin/tourbookings",
-//         element:(
-//           <AdminRoute>
-//             <AdminTourBookings />
-//           </AdminRoute>
-//         )
-//       },
-
-//       // ================= PUBLIC TOUR PAGE =================
-//       {
-//         path: "/tour/:id",
-//         element: <TourDetails />,
-//       },
-//       {
-//       path : "/tours",
-//       element : <Tours />,
-//       },
-//       {
-//       path: "/booking-success",
-//       element: <BookingSuccess />,
-//     },
-//     ],
-//   },
-// ]);
 
 
 
@@ -253,13 +116,7 @@ const router = createBrowserRouter([
       { path: "contact-us", element: <ContactPage /> },
       { path: "about-us", element: <AboutPage /> },
 
-      // // ================= TOUR BOOKING (PROTECTED) =================
-      // { 
-      //   path: "tour-booking/:id", 
-      //   element: <UserRoute><TourBookingPage /></UserRoute> 
-      // },
-
-      // ================= PROTECTED USER ROUTES =================
+     
       {
         path: "user",
         element: <UserRoute><UserLayout /></UserRoute>,
@@ -307,6 +164,7 @@ const router = createBrowserRouter([
       { path: "tours", element: <AdminTours /> },
       { path: "tourbookings", element: <AdminTourBookings /> },
       { path:"inquiries", element:<AdminInquiries /> } ,
+      {path: "profile", element:<AdminProfile />}
     ],
   },
 
@@ -323,7 +181,17 @@ const router = createBrowserRouter([
       {
       path : "/bookride",
       element : <BookRide />
-      }
+      },
+        {
+        path: "/", // This handles the root URL
+        element: (
+          <AuthRedirectHandler>
+            <HomePage />
+          </AuthRedirectHandler>
+        )
+      },
+
+
     ],
   },
 ]);

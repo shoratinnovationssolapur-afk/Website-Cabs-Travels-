@@ -10,21 +10,7 @@ import { FaWhatsapp } from "react-icons/fa6";
 
 
 
-import innova from "../assets/innova.avif";
-import MahindraXUV700 from "../assets/MahindraXUV700.avif";
-import HyundaiCreta from "../assets/HyundaiCreta.avif";
-import GrandVitara from "../assets/GrandVitara.webp";
-import Brezza from "../assets/Brezza.avif";
-import HyundaiAura from "../assets/Sedan1.avif";
-import SuzukiDzire from "../assets/Sedan2.webp";
-import HyundaiVerna from "../assets/Sedan3.avif";
-import HondaAmaze from "../assets/Sedan4.avif";
-import TataTigor from "../assets/Sedan5.jpg";
-import MercedesBenzSClass from "../assets/Luxurycar1.webp";
-import RangeRover from "../assets/Luxurycar2.webp";
-import BMW from "../assets/Luxurycar3.webp";
-import Audi from "../assets/Luxurycar4.webp";
-import VolvoXC90 from "../assets/Luxurycar5.webp";
+
 import outstationcar from "../assets/OutstationCab.webp";
 
 import LocationInputs from "../components/pickupanddrop";
@@ -55,7 +41,6 @@ const HomePage = () => {
   const [heroDrop, setHeroDrop] = useState("");
   const [vehicles, setVehicles] = useState([]); // Existing
   const [tours, setTours] = useState([]);       // Add this
-  const [activeRideVehicleIds, setActiveRideVehicleIds] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
 
   const [calculatedFare, setCalculatedFare] = useState(0);
@@ -133,77 +118,51 @@ const HomePage = () => {
       console.error("Error listening to tours:", error);
     });
 
-    // 3. Active ride listener: hide cars currently on trip from homepage
-    const qActiveRides = query(
-      collection(db, "bookings"),
-      where("status", "in", ["assigned", "approved", "on_the_way"])
-    );
-    const unsubActiveRides = onSnapshot(qActiveRides, (snapshot) => {
-      const vehicleIds = snapshot.docs
-        .map((bookingDoc) => bookingDoc.data()?.vehicleId)
-        .filter((id) => id && id !== "quick_choice" && id !== "city_ride");
-      setActiveRideVehicleIds(vehicleIds);
-    }, (error) => {
-      console.error("Error listening to active rides:", error);
-    });
-
-    // 4. Clean up listeners
+    // 3. Clean up listeners
     return () => {
       unsubVehicles();
       unsubTours();
-      unsubActiveRides();
     };
   }, []);
 
-  const activeRideVehicleSet = new Set(activeRideVehicleIds);
-  const visibleVehicles = vehicles.filter((v) => !activeRideVehicleSet.has(v.id));
+  const visibleVehicles = vehicles;
 
   // Fallback auto-refresh in case realtime listeners miss updates on slow networks.
   useEffect(() => {
     let isMounted = true;
 
-    const refreshHomeData = async () => {
-      try {
-        const [vehiclesSnap, toursSnap, ridesSnap] = await Promise.all([
-          getDocs(query(collection(db, "vehicles"), where("available", "==", true))),
-          getDocs(query(collection(db, "tours"))),
-          getDocs(
-            query(
-              collection(db, "bookings"),
-              where("status", "in", ["assigned", "approved", "on_the_way"])
-            )
-          ),
-        ]);
+    // 1. Define the real-time subscriptions
+    const qVehicles = query(collection(db, "vehicles"), where("available", "==", true));
+    const qTours = query(collection(db, "tours"));
 
-        if (!isMounted) return;
+    const unsubVehicles = onSnapshot(qVehicles, (snapshot) => {
+      if (!isMounted) return;
+      const vehicleList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setVehicles(vehicleList);
+    }, (err) => console.error("Vehicle Sync Error:", err));
 
-        const vehicleList = vehiclesSnap.docs.map((vehicleDoc) => ({
-          id: vehicleDoc.id,
-          ...vehicleDoc.data(),
-        }));
+    const unsubTours = onSnapshot(qTours, (snapshot) => {
+      if (!isMounted) return;
+      const tourList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setTours(tourList);
+    }, (err) => console.error("Tours Sync Error:", err));
 
-        const tourList = toursSnap.docs.map((tourDoc) => ({
-          id: tourDoc.id,
-          ...tourDoc.data(),
-        }));
-
-        const vehicleIds = ridesSnap.docs
-          .map((bookingDoc) => bookingDoc.data()?.vehicleId)
-          .filter((id) => id && id !== "quick_choice" && id !== "city_ride");
-
-        setVehicles(vehicleList);
-        setTours(tourList);
-        setActiveRideVehicleIds(vehicleIds);
-      } catch (error) {
-        console.error("Auto-refresh failed:", error);
-      }
+    // 2. Network Recovery Logic (The "Smart" Auto-Refresh)
+    // Instead of a blind timer, we listen for the browser coming back online
+    const handleOnline = () => {
+      console.log("Network back online. Firebase will auto-sync.");
+      // Firebase onSnapshot actually handles reconnection automatically, 
+      // but this is a great place to trigger any additional API calls if needed.
     };
 
-    const intervalId = setInterval(refreshHomeData, 20000);
+    window.addEventListener('online', handleOnline);
 
+    // 3. Cleanup: Stop all listeners when user leaves the page
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
+      unsubVehicles();
+      unsubTours();
+      window.removeEventListener('online', handleOnline);
     };
   }, []);
 
@@ -283,53 +242,21 @@ const HomePage = () => {
   };
 
 
+  const handleRouteClick = (from, to) => {
+    // 1. Set the pickup and drop states
+    setPickup(from);
+    setDrop(to);
 
+    // 2. Set Trip Type to Outstation since these are outstation routes
+    setTripType("Outstation");
 
+    // 3. Scroll to the booking section
+    const bookingSection = document.getElementById("booking");
+    if (bookingSection) {
+      bookingSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
-
-
-  //   const submitBooking = async () => {
-
-  //     if (
-  //       !name.trim() ||
-  //       !phone.trim() ||
-  //       !pickup.trim() ||
-  //       !drop.trim() ||
-  //       !carType ||
-  //       !dateTime
-  //     ) {
-  //       alert("Please first fill the booking form");
-  //       return;
-  //     }
-
-  //     const user = auth.currentUser;
-
-  //     if (!user) {
-  //       alert("Please login to book a ride");
-  //       return;
-  //     }
-
-  //     try {
-  //       await addDoc(collection(db, "bookings"), {
-  //   userId: user.uid,
-  //   userEmail: user.email,
-  //   vehicleId: selectedVehicleId,   // ⭐ IMPORTANT
-  //   name,
-  //   phone,
-  //   pickup,
-  //   drop,
-  //   carType,
-  //   tripType,
-  //   dateTime,
-  //   status: "pending",
-  //   createdAt: serverTimestamp()
-  // });
-  //       alert("Booking request submitted successfully!");
-
-  //     } catch (error) {
-  //       alert(error.message);
-  //     }
-  //   };
 
   const submitBooking = async () => {
     // 1. Basic Field Validation
@@ -651,7 +578,7 @@ const HomePage = () => {
       </section>
 
 
-      
+
 
       {/*Others SHOWCASE*/}
       {/* ================= OTHERS SHOWCASE ================= */}
@@ -761,7 +688,7 @@ const HomePage = () => {
       {/* ================= TRAVELS / TOURS SHOWCASE ================= */}
       <section id="TRAVELS" className="py-14 md:py-16 px-4 md:px-6 bg-slate-50">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-12">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold text-black">Popular Tour Packages</h2>
               <p className="text-gray-500 mt-2">Explore the best destinations with our curated travel plans</p>
@@ -775,7 +702,7 @@ const HomePage = () => {
           </div>
 
           {/* Scroll Container */}
-          <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-6 no-scrollbar">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 px-2 pb-6 lg:flex lg:gap-6 lg:overflow-x-auto lg:scroll-smooth no-scrollbar">
             {/* If you have a 'tours' array from Firestore, use it here. 
          Otherwise, you can filter your vehicles if they are marked as 'Tour'
       */}
@@ -784,7 +711,7 @@ const HomePage = () => {
                 <div
                   key={tour.id}
                   onClick={() => navigate(`/user/tour/${tour.id}`)}
-                  className="min-w-[260px] sm:min-w-[300px] md:min-w-[350px] bg-white rounded-3xl shadow-md overflow-hidden flex-shrink-0 group cursor-pointer border border-gray-100 hover:shadow-xl transition-all duration-300"
+                  className="w-full bg-white rounded-3xl shadow-md overflow-hidden group cursor-pointer border border-gray-100 hover:shadow-xl transition-all duration-300 lg:min-w-[350px] lg:max-w-[350px] lg:flex-shrink-0"
                 >
                   <div className="relative h-56 overflow-hidden">
                     <img
@@ -829,6 +756,13 @@ const HomePage = () => {
               </div>
             )}
           </div>
+
+          <button
+            onClick={() => navigate('user/tours')}
+            className="md:hidden mt-2 text-blue-600 font-semibold hover:underline"
+          >
+            View All Packages →
+          </button>
         </div>
       </section>
 
@@ -1091,40 +1025,79 @@ const HomePage = () => {
       </section>
 
       {/* ⭐ NEW CITY ROUTES SECTION (Hyperlinks added here) */}
+      {/* Popular Outstation Routes Section */}
       <section className="py-14 md:py-16 px-4 md:px-6 bg-white border-t">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 md:mb-12">Popular Outstation Routes</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+
+            {/* Example for Solapur - Repeat for others */}
             <div>
               <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Solapur Routes</h3>
               <ul className="space-y-2 text-sm text-gray-600 font-bold">
-                {["Solapur to Pune", "Solapur to Mumbai", "Solapur to Goa", "Solapur to Tuljapur"].map(r => (
-                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} taxi</li>
-                ))}
+                {["Solapur to Pune", "Solapur to Mumbai", "Solapur to Goa", "Solapur to Tuljapur"].map(r => {
+                  const [from, to] = r.split(" to ");
+                  return (
+                    <li
+                      key={r}
+                      onClick={() => handleRouteClick(from, to)}
+                      className="cursor-pointer hover:text-yellow-600 transition-colors duration-200"
+                    >
+                      • {r} taxi
+                    </li>
+                  );
+                })}
               </ul>
             </div>
             <div>
               <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Pune Routes</h3>
               <ul className="space-y-2 text-sm text-gray-600 font-bold">
-                {["Pune to Mahabaleshwar", "Pune to Shirdi", "Pune to Mumbai Airport", "Pune to Lonavala"].map(r => (
-                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} cab</li>
-                ))}
+                {["Pune to Mahabaleshwar", "Pune to Shirdi", "Pune to Mumbai Airport", "Pune to Lonavala"].map(r => {
+                  const [from, to] = r.split(" to ");
+                  return (
+                    <li
+                      key={r}
+                      onClick={() => handleRouteClick(from, to)}
+                      className="cursor-pointer hover:text-yellow-600 transition-colors duration-200"
+                    >
+                      • {r} taxi
+                    </li>
+                  );
+                })}
               </ul>
             </div>
             <div>
               <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Mumbai Routes</h3>
               <ul className="space-y-2 text-sm text-gray-600 font-bold">
-                {["Mumbai to Solapur", "Mumbai to Pune", "Mumbai to Goa", "Mumbai to Nashik"].map(r => (
-                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} car rental</li>
-                ))}
+                {["Mumbai to Solapur", "Mumbai to Pune", "Mumbai to Goa", "Mumbai to Nashik"].map(r => {
+                  const [from, to] = r.split(" to ");
+                  return (
+                    <li
+                      key={r}
+                      onClick={() => handleRouteClick(from, to)}
+                      className="cursor-pointer hover:text-yellow-600 transition-colors duration-200"
+                    >
+                      • {r} taxi
+                    </li>
+                  );
+                })}
               </ul>
             </div>
             <div>
               <h3 className="font-black text-lg mb-4 text-blue-600 border-b-2 border-yellow-400 inline-block">Goa Routes</h3>
               <ul className="space-y-2 text-sm text-gray-600 font-bold">
-                {["Goa to Solapur", "Goa to Pune", "Goa to Mumbai", "Goa Airport to Calangute"].map(r => (
-                  <li key={r} onClick={() => handleRouteClick(r.split(" to ")[0], r.split(" to ")[1])} className="cursor-pointer hover:text-yellow-600">• {r} trip</li>
-                ))}
+                {["Goa to Solapur", "Goa to Pune", "Goa to Mumbai", "Goa Airport to Calangute"].map(r => {
+                  const [from, to] = r.split(" to ");
+                  return (
+                    <li
+                      key={r}
+                      onClick={() => handleRouteClick(from, to)}
+                      className="cursor-pointer hover:text-yellow-600 transition-colors duration-200"
+                    >
+                      • {r} taxi
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
