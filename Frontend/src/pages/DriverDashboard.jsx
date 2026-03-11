@@ -64,6 +64,7 @@ export default function DriverDashboard() {
 
           // Shorten the address (Nominatim gives a very long string)
           const addressString = data.display_name;
+          const shortAddress = addressString.split(',').slice(0, 4).join(',');
 
           // Update Firestore - using auth.currentUser.uid
           // Inside watchPosition try block
