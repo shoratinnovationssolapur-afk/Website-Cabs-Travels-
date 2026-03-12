@@ -97,7 +97,7 @@ const BookingDetails = () => {
     }
   };
 
-  const totalAmount = calculateTotal();
+  
  
   
 
@@ -118,6 +118,9 @@ const BookingDetails = () => {
     setDistance(distance);
     setRouteFare(fare);
   };
+
+  const totalAmount = ratePerKm + baseServiceFee + routeFare
+
 
   // ================= FINAL BOOKING =================
   const handleFinalBooking = async () => {
@@ -197,6 +200,7 @@ const BookingDetails = () => {
       <Loader2 className="animate-spin text-yellow-500" size={48} />
     </div>
   );
+  
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
