@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Link to your sitemap to help Google find all your travel packages
+Sitemap: https://rathodexpress.com/sitemap.xml
