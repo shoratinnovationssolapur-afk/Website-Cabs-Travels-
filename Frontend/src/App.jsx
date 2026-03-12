@@ -155,7 +155,7 @@ const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <AdminDashboard /> }, 
-      Admin
+
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "vehicles", element: <AdminVehicles /> },
       { path: "bookings", element: <AdminBookings /> },
