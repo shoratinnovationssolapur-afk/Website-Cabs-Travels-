@@ -40,6 +40,7 @@ const HomePage = () => {
   const [heroPickup, setHeroPickup] = useState("");
   const [heroDrop, setHeroDrop] = useState("");
   const [vehicles, setVehicles] = useState([]); // Existing
+  const [bookedVehicleIds, setBookedVehicleIds] = useState([]);
   const [tours, setTours] = useState([]);       // Add this
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
 
@@ -118,14 +119,45 @@ const HomePage = () => {
       console.error("Error listening to tours:", error);
     });
 
+    const unsubBookings = onSnapshot(collection(db, "bookings"), (snapshot) => {
+      const activeStatuses = ["pending", "assigned", "approved", "on_the_way"];
+      const bookedIds = snapshot.docs
+        .map((doc) => doc.data())
+        .filter((booking) =>
+          booking?.vehicleId &&
+          booking.vehicleId !== "quick_choice" &&
+          booking.vehicleId !== "city_ride" &&
+          activeStatuses.includes(String(booking?.status || "").toLowerCase())
+        )
+        .map((booking) => booking.vehicleId);
+
+      setBookedVehicleIds(bookedIds);
+    });
+
     // 3. Clean up listeners
     return () => {
       unsubVehicles();
       unsubTours();
+      unsubBookings();
     };
   }, []);
 
-  const visibleVehicles = vehicles;
+  const isVehicleVisible = (vehicle) => {
+    const statusFields = [
+      vehicle?.status,
+      vehicle?.bookingStatus,
+      vehicle?.availabilityStatus
+    ];
+
+    return !statusFields.some((value) => {
+      const normalizedValue = String(value || "").trim().toLowerCase();
+      return normalizedValue === "busy" || normalizedValue === "booked";
+    });
+  };
+
+  const visibleVehicles = vehicles.filter(
+    (vehicle) => isVehicleVisible(vehicle) && !bookedVehicleIds.includes(vehicle.id)
+  );
 
   // Fallback auto-refresh in case realtime listeners miss updates on slow networks.
   useEffect(() => {
@@ -134,6 +166,7 @@ const HomePage = () => {
     // 1. Define the real-time subscriptions
     const qVehicles = query(collection(db, "vehicles"), where("available", "==", true));
     const qTours = query(collection(db, "tours"));
+    const qBookings = collection(db, "bookings");
 
     const unsubVehicles = onSnapshot(qVehicles, (snapshot) => {
       if (!isMounted) return;
@@ -146,6 +179,22 @@ const HomePage = () => {
       const tourList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setTours(tourList);
     }, (err) => console.error("Tours Sync Error:", err));
+
+    const unsubBookings = onSnapshot(qBookings, (snapshot) => {
+      if (!isMounted) return;
+      const activeStatuses = ["pending", "assigned", "approved", "on_the_way"];
+      const bookedIds = snapshot.docs
+        .map((doc) => doc.data())
+        .filter((booking) =>
+          booking?.vehicleId &&
+          booking.vehicleId !== "quick_choice" &&
+          booking.vehicleId !== "city_ride" &&
+          activeStatuses.includes(String(booking?.status || "").toLowerCase())
+        )
+        .map((booking) => booking.vehicleId);
+
+      setBookedVehicleIds(bookedIds);
+    }, (err) => console.error("Bookings Sync Error:", err));
 
     // 2. Network Recovery Logic (The "Smart" Auto-Refresh)
     // Instead of a blind timer, we listen for the browser coming back online
@@ -162,6 +211,7 @@ const HomePage = () => {
       isMounted = false;
       unsubVehicles();
       unsubTours();
+      unsubBookings();
       window.removeEventListener('online', handleOnline);
     };
   }, []);
