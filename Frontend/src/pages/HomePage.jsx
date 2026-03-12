@@ -208,7 +208,10 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
     // 1. Define the real-time subscriptions
     const qVehicles = query(collection(db, "vehicles"), where("available", "==", true));
     const qTours = query(collection(db, "tours"));
-    const qBookings = collection(db, "bookings");
+    const qBookings = query(
+  collection(db, "bookings"), 
+  where("userId", "==", currentUser?.uid || "guest")
+);
 
     const unsubVehicles = onSnapshot(qVehicles, (snapshot) => {
       if (!isMounted) return;
@@ -222,21 +225,29 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
       setTours(tourList);
     }, (err) => console.error("Tours Sync Error:", err));
 
-    const unsubBookings = onSnapshot(qBookings, (snapshot) => {
-      if (!isMounted) return;
-      const activeStatuses = ["pending", "assigned", "approved", "on_the_way"];
-      const bookedIds = snapshot.docs
-        .map((doc) => doc.data())
-        .filter((booking) =>
-          booking?.vehicleId &&
-          booking.vehicleId !== "quick_choice" &&
-          booking.vehicleId !== "city_ride" &&
-          activeStatuses.includes(String(booking?.status || "").toLowerCase())
-        )
-        .map((booking) => booking.vehicleId);
+    // 1. Get the current user ID
+const currentUser = auth.currentUser;
 
-      setBookedVehicleIds(bookedIds);
-    }, (err) => console.error("Bookings Sync Error:", err));
+// 2. Create a query that only looks for bookings related to this user
+// This prevents the permission-denied error
+
+
+const unsubBookings = onSnapshot(qBookings, (snapshot) => {
+  const activeStatuses = ["pending", "assigned", "approved", "on_the_way"];
+  const bookedIds = snapshot.docs
+    .map((doc) => doc.data())
+    .filter((booking) =>
+      booking?.vehicleId &&
+      booking.vehicleId !== "quick_choice" &&
+      booking.vehicleId !== "city_ride" &&
+      activeStatuses.includes(String(booking?.status || "").toLowerCase())
+    )
+    .map((booking) => booking.vehicleId);
+
+  setBookedVehicleIds(bookedIds);
+}, (error) => {
+  console.error("Bookings Sync Error handled:", error);
+});
 
     // 2. Network Recovery Logic (The "Smart" Auto-Refresh)
     // Instead of a blind timer, we listen for the browser coming back online
