@@ -90,6 +90,36 @@ const HomePage = () => {
   //   fetchVehicles();
   // }, []);
 
+
+useEffect(() => {
+  const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      try {
+        // 1. Reference the user's document in the "users" collection
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const role = userData.role?.toLowerCase(); // e.g., "admin", "driver", "user"
+
+          // 2. Redirect based on role
+          if (role === "admin") {
+            navigate("/admin/dashboard"); // Change to your actual admin route
+          } else if (role === "driver") {
+            navigate("/driver/dashboard"); // Change to your actual driver route
+          }
+          // If role is "user" or undefined, we do nothing and they stay on HomePage
+        }
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+      }
+    }
+  });
+
+  return () => unsubscribe();
+}, [navigate]);
+
   useEffect(() => {
     if (pickup === drop) {
       setTotalFare(0);
