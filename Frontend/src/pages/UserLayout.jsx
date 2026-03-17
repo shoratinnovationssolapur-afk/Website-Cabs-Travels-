@@ -39,6 +39,9 @@ const UserLayout = () => {
           <button onClick={() => navigate("/user/profile")} className={`${navBtnClass} hover:text-yellow-400`}>
             Profile
           </button>
+          <button onClick={() => navigate("/user/galleries")} className={`${navBtnClass} hover:text-yellow-400`}>
+            Gallery
+          </button>
           <button onClick={logout} className="block w-full text-left text-red-400 font-bold p-2 transition rounded hover:bg-red-900/20 whitespace-nowrap">
             Logout
           </button>

@@ -85,6 +85,8 @@ const Navbar = ({ openLogin, openLogout }) => {
         </div>
 
         <div className="hidden md:flex gap-4">
+          
+
           {user && role === "Admin" && (
             <>
               <button onClick={() => navigate("/admin")} className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer">Home</button>
@@ -130,6 +132,8 @@ const Navbar = ({ openLogin, openLogout }) => {
 
       {mobileMenuOpen && (
         <div className="md:hidden mt-3 flex flex-col gap-2 bg-zinc-900 border border-white/10 rounded-xl p-3">
+          <button onClick={() => navigate("/gallery")} className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer text-left">Gallery</button>
+
           {user && role === "Admin" && (
             <>
               <button onClick={() => navigate("/admin")} className="bg-white text-black hover:bg-yellow-500 px-4 py-2 rounded font-semibold cursor-pointer text-left">Home</button>

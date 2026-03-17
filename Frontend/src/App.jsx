@@ -55,6 +55,8 @@ import ContactPage from "./pages/ContactPage";
 import AboutPage from "./pages/AboutPage";
 import AdminInquiries from "./pages/AdminInquiries";
 import AdminProfile from "./pages/AdminProfile";
+import GalleryPage from "./pages/GalleryPage";
+import AdminGallery from "./pages/AdminGallery";
 
 
 
@@ -115,6 +117,7 @@ const router = createBrowserRouter([
       { path: "driver-login", element: <DriverLogin /> },
       { path: "contact-us", element: <ContactPage /> },
       { path: "about-us", element: <AboutPage /> },
+      { path: "gallery", element: <GalleryPage /> },
 
      
       {
@@ -128,6 +131,7 @@ const router = createBrowserRouter([
           { path: "booking-success", element: <BookingSuccess /> },
           { path: "tour-booking/:id", element: <TourBookingPage /> },
           { path: "tours", element: <Tours /> },
+          {path: "galleries",element: <GalleryPage />},
           { path: "tour/:id", element: <TourDetails /> },
           
         ],
@@ -165,6 +169,7 @@ const router = createBrowserRouter([
       { path: "tours", element: <AdminTours /> },
       { path: "tourbookings", element: <AdminTourBookings /> },
       { path:"inquiries", element:<AdminInquiries /> } ,
+      { path: "gallery", element: <AdminGallery /> },
       {path: "profile", element:<AdminProfile />}
     ],
   },

@@ -205,8 +205,12 @@ const BookingDetails = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* HERO */}
-      <div className="relative h-[280px] md:h-[420px] bg-black">
-        <img src={vehicle?.imageUrl} alt={vehicle?.name} className="w-full h-full object-cover opacity-80" />
+      <div className="relative h-[320px] md:h-[460px] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <img
+          src={vehicle?.imageUrl}
+          alt={vehicle?.name}
+          className="w-full h-full object-contain object-center bg-white opacity-95 p-2 md:p-4"
+        />
         <button onClick={() => navigate(-1)} className="absolute top-6 left-6 bg-white/20 p-2 rounded-full text-white">
           <ChevronLeft size={28} />
         </button>

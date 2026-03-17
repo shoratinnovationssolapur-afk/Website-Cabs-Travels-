@@ -21,9 +21,11 @@ export default function AdminLayout() {
           <button className={navBtnClass} onClick={() => navigate("/admin/vendors")}>Vendors</button>
           <button className={navBtnClass} onClick={() => navigate("/admin/bookings")}>Bookings</button>
           <button className={navBtnClass} onClick={() => navigate("/admin/tourbookings")}>Tour Bookings</button>
+          <button className={navBtnClass} onClick={() => navigate("/admin/gallery")}> AdminGallery</button>
           <button className={navBtnClass} onClick={() => navigate("/admin/inquiries")}>Customer Inquiries</button>
           <button className={navBtnClass} onClick={() => navigate("/contact-us")}>Contact Us</button>
           <button className={navBtnClass} onClick={() => navigate("/about-us")}>About Us</button>
+          <button className={navBtnClass} onClick={() => navigate("/gallery")}>Public Gallery</button>
           <button className={navBtnClass} onClick={() => navigate("/admin/profile")}>My Profile</button>
         </nav>
       </aside>

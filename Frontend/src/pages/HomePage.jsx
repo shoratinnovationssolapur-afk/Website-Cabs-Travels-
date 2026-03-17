@@ -6,7 +6,7 @@ import {
   query,
   where
 } from "firebase/firestore";
-import { FaWhatsapp } from "react-icons/fa6";
+import { FaChevronLeft, FaChevronRight, FaWhatsapp } from "react-icons/fa6";
 
 
 
@@ -49,6 +49,7 @@ const HomePage = () => {
   const [feedbackName, setFeedbackName] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackRating, setFeedbackRating] = useState(5);
+  const fleetScrollRefs = React.useRef({});
 
   // 3. ADD THIS HANDLER to receive data from RouteFare component
   const handleFareUpdate = ({ fare, distance }) => {
@@ -57,68 +58,48 @@ const HomePage = () => {
 
     setDistance(distance);   // Updates the distance state
   };
+  const revealClass = "transform-gpu opacity-0 translate-y-8 transition-all duration-700 ease-out will-change-transform";
+
+  const scrollFleet = (sectionKey, direction) => {
+    const container = fleetScrollRefs.current[sectionKey];
+    if (!container) return;
+
+    const scrollAmount = Math.max(container.clientWidth * 0.85, 260);
+    container.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth"
+    });
+  };
 
   const navigate = useNavigate();
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        try {
+          // 1. Reference the user's document in the "users" collection
+          const userDocRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userDocRef);
 
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const role = userData.role?.toLowerCase(); // e.g., "admin", "driver", "user"
 
-
-
-
-
-
-
-
-
-
-  // useEffect(() => {
-  //   const fetchVehicles = async () => {
-  //     try {
-  //       const snapshot = await getDocs(collection(db, "vehicles"));
-
-  //       const vehicleList = snapshot.docs.map(doc => ({
-  //         id: doc.id,
-  //         ...doc.data()
-  //       }));
-
-  //       setVehicles(vehicleList);
-
-  //     } catch (error) {
-  //       console.error("Error fetching vehicles:", error);
-  //     }
-  //   };
-
-  //   fetchVehicles();
-  // }, []);
-
-
-useEffect(() => {
-  const unsubscribe = auth.onAuthStateChanged(async (user) => {
-    if (user) {
-      try {
-        // 1. Reference the user's document in the "users" collection
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const role = userData.role?.toLowerCase(); // e.g., "admin", "driver", "user"
-
-          // 2. Redirect based on role
-          if (role === "admin") {
-            navigate("/admin/dashboard"); // Change to your actual admin route
-          } else if (role === "driver") {
-            navigate("/driver/dashboard"); // Change to your actual driver route
+            // 2. Redirect based on role
+            if (role === "admin") {
+              navigate("/admin/dashboard"); // Change to your actual admin route
+            } else if (role === "driver") {
+              navigate("/driver/dashboard"); // Change to your actual driver route
+            }
+            // If role is "user" or undefined, we do nothing and they stay on HomePage
           }
-          // If role is "user" or undefined, we do nothing and they stay on HomePage
+        } catch (error) {
+          console.error("Error fetching user role:", error);
         }
-      } catch (error) {
-        console.error("Error fetching user role:", error);
       }
-    }
-  });
+    });
 
-  return () => unsubscribe();
-}, [navigate]);
+    return () => unsubscribe();
+  }, [navigate]);
 
   useEffect(() => {
     if (pickup === drop) {
@@ -127,62 +108,101 @@ useEffect(() => {
   }, [pickup, drop]);
 
   useEffect(() => {
-    // 1. Vehicle Listener (Existing)
+    const revealElements = document.querySelectorAll("[data-reveal]");
+
+    if (!("IntersectionObserver" in window)) {
+      revealElements.forEach((element) => {
+        element.classList.remove("opacity-0", "translate-y-8");
+        element.classList.add("opacity-100", "translate-y-0");
+      });
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+
+          entry.target.classList.remove("opacity-0", "translate-y-8");
+          entry.target.classList.add("opacity-100", "translate-y-0");
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.18 }
+    );
+
+    revealElements.forEach((element) => observer.observe(element));
+
+    return () => observer.disconnect();
+  }, []);
+
+
+  useEffect(() => {
+    let isMounted = true;
+
     const qVehicles = query(collection(db, "vehicles"), where("available", "==", true));
     const unsubVehicles = onSnapshot(qVehicles, (snapshot) => {
-      const vehicleList = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      if (!isMounted) return;
+      const vehicleList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setVehicles(vehicleList);
-    });
+    }, (err) => console.error("Vehicle Sync Error:", err));
 
-    // 2. Tours Listener (New)
-    const qTours = query(collection(db, "tours")); // Adjust query if you have an 'available' field here too
+    const qTours = query(collection(db, "tours"));
     const unsubTours = onSnapshot(qTours, (snapshot) => {
-      const tourList = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      if (!isMounted) return;
+      const tourList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setTours(tourList);
-    }, (error) => {
-      console.error("Error listening to tours:", error);
+    }, (err) => console.error("Tours Sync Error:", err));
+
+    let unsubBookings = () => {};
+
+    // Only the booking-based hide logic depends on auth.
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+      unsubBookings();
+      setBookedVehicleIds([]);
+
+      if (user && isMounted) {
+        const qBookings = query(
+          collection(db, "bookings"),
+          where("userId", "==", user.uid)
+        );
+
+        unsubBookings = onSnapshot(qBookings, (snapshot) => {
+          const activeStatuses = ["pending", "assigned", "approved", "on_the_way"];
+          const bookedIds = snapshot.docs
+            .map((doc) => doc.data())
+            .filter((booking) =>
+              booking?.vehicleId &&
+              booking.vehicleId !== "quick_choice" &&
+              activeStatuses.includes(String(booking?.status || "").toLowerCase())
+            )
+            .map((booking) => booking.vehicleId);
+
+          setBookedVehicleIds(bookedIds);
+        }, (error) => {
+          console.error("Bookings Sync Error handled:", error);
+        });
+      }
     });
 
-    // 1. Get the current user ID
-const currentUser = auth.currentUser;
+    // Handle network recovery
+    const handleOnline = () => {
+      console.log("Network back online. Firebase will auto-sync.");
+    };
+    window.addEventListener('online', handleOnline);
 
-// 2. Create a query that only looks for bookings related to this user
-// This prevents the permission-denied error
-const qBookings = query(
-  collection(db, "bookings"), 
-  where("userId", "==", currentUser?.uid || "guest")
-);
-
-const unsubBookings = onSnapshot(qBookings, (snapshot) => {
-  const activeStatuses = ["pending", "assigned", "approved", "on_the_way"];
-  const bookedIds = snapshot.docs
-    .map((doc) => doc.data())
-    .filter((booking) =>
-      booking?.vehicleId &&
-      booking.vehicleId !== "quick_choice" &&
-      booking.vehicleId !== "city_ride" &&
-      activeStatuses.includes(String(booking?.status || "").toLowerCase())
-    )
-    .map((booking) => booking.vehicleId);
-
-  setBookedVehicleIds(bookedIds);
-}, (error) => {
-  console.error("Bookings Sync Error handled:", error);
-});
-
-    // 3. Clean up listeners
     return () => {
+      isMounted = false;
       unsubVehicles();
       unsubTours();
       unsubBookings();
+      unsubscribeAuth();
+      window.removeEventListener('online', handleOnline);
     };
   }, []);
+
+
+
 
   const isVehicleVisible = (vehicle) => {
     const statusFields = [
@@ -202,72 +222,6 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
   );
 
   // Fallback auto-refresh in case realtime listeners miss updates on slow networks.
-  useEffect(() => {
-    let isMounted = true;
-
-    // 1. Define the real-time subscriptions
-    const qVehicles = query(collection(db, "vehicles"), where("available", "==", true));
-    const qTours = query(collection(db, "tours"));
-    const qBookings = query(
-  collection(db, "bookings"), 
-  where("userId", "==", currentUser?.uid || "guest")
-);
-
-    const unsubVehicles = onSnapshot(qVehicles, (snapshot) => {
-      if (!isMounted) return;
-      const vehicleList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setVehicles(vehicleList);
-    }, (err) => console.error("Vehicle Sync Error:", err));
-
-    const unsubTours = onSnapshot(qTours, (snapshot) => {
-      if (!isMounted) return;
-      const tourList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setTours(tourList);
-    }, (err) => console.error("Tours Sync Error:", err));
-
-    // 1. Get the current user ID
-const currentUser = auth.currentUser;
-
-// 2. Create a query that only looks for bookings related to this user
-// This prevents the permission-denied error
-
-
-const unsubBookings = onSnapshot(qBookings, (snapshot) => {
-  const activeStatuses = ["pending", "assigned", "approved", "on_the_way"];
-  const bookedIds = snapshot.docs
-    .map((doc) => doc.data())
-    .filter((booking) =>
-      booking?.vehicleId &&
-      booking.vehicleId !== "quick_choice" &&
-      booking.vehicleId !== "city_ride" &&
-      activeStatuses.includes(String(booking?.status || "").toLowerCase())
-    )
-    .map((booking) => booking.vehicleId);
-
-  setBookedVehicleIds(bookedIds);
-}, (error) => {
-  console.error("Bookings Sync Error handled:", error);
-});
-
-    // 2. Network Recovery Logic (The "Smart" Auto-Refresh)
-    // Instead of a blind timer, we listen for the browser coming back online
-    const handleOnline = () => {
-      console.log("Network back online. Firebase will auto-sync.");
-      // Firebase onSnapshot actually handles reconnection automatically, 
-      // but this is a great place to trigger any additional API calls if needed.
-    };
-
-    window.addEventListener('online', handleOnline);
-
-    // 3. Cleanup: Stop all listeners when user leaves the page
-    return () => {
-      isMounted = false;
-      unsubVehicles();
-      unsubTours();
-      unsubBookings();
-      window.removeEventListener('online', handleOnline);
-    };
-  }, []);
 
 
 
@@ -567,7 +521,7 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
 
           </div>
           <div className="text-white inline-block relative top-8 md:top-10 font-semibold text-sm sm:text-base animate-pulse">
-            ⭐ #1 Trusted Cab Service in Solapur
+            ⭐ #1 Trusted Cab Service Across Mumbai, Pune, Solapur & Goa
           </div>
 
 
@@ -579,11 +533,32 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
 
       {/*SEDAN SHOWCASE*/}
       <section id="SEDAN" className="py-14 md:py-16 px-4 md:px-6 bg-white">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 md:mb-12 text-black">
+        <h2 className="mb-10 text-2xl md:mb-12 md:text-3xl font-bold text-center text-black">
           Our Premium Sedan Fleet
         </h2>
-        {/* Scroll Container */}
-        <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => scrollFleet("sedan", "left")}
+            className="absolute left-0 top-1/2 z-10 flex items-center h-[25px] w-[25px] justify-center rounded-full bg-white/180 text-black shadow-lg transition hover:bg-gray-200"
+            aria-label="Scroll sedan cars left"
+          >
+            <FaChevronLeft />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollFleet("sedan", "right")}
+            className="absolute right-0 top-1/2 z-10 flex items-center justify-center h-[25px] w-[25px] rounded-full bg-white/180 text-black shadow-lg transition hover:bg-gray-200"
+            aria-label="Scroll sedan cars right"
+          >
+            <FaChevronRight />
+          </button>
+          <div
+            ref={(node) => {
+              fleetScrollRefs.current.sedan = node;
+            }}
+            className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory px-10 pb-4 sm:gap-6 sm:snap-none"
+          >
           {visibleVehicles
             .filter(v => v.type === "Sedan")
             .map(vehicle => (
@@ -592,11 +567,11 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
                   navigate(`/booking?vehicle_id=${vehicle.id}`)
                 }
 
-                className="min-w-[240px] sm:min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group">
+                className="w-[calc(100vw-2.5rem)] max-w-[360px] min-w-[240px] snap-center bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group sm:min-w-[280px] sm:w-auto sm:max-w-none sm:snap-start">
                 <img
                   src={vehicle.imageUrl}
                   alt={vehicle.name}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-52 bg-white object-contain object-top sm:h-48 sm:object-cover sm:object-center"
                 />
 
                 <div className="p-4 text-center">
@@ -606,17 +581,38 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
               </div>
             ))}
 
+          </div>
         </div>
       </section>
       {/* ================= SUV SHOWCASE ================= */}
 
       <section id="SUV" className="py-14 md:py-16 px-4 md:px-6 bg-white ">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 md:mb-12 text-black">
+        <h2 className="mb-10 text-2xl md:mb-12 md:text-3xl font-bold text-center text-black">
           Our Premium SUV Fleet
         </h2>
-
-        {/* Scroll Container */}
-        <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => scrollFleet("suv", "left")}
+            className="absolute left-0 top-1/2 z-10 flex items-center h-[25px] w-[25px] justify-center rounded-full bg-white/180 text-black shadow-lg transition hover:bg-gray-200"
+            aria-label="Scroll SUV cars left"
+          >
+            <FaChevronLeft />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollFleet("suv", "right")}
+            className="absolute right-0 top-1/2 z-10 flex   items-center h-[25px] w-[25px] justify-center rounded-full bg-white/180 text-black shadow-lg transition hover:bg-gray-200"
+            aria-label="Scroll SUV cars right"
+          >
+            <FaChevronRight />
+          </button>
+          <div
+            ref={(node) => {
+              fleetScrollRefs.current.suv = node;
+            }}
+            className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory px-10 pb-4 sm:gap-6 sm:snap-none"
+          >
           {visibleVehicles
             .filter(v => v.type === "SUV")
             .map(vehicle => (
@@ -627,13 +623,13 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
 
                 }
 
-                className="min-w-[240px] sm:min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group"
+                className="w-[calc(100vw-2.5rem)] max-w-[360px] min-w-[240px] snap-center bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group sm:min-w-[280px] sm:w-auto sm:max-w-none sm:snap-start"
 
               >
                 <img
                   src={vehicle.imageUrl}
                   alt={vehicle.name}
-                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-52 bg-white object-contain object-top transition-transform duration-500 sm:h-48 sm:object-cover sm:object-center group-hover:scale-110"
                 />
 
                 <div className="p-4 text-center">
@@ -642,18 +638,38 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
                 </div>
               </div>
             ))}
-
-
+          </div>
         </div>
       </section>
 
       {/*Luxury SHOWCASE*/}
       <section id="LUXURY" className="py-14 md:py-16 px-4 md:px-6 bg-white">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 md:mb-12 text-black">
+        <h2 className="mb-10 text-2xl md:mb-12 md:text-3xl font-bold text-center text-black">
           Our Premium Luxury Car Fleet
         </h2>
-        {/* Scroll Container */}
-        <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => scrollFleet("luxury", "left")}
+            className="absolute left-0 top-1/2 z-10 flex  items-center h-[25px] w-[25px] justify-center rounded-full bg-white/180 text-black shadow-lg transition hover:bg-gray-200"
+            aria-label="Scroll luxury cars left"
+          >
+            <FaChevronLeft />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollFleet("luxury", "right")}
+            className="absolute right-0 top-1/2 z-10 flex items-center h-[25px] w-[25px] justify-center rounded-full bg-white/180 text-black shadow-lg transition hover:bg-gray-200"
+            aria-label="Scroll luxury cars right"
+          >
+            <FaChevronRight />
+          </button>
+          <div
+            ref={(node) => {
+              fleetScrollRefs.current.luxury = node;
+            }}
+            className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory px-10 pb-4 sm:gap-6 sm:snap-none"
+          >
           {visibleVehicles
             .filter(v => v.type === "Luxury")
             .map(vehicle => (
@@ -662,11 +678,11 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
                   navigate(`/booking?vehicle_id=${vehicle.id}`)
                 }
 
-                className="min-w-[240px] sm:min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group">
+                className="w-[calc(100vw-2.5rem)] max-w-[360px] min-w-[240px] snap-center bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group sm:min-w-[280px] sm:w-auto sm:max-w-none sm:snap-start">
                 <img
                   src={vehicle.imageUrl}
                   alt={vehicle.name}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-52 bg-white object-contain object-top sm:h-48 sm:object-cover sm:object-center"
                 />
 
                 <div className="p-4 text-center">
@@ -676,6 +692,7 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
               </div>
             ))}
 
+          </div>
         </div>
 
       </section>
@@ -686,22 +703,44 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
       {/*Others SHOWCASE*/}
       {/* ================= OTHERS SHOWCASE ================= */}
       <section id="OTHERS" className="py-14 md:py-16 px-4 md:px-6 bg-white">
-        <h2 className="text-2xl md:text-3xl font-bold text-center mb-10 md:mb-12 text-black">
+        <h2 className="mb-10 text-2xl md:mb-12 md:text-3xl font-bold text-center text-black">
           Cabs on Per day basis
         </h2>
-        <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-4">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => scrollFleet("others", "left")}
+            className="absolute left-0 top-1/2 z-10 flex  items-center h-[25px] w-[25px] justify-center rounded-full bg-white/180 text-black shadow-lg transition hover:bg-gray-200"
+            aria-label="Scroll other cars left"
+          >
+            <FaChevronLeft />
+          </button>
+          <button
+            type="button"
+            onClick={() => scrollFleet("others", "right")}
+            className="absolute right-0 top-1/2 z-10 flex  items-center h-[25px] w-[25px] justify-center rounded-full bg-white/180 text-black shadow-lg transition hover:bg-gray-200"
+            aria-label="Scroll other cars right"
+          >
+            <FaChevronRight />
+          </button>
+          <div
+            ref={(node) => {
+              fleetScrollRefs.current.others = node;
+            }}
+            className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory px-10 pb-4 sm:gap-6 sm:snap-none"
+          >
           {visibleVehicles
             .filter(v => v.type === "Others")
             .map(vehicle => (
               <div
                 key={vehicle.id}
                 onClick={() => navigate(`/booking?vehicle_id=${vehicle.id}`)}
-                className="min-w-[240px] sm:min-w-[280px] bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group cursor-pointer"
+                className="w-[calc(100vw-2.5rem)] max-w-[360px] min-w-[240px] snap-center bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 group cursor-pointer sm:min-w-[280px] sm:w-auto sm:max-w-none sm:snap-start"
               >
                 <img
                   src={vehicle.imageUrl}
                   alt={vehicle.name}
-                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-52 bg-white object-contain object-top transition-transform duration-500 sm:h-48 sm:object-cover sm:object-center group-hover:scale-105"
                 />
                 <div className="p-4 text-center">
                   <h3 className="font-semibold text-lg">{vehicle.name}</h3>
@@ -709,6 +748,7 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
                 </div>
               </div>
             ))}
+          </div>
         </div>
         {/* Show message if no "Other" cars are available */}
         {visibleVehicles.filter(v => v.type === "Others").length === 0 && (
@@ -721,29 +761,51 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
       {/* ================= BUSES & TRAVELS SHOWCASE ================= */}
       <section id="TRAVELS" className="py-14 md:py-16 px-4 md:px-6 bg-slate-50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="mb-12 text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-black font-outfit">
               Buses & Large Travels
             </h2>
-            <p className="text-gray-500 mt-2">Perfect for group tours, weddings, and corporate events</p>
+            <p className="mt-2 text-gray-500">Perfect for group tours, weddings, and corporate events</p>
           </div>
 
-          {/* Scroll Container */}
-          <div className="flex gap-6 overflow-x-auto scroll-smooth px-2 pb-6 no-scrollbar">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => scrollFleet("travels", "left")}
+              className="absolute left-0 top-1/2 z-10 flex items-center h-[25px] w-[25px] justify-center rounded-full bg-white/180 text-black shadow-lg transition hover:bg-gray-200"
+              aria-label="Scroll travel vehicles left"
+            >
+              <FaChevronLeft />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollFleet("travels", "right")}
+              className="absolute right-0 top-1/2 z-10 flex items-center h-[25px] w-[25px] justify-center rounded-full bg-white/180 text-black shadow-lg transition hover:bg-gray-200"
+              aria-label="Scroll travel vehicles right"
+            >
+              <FaChevronRight />
+            </button>
+
+            <div
+              ref={(node) => {
+                fleetScrollRefs.current.travels = node;
+              }}
+              className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory px-10 pb-6 no-scrollbar sm:gap-6 sm:snap-none"
+            >
             {visibleVehicles
               .filter(v => v.type === "Travels" || v.type === "Bus")
               .map(vehicle => (
                 <div
                   key={vehicle.id}
                   onClick={() => navigate(`/booking?vehicle_id=${vehicle.id}`)}
-                  className="min-w-[260px] sm:min-w-[300px] md:min-w-[380px] bg-white rounded-3xl shadow-md overflow-hidden flex-shrink-0 group cursor-pointer border border-gray-100 hover:shadow-2xl transition-all duration-300"
+                  className="w-[calc(100vw-2.5rem)] max-w-[380px] min-w-[260px] snap-center bg-white rounded-3xl shadow-md overflow-hidden flex-shrink-0 group cursor-pointer border border-gray-100 hover:shadow-2xl transition-all duration-300 sm:min-w-[300px] sm:w-auto sm:max-w-none sm:snap-start md:min-w-[380px]"
                 >
                   {/* Image Container with Capacity Badge */}
-                  <div className="relative h-52 overflow-hidden">
+                  <div className="relative h-52 overflow-hidden bg-white">
                     <img
                       src={vehicle.imageUrl}
                       alt={vehicle.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-contain object-top transition-transform duration-500 sm:object-cover sm:object-center group-hover:scale-105"
                     />
                     <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold">
                       {vehicle.capacity || "17-50"} Seater
@@ -776,6 +838,7 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
                   </div>
                 </div>
               ))}
+            </div>
           </div>
 
           {/* Empty State */}
@@ -892,13 +955,17 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
       {/* ================= SERVICES ================= */}
       <section className="py-14 md:py-24 px-4 md:px-6 bg-gradient-to-br from-indigo-100 via-white to-blue-100">
 
-        <h2 className="text-4xl md:text-6xl lg:text-5xl font-bold text-center mb-10 md:mb-16">
+        <h2
+          data-reveal
+          className={`${revealClass} text-4xl md:text-6xl lg:text-5xl font-bold text-center mb-10 md:mb-16`}
+        >
           Our Services
         </h2>
 
         <div className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto">
 
           {/* ===== OUTSTATION ===== */}
+          <div data-reveal className={revealClass} style={{ transitionDelay: "0ms" }}>
           <ServiceCard
             title="Outstation Cab"
             icon="🚗"
@@ -911,8 +978,10 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
 
             }}
           />
+          </div>
 
           {/* ===== CORPORATE ===== */}
+          <div data-reveal className={revealClass} style={{ transitionDelay: "120ms" }}>
           <ServiceCard
             title="Corporate Travel"
             icon="💼"
@@ -925,8 +994,10 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
 
             }}
           />
+          </div>
 
           {/* ===== AIRPORT ===== */}
+          <div data-reveal className={revealClass} style={{ transitionDelay: "240ms" }}>
           <ServiceCard
             title="Airport Transfers"
             icon="✈️"
@@ -937,6 +1008,7 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
               setSelectedService("Airport Transfers");
             }}
           />
+          </div>
 
         </div>
 
@@ -1040,34 +1112,54 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
         </div>
       </section>
       {/* ================= WHY CHOOSE US ================= */}
-      <section className="py-14 md:py-20 px-4 md:px-6 bg-gray-100">
-        <div className="max-w-6xl mx-auto text-center">
+      <section className="relative overflow-hidden py-14 md:py-20 px-4 md:px-6 bg-slate-950">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(250,204,21,0.18),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.16),_transparent_30%)]"></div>
+        <div className="relative max-w-6xl mx-auto text-center">
 
-          <h2 className="text-3xl md:text-5xl font-bold mb-10 md:mb-12">
+          <h2
+            data-reveal
+            className={`${revealClass} text-3xl md:text-5xl font-black text-white mb-4 md:mb-5`}
+          >
             Why Choose Us
           </h2>
+
+          <p
+            data-reveal
+            className={`${revealClass} max-w-3xl mx-auto text-sm md:text-base leading-7 text-slate-300 mb-10 md:mb-12`}
+            style={{ transitionDelay: "100ms" }}
+          >
+            Professional drivers, clean vehicles, punctual arrivals, and transparent pricing make every trip feel easier from pickup to drop-off.
+          </p>
 
           <div className="grid md:grid-cols-3 gap-8">
 
             {/* SAFE & RELIABLE */}
-            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+            <div
+              data-reveal
+              className={`${revealClass} rounded-[28px] border border-white/10 bg-white/[0.06] p-8 text-left shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm transition duration-300 hover:-translate-y-2 hover:border-yellow-300/40 hover:bg-white/[0.09]`}
+              style={{ transitionDelay: "0ms" }}
+            >
               <div className="text-4xl mb-4">🛡️</div>
-              <h3 className="text-xl font-semibold mb-2">
+              <h3 className="text-2xl font-black text-white mb-3">
                 Safe & Reliable
               </h3>
-              <p className="text-gray-600">
+              <p className="text-slate-300 leading-7">
                 Experienced drivers and well-maintained vehicles ensure a
                 secure and comfortable journey every time.
               </p>
             </div>
 
             {/* ON-TIME SERVICE */}
-            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+            <div
+              data-reveal
+              className={`${revealClass} rounded-[28px] border border-white/10 bg-white/[0.06] p-8 text-left shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm transition duration-300 hover:-translate-y-2 hover:border-yellow-300/40 hover:bg-white/[0.09]`}
+              style={{ transitionDelay: "120ms" }}
+            >
               <div className="text-4xl mb-4">⏱️</div>
-              <h3 className="text-xl font-semibold mb-2">
+              <h3 className="text-2xl font-black text-white mb-3">
                 Always On Time
               </h3>
-              <p className="text-gray-600">
+              <p className="text-slate-300 leading-7">
                 We value your time and guarantee punctual pickups and
                 timely drop-offs for every trip.
                 timely drop-offs for every tritep.
@@ -1075,48 +1167,64 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
             </div>
 
             {/* AFFORDABLE PRICING */}
-            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+            <div
+              data-reveal
+              className={`${revealClass} rounded-[28px] border border-white/10 bg-white/[0.06] p-8 text-left shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm transition duration-300 hover:-translate-y-2 hover:border-yellow-300/40 hover:bg-white/[0.09]`}
+              style={{ transitionDelay: "240ms" }}
+            >
               <div className="text-4xl mb-4">💰</div>
-              <h3 className="text-xl font-semibold mb-2">
+              <h3 className="text-2xl font-black text-white mb-3">
                 Transparent Pricing
               </h3>
-              <p className="text-gray-600">
+              <p className="text-slate-300 leading-7">
                 No hidden charges — get fair and competitive pricing for
                 all types of journeys.
               </p>
             </div>
 
             {/* 24x7 SUPPORT */}
-            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+            <div
+              data-reveal
+              className={`${revealClass} rounded-[28px] border border-white/10 bg-white/[0.06] p-8 text-left shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm transition duration-300 hover:-translate-y-2 hover:border-yellow-300/40 hover:bg-white/[0.09]`}
+              style={{ transitionDelay: "360ms" }}
+            >
               <div className="text-4xl mb-4">📞</div>
-              <h3 className="text-xl font-semibold mb-2">
+              <h3 className="text-2xl font-black text-white mb-3">
                 24×7 Customer Support
               </h3>
-              <p className="text-gray-600">
+              <p className="text-slate-300 leading-7">
                 Our support team is available round-the-clock to assist
                 you anytime, anywhere.
               </p>
             </div>
 
             {/* CLEAN VEHICLES */}
-            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+            <div
+              data-reveal
+              className={`${revealClass} rounded-[28px] border border-white/10 bg-white/[0.06] p-8 text-left shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm transition duration-300 hover:-translate-y-2 hover:border-yellow-300/40 hover:bg-white/[0.09]`}
+              style={{ transitionDelay: "480ms" }}
+            >
               <div className="text-4xl mb-4">✨</div>
-              <h3 className="text-xl font-semibold mb-2">
+              <h3 className="text-2xl font-black text-white mb-3">
                 Clean & Comfortable
               </h3>
-              <p className="text-gray-600">
+              <p className="text-slate-300 leading-7">
                 Enjoy a pleasant ride in sanitized, spacious, and
                 comfortable vehicles.
               </p>
             </div>
 
             {/* WIDE COVERAGE */}
-            <div className="bg-white p-8 rounded-2xl shadow hover:shadow-xl transition">
+            <div
+              data-reveal
+              className={`${revealClass} rounded-[28px] border border-white/10 bg-white/[0.06] p-8 text-left shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-sm transition duration-300 hover:-translate-y-2 hover:border-yellow-300/40 hover:bg-white/[0.09]`}
+              style={{ transitionDelay: "600ms" }}
+            >
               <div className="text-4xl mb-4">🌍</div>
-              <h3 className="text-xl font-semibold mb-2">
+              <h3 className="text-2xl font-black text-white mb-3">
                 Wide Service Area
               </h3>
-              <p className="text-gray-600">
+              <p className="text-slate-300 leading-7">
                 Serving Solapur, Pune, Mumbai, Goa, and many nearby
                 destinations for your convenience.
               </p>
@@ -1210,13 +1318,86 @@ const unsubBookings = onSnapshot(qBookings, (snapshot) => {
 
 
       {/* ================= FOOTER ================= */}
-      <footer className="bg-yellow-500 text-white font-bold py-8 px-6 text-center">
-        <p className="font-bold">
-          Rathod Express
-        </p>
-        <p>Solapur | Pune | Mumbai | Goa</p>
-        <p>Phone: +91 9130067841</p>
-        <p>Email: rathodexpressofficial@gmail.com</p>
+      <footer className="relative overflow-hidden bg-slate-950 text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(250,204,21,0.22),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.16),_transparent_30%)]" />
+        <div className="relative max-w-6xl mx-auto px-6 py-14">
+          <div className="grid gap-8 md:grid-cols-[1.3fr_0.9fr_1fr]">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-7 backdrop-blur-sm">
+              <p className="inline-flex items-center rounded-full border border-yellow-400/40 bg-yellow-400/10 px-4 py-1 text-xs font-black uppercase tracking-[0.28em] text-yellow-300">
+                Rathod Express
+              </p>
+              <h3 className="mt-5 text-3xl font-black leading-tight text-white">
+                Reliable rides for city travel, airport drops, and outstation journeys.
+              </h3>
+              <p className="mt-4 max-w-xl text-sm font-medium leading-7 text-slate-300">
+                Trusted cab service across Solapur, Pune, Mumbai, Goa, and nearby destinations with punctual drivers, clean vehicles, and transparent pricing.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3 text-sm font-bold">
+                <a
+                  href="tel:+919130067841"
+                  className="rounded-full bg-yellow-400 px-5 py-3 text-slate-950 transition hover:bg-yellow-300"
+                >
+                  Call Now
+                </a>
+                <a
+                  href="mailto:rathodexpressofficial@gmail.com"
+                  className="rounded-full border border-white/20 px-5 py-3 text-white transition hover:bg-white/10"
+                >
+                  Email Us
+                </a>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-7 backdrop-blur-sm">
+              <h4 className="text-sm font-black uppercase tracking-[0.22em] text-yellow-300">
+                Quick Links
+              </h4>
+              <div className="mt-5 grid gap-3 text-sm font-semibold text-slate-200">
+                <a href="#booking" className="rounded-2xl border border-transparent px-3 py-2 transition hover:border-white/10 hover:bg-white/5">
+                  Quick Booking
+                </a>
+                <a href="#SEDAN" className="rounded-2xl border border-transparent px-3 py-2 transition hover:border-white/10 hover:bg-white/5">
+                  Sedan Fleet
+                </a>
+                <a href="#SUV" className="rounded-2xl border border-transparent px-3 py-2 transition hover:border-white/10 hover:bg-white/5">
+                  SUV Fleet
+                </a>
+                <a href="#TRAVELS" className="rounded-2xl border border-transparent px-3 py-2 transition hover:border-white/10 hover:bg-white/5">
+                  Tour Packages
+                </a>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-7 backdrop-blur-sm">
+              <h4 className="text-sm font-black uppercase tracking-[0.22em] text-yellow-300">
+                Contact
+              </h4>
+              <div className="mt-5 space-y-4 text-sm font-medium text-slate-200">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Coverage</p>
+                  <p className="mt-1 leading-6">Solapur | Pune | Mumbai | Goa</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Phone</p>
+                  <a href="tel:+919130067841" className="mt-1 block leading-6 transition hover:text-yellow-300">
+                    +91 9130067841
+                  </a>
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Email</p>
+                  <a href="mailto:rathodexpressofficial@gmail.com" className="mt-1 block break-all leading-6 transition hover:text-yellow-300">
+                    rathodexpressofficial@gmail.com
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-center text-xs font-semibold text-slate-400 md:flex-row md:items-center md:justify-between md:text-left">
+            <p>© 2026 Rathod Express. Built for comfortable and dependable travel.</p>
+            <p>Available for local rides, airport transfers, corporate trips, and outstation bookings.</p>
+          </div>
+        </div>
       </footer>
 
     </div>
